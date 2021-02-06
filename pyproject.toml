@@ -11,14 +11,22 @@ parallel = true
 branch = true
 source = ["src"]
 
-[tool.coverage.paths]
-source = ["src", ".tox/*/site-packages"]
-
 [tool.coverage.report]
 show_missing = true
 exclude_lines = [
+    "if __name__ == .__main__.:",
+    "if typing.TYPE_CHECKING:",
+    "if TYPE_CHECKING:",
+    "pass",
+    "raise NotImplementedError",
     "pragma: no cover",
 ]
+
+[tool.coverage.paths]
+source = ["src", ".tox/*/site-packages"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --cov"
 
 [tool.black]
 line-length = 79

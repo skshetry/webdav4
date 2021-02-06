@@ -3,3 +3,4 @@ cheroot
 wsgidav
 pylint-pytest
 pylint
+pytest-cov
