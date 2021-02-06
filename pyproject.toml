@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "src/webdav4/_version.py"
+write_to_template = "__version__ = '{version}'\n"
+
+[tool.coverage.run]
+parallel = true
+branch = true
+source = ["src"]
+
+[tool.coverage.paths]
+source = ["src", ".tox/*/site-packages"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+]
+
+[tool.black]
+line-length = 79
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-nested-functions = true
+verbose = 2
+fail-under = 100
+color = true
+exclude = ["src/webdav4/_version.py"]
+
+[tool.isort]
+profile = "black"
