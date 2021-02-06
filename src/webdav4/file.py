@@ -1,4 +1,5 @@
 """A File abstraction that could be used in `fs.open()` calls."""
+
 from typing import TYPE_CHECKING
 
 from fsspec.spec import AbstractBufferedFile

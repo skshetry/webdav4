@@ -3,7 +3,6 @@
 import os
 import threading
 from contextlib import contextmanager
-from pathlib import Path
 
 import pytest
 from cheroot import wsgi
@@ -11,6 +10,8 @@ from httpx import URL
 from wsgidav.wsgidav_app import WsgiDAVApp
 
 from webdav4.http import Client as HTTPClient
+
+from .utils import TmpDir
 
 
 @pytest.fixture
@@ -38,7 +39,7 @@ def run_server_on_thread(server: "wsgi.Server"):
 def storage_dir(tmp_path_factory):
     """Storage for webdav server to keep files in."""
     path = os.fspath(tmp_path_factory.mktemp("webdav"))
-    yield Path(path)
+    yield TmpDir(path)
 
 
 @pytest.fixture
