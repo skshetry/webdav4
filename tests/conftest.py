@@ -9,7 +9,7 @@ from cheroot import wsgi
 from httpx import URL
 from wsgidav.wsgidav_app import WsgiDAVApp
 
-from webdav4.http import Client as HTTPClient
+from webdav4.client import Client
 
 from .utils import TmpDir
 
@@ -69,7 +69,6 @@ def server_address(server):
 
 
 @pytest.fixture
-def http_client(auth, server):
-    """Http client to interact with the server."""
-    client = HTTPClient(auth=auth)
-    yield client
+def client(auth, server_address):
+    """Webdav client to interact with the server."""
+    yield Client(server_address, auth=auth)

@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from ._types import HTTPResponse, URLTypes
 
 URL = httpx.URL
+HTTPStatusError = httpx.HTTPStatusError
 
 
 def request(method: str):

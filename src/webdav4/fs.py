@@ -14,16 +14,20 @@ if TYPE_CHECKING:
 class WebdavFileSystem(AbstractFileSystem):
     """Provides access to webdav through fsspec-compliant APIs."""
 
-    def __init__(self, base_url: "URLTypes", auth: "AuthTypes") -> None:
+    def __init__(
+        self, base_url: "URLTypes", auth: "AuthTypes", client: "Client" = None
+    ) -> None:
         """Instantiate WebdavFileSystem with base_url and auth.
 
         Args:
             base_url: base url of the server
             auth: Authentication to the server
                 Refer to HTTPX's auth for more information.
+            client: Webdav client to use instead, useful for testing/mocking,
+                or extending WebdavFileSystem.
         """
         super().__init__()
-        self.client = Client(base_url, auth=auth)
+        self.client = client or Client(base_url, auth=auth)
 
     def ls(
         self, path: str, detail: bool = True, **kwargs

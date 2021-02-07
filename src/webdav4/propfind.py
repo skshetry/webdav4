@@ -69,7 +69,7 @@ class ResourceProps:
     def content_length(self) -> Optional[int]:
         """Returns content length of the resource from the response."""
         length = prop(self.props, MAPPING_PROPS["content_length"])
-        return int(length) if length is not None else None
+        return int(length) if length else None
 
     @property
     def content_language(self) -> Optional[str]:
@@ -176,7 +176,7 @@ def prepare_propfind_request_data(
     """
     if not name:
         return None
-    name = MAPPING_PROPS[name]
+    name = MAPPING_PROPS.get(name) or name
     root = Element("propfind", xmlns="DAV:")
     SubElement(
         SubElement(root, "prop"), "{DAV:}" + name, xmlns=namespace or ""
