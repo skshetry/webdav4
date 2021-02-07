@@ -1,11 +1,11 @@
 """Test utilities here."""
+import os
+from pathlib import PosixPath, WindowsPath
 
-from pathlib import Path
-
-PathType = type(Path())
+PathClass = PosixPath if os.name == "posix" else WindowsPath
 
 
-class TmpDir(PathType):
+class TmpDir(PathClass):  # type: ignore
     """Extends Path with `cat` and `gen` methods."""
 
     def cat(self):
@@ -29,7 +29,7 @@ class TmpDir(PathType):
                 If it's a string, a file with `text` is created.
             text: optional, only necessary if struct is passed a string.
         """
-        if isinstance(struct, (str, bytes, Path)):
+        if isinstance(struct, (str, bytes, PathClass)):
             struct = {struct: text}
         for name, contents in struct.items():
             path = self / name

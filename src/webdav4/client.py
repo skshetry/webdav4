@@ -184,9 +184,16 @@ class Client:
         return URL(urljoin(str(self.base_url), path))
 
     def _get_props(
-        self, path: str, data: Optional[str] = None
+        self,
+        path: str,
+        name: str = None,
+        namespace: str = None,
+        data: str = None,
     ) -> "ResourceProps":
         """Returns properties of the specific resource by propfind request."""
+        if not data and name:
+            data = prepare_propfind_request_data(name, namespace)
+
         response = self.http.propfind(self.join(path), data=data)
         response.raise_for_status()
         prop_data = PropfindData(response)
@@ -199,8 +206,7 @@ class Client:
         Also supports getting named properties
         (for now restricted to a single string with the given namespace)
         """
-        data = prepare_propfind_request_data(name, namespace)
-        props = self._get_props(path, data=data)
+        props = self._get_props(path, name=name, namespace=namespace)
         return getattr(props, name, "")
 
     def set_property(self):
@@ -238,13 +244,30 @@ class Client:
     def mkdir(self, path: str) -> None:
         """Create a collection."""
         response = self.http.mkcol(self.join(path))
-
         try:
             response.raise_for_status()
         except HTTPStatusError as exc:
             raise CreateCollectionError(path, response) from exc
 
         assert response.status_code in (200, 201)
+
+    def makedirs(self, path: str, exist_ok: bool = False) -> None:
+        """Creates a directory and its intermediate paths.
+
+        Args:
+            path: path till the directory to create
+            exist_ok: if it exists already, it will be silently ignored
+        """
+        parts = list(filter(bool, path.split("/")))
+        paths = ["/".join(parts[: n + 1]) for n in range(len(parts))]
+
+        for parent in paths:
+            try:
+                self.mkdir(parent)
+            except CreateCollectionError as exc:
+                if exist_ok and exc.status_code == 405:
+                    continue
+                raise
 
     def remove(self, path: str) -> None:
         """Remove a resource."""
@@ -280,14 +303,14 @@ class Client:
             if not detail:
                 return href
             return {
-                "name": href,
-                "size": response.props.content_length,
+                "href": href,
+                "content_length": response.props.content_length,
                 "created": response.props.created,
                 "modified": response.props.modified,
-                "language": response.props.content_language,
+                "content_language": response.props.content_language,
                 "content_type": response.props.content_type,
                 "etag": response.props.etag,
-                "type": "directory" if response.props.collection else "file",
+                "type": response.props.resource_type,
             }
 
         responses = list(data.responses.values())
@@ -299,3 +322,35 @@ class Client:
             ]
 
         return list(map(prepare_result, responses))
+
+    def isdir(self, path: str) -> bool:
+        """Checks whether the resource with the given path is a directory."""
+        return self._get_props(path).collection
+
+    def isfile(self, path: str) -> bool:
+        """Checks whether the resource with the given path is a file."""
+        return not self._get_props(path).collection
+
+    def content_length(self, path: str) -> Optional[int]:
+        """Returns content-length of the resource with the given path."""
+        return not self._get_props(path, "content_length").content_length
+
+    def created(self, path: str) -> Optional[str]:
+        """Returns creationdate of the resource with the given path."""
+        return self._get_props(path, "created").created
+
+    def modified(self, path: str) -> Optional[str]:
+        """Returns getlastmodified of the resource with the given path."""
+        return self._get_props(path, "modified").modified
+
+    def etag(self, path: str) -> Optional[str]:
+        """Returns etag of the resource with the given path."""
+        return self._get_props(path, "etag").etag
+
+    def content_type(self, path: str) -> Optional[str]:
+        """Returns content type of the resource with the given path."""
+        return self._get_props(path, "content_type").content_type
+
+    def content_language(self, path: str) -> Optional[str]:
+        """Returns content language of the resource with the given path."""
+        return self._get_props(path, "content_language").content_language

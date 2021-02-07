@@ -345,7 +345,7 @@ def test_client_propfind(
     structure,
     path,
     storage_dir: "TmpDir",
-    client: "Client",
+    client: Client,
 ):
     """Test http client's propfind response."""
     storage_dir.gen(structure)

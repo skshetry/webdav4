@@ -57,6 +57,15 @@ class ResourceProps:
         )
 
     @property
+    def resource_type(self) -> str:
+        """Tells whether the resource is directory or a file.
+
+        It might not be any of those, but this is mostly used
+        in relation to files.
+        """
+        return "directory" if self.collection else "file"
+
+    @property
     def etag(self) -> Optional[str]:
         """Returns etag from the propfind response."""
         return prop(self.props, MAPPING_PROPS["etag"])

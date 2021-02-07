@@ -37,10 +37,13 @@ class WebdavFileSystem(AbstractFileSystem):
         if not detail:
             return data
 
-        def extract_info(item):
-            return {key: item[key] for key in ["name", "size", "type"]}
+        mapping = {"content_length": "size", "href": "name", "type": "type"}
 
-        return list(map(extract_info, data))
+        def extract_info(item: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
+            assert not isinstance(item, str)
+            return {key: item[proxy] for proxy, key in mapping.items()}
+
+        return [extract_info(item) for item in data]
 
     def rm_file(self, path: str) -> None:
         """Remove a file."""
@@ -58,20 +61,15 @@ class WebdavFileSystem(AbstractFileSystem):
 
     def makedirs(self, path: str, exist_ok: bool = False) -> None:
         """Creates directory to the given path."""
-        parts = list(filter(bool, path.split("/")))
-        paths = ["/".join(parts[: n + 1]) for n in range(len(parts))]
-        for parent in paths:
-            if not exist_ok and self.isdir(parent):
-                raise Exception("oops exists")
-            self.mkdir(parent)
+        return self.client.makedirs(path, exist_ok=exist_ok)
 
     def created(self, path: str) -> str:
         """Returns creation time/date."""
-        return self.client.get_property(path, "created") or ""
+        return self.client.created(path) or ""
 
     def modified(self, path: str) -> str:
         """Returns last modified time/data."""
-        return self.client.get_property(path, "modified") or ""
+        return self.client.modified(path) or ""
 
     def mv(
         self, path1, path2, recursive=False, maxdepth=None, **kwargs
@@ -105,16 +103,7 @@ class WebdavFileSystem(AbstractFileSystem):
 
     def checksum(self, path: str) -> Optional[str]:
         """Returns checksum/etag of the path."""
-        return self.client.get_property(path, "etag") or None
-
-    def size(self, path: str) -> Optional[int]:
-        """Returns size of the path."""
-        size = self.client.get_property(path, "content_length")
-        if size is None:
-            return None
-
-        assert isinstance(size, int)
-        return size
+        return self.client.etag(path)
 
     def sign(self, path: str, expiration: int = 100, **kwargs) -> None:
         """Create a signed URL representing the given path."""
