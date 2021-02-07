@@ -16,10 +16,37 @@ if TYPE_CHECKING:
 class ClientError(Exception):
     """Custom exception thrown by the Client."""
 
-    def __init__(self, msg: str, *args):
+    def __init__(self, msg: str, *args) -> None:
         """Instantiate exception with a msg."""
         self.msg: str = msg
         super().__init__(msg, *args)
+
+
+class CreateCollectionError(ClientError):
+    """Error returned during `mkcol` operation."""
+
+    ERROR_MESSAGE = {
+        403: "the server does not allow creation in the namespace"
+        "or cannot accept members",
+        405: "collection already exists",
+        409: "parent of the collection does not exist",
+        415: "the server does not support the request body type",
+        507: "insufficient storage",
+    }
+
+    def __init__(self, path: str, response: "HTTPResponse"):
+        """Exception when creating a collection.
+
+        Args:
+            path: the path trying to create a collection
+            response: response from failed mkcol
+        """
+        self.path = path
+        self.response = response
+        self.status_code = status_code = response.status_code
+
+        hint = self.ERROR_MESSAGE.get(status_code, f"received {status_code}")
+        super().__init__(f"failed to create collection {path} - {hint}")
 
 
 class MoveError(ClientError):
@@ -34,7 +61,9 @@ class MoveError(ClientError):
         502: "the destination server may have refused to accept the resource",
     }
 
-    def __init__(self, from_path: str, to_path: str, response: "HTTPResponse"):
+    def __init__(
+        self, from_path: str, to_path: str, response: "HTTPResponse"
+    ) -> None:
         """Exception when moving file from one path to the other.
 
         Args:
@@ -129,7 +158,14 @@ class Client:
 
     def mkdir(self, path: str) -> None:
         """Create a collection."""
-        self.http.mkcol(self._join(path))
+        response = self.http.mkcol(self._join(path))
+
+        try:
+            response.raise_for_status()
+        except HTTPStatusError as exc:
+            raise CreateCollectionError(path, response) from exc
+
+        assert response.status_code in (200, 201)
 
     def remove(self, path: str) -> None:
         """Remove a resource."""

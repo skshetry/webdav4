@@ -2,7 +2,7 @@
 
 import pytest
 
-from webdav4.client import Client, MoveError
+from webdav4.client import Client, CreateCollectionError, MoveError
 from webdav4.http import URL
 from webdav4.http import Client as HTTPClient
 
@@ -201,6 +201,39 @@ def test_try_moving_a_resource_locked(
         "data": {"foo": "foo", "bar": "bar"},
         "data2": {"foobar": "foobar"},
     }
+
+
+def test_mkdir(storage_dir: TmpDir, client: Client):
+    """Test simple mkdir creation."""
+    client.mkdir("data")
+    assert storage_dir.cat() == {"data": {}}
+
+
+def test_mkdir_but_parent_collection_not_exist(
+    storage_dir: TmpDir, client: Client
+):
+    """Test creating a collection but parent collection does not exist."""
+    with pytest.raises(CreateCollectionError) as exc_info:
+        client.mkdir("data/sub")
+    assert (
+        str(exc_info.value) == "failed to create collection data/sub - "
+        "parent of the collection does not exist"
+    )
+    assert exc_info.value.status_code == 409
+    assert exc_info.value.path == "data/sub"
+
+
+def test_mkdir_collection_already_exists(storage_dir: TmpDir, client: Client):
+    """Test trying to create an already-existing collection."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+    with pytest.raises(CreateCollectionError) as exc_info:
+        client.mkdir("data")
+    assert (
+        str(exc_info.value) == "failed to create collection data - "
+        "collection already exists"
+    )
+    assert exc_info.value.status_code == 405
+    assert exc_info.value.path == "data"
 
 
 @pytest.mark.parametrize(
