@@ -90,13 +90,17 @@ class WebdavFileSystem(AbstractFileSystem):
         **kwargs
     ) -> WebdavFile:
         """Return a file-like object from the filesystem."""
+        size = kwargs.get("size")
+        if mode == "rb" and not size:
+            size = self.size(path)
+
         return WebdavFile(
             self,
             self.client.join(path),
             session=self.client.http,
             block_size=block_size,
             mode=mode,
-            size=kwargs.get("size") or self.size(path),
+            size=size,
             cache_options=cache_options,
             **kwargs
         )

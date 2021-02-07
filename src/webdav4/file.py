@@ -59,7 +59,7 @@ class WebdavFile(AbstractBufferedFile):
         self.details = {"name": url, "size": size, "type": "file"}
         super().__init__(
             fs=fs,
-            path=url,
+            path=str(url),
             mode=mode,
             block_size=block_size,
             cache_type=cache_type,
@@ -148,7 +148,7 @@ class WebdavFile(AbstractBufferedFile):
 
     def discard(self) -> None:
         """Discard temp. file."""
-        return self.fs.rm_file(self.path)
+        return self.fs.rm_file(self.location)
 
     def __reduce__(self):
         """Recreate/reopen file when restored."""

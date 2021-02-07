@@ -323,6 +323,15 @@ class Client:
 
         return list(map(prepare_result, responses))
 
+    def exists(self, path: str) -> bool:
+        """Checks whether the resource with the given path exists or not."""
+        http_resp = self.http.propfind(self.join(path), headers={"Depth": "1"})
+
+        if http_resp.status_code == 404:
+            return False
+        http_resp.raise_for_status()
+        return http_resp.status_code in (200,)
+
     def isdir(self, path: str) -> bool:
         """Checks whether the resource with the given path is a directory."""
         return self._get_props(path).collection
