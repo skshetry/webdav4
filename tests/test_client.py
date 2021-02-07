@@ -2,11 +2,30 @@
 
 import pytest
 
-from webdav4.client import Client, CreateCollectionError, MoveError
+from webdav4.client import (
+    Client,
+    CreateCollectionError,
+    MoveError,
+    MultiStatusError,
+    RemoveError,
+)
 from webdav4.http import URL
 from webdav4.http import Client as HTTPClient
 
 from .utils import TmpDir
+
+
+def lock_resource(client: Client, path: str):
+    """Exclusive lock on a resource."""
+    url = client.base_url.join(path)
+    d = f"""<?xml version="1.0" encoding="utf-8" ?>
+     <d:lockinfo xmlns:d='DAV:'>
+       <d:lockscope><d:exclusive/></d:lockscope>
+       <d:locktype><d:write/></d:locktype>
+       <d:owner><d:href>{url}</d:href></d:owner>
+     </d:lockinfo>"""
+    resp = client.http.lock(url, data=d)
+    resp.raise_for_status()
 
 
 def test_init():
@@ -56,11 +75,14 @@ def test_move_collection(storage_dir: TmpDir, client: Client):
     assert storage_dir.cat() == {"data2": {"foo": "foo", "bar": "bar"}}
 
 
-def test_try_move_resource_that_does_not_exist(client: Client):
+def test_try_move_resource_that_does_not_exist(
+    storage_dir: TmpDir, client: Client
+):
     """Test trying to move a resource that does not exist at all."""
     with pytest.raises(MoveError) as exc_info:
         client.move("data", "data2")
 
+    assert storage_dir.cat() == {}
     assert str(exc_info.value) == (
         "failed to move data to data2 - the resource could not be found"
     )
@@ -175,15 +197,7 @@ def test_try_moving_a_resource_locked(
     storage_dir.gen(
         {"data": {"foo": "foo", "bar": "bar"}, "data2": {"foobar": "foobar"}}
     )
-    url = server_address.join(lock_path)
-    d = f"""<?xml version="1.0" encoding="utf-8" ?>
-     <d:lockinfo xmlns:d='DAV:'>
-       <d:lockscope><d:exclusive/></d:lockscope>
-       <d:locktype><d:write/></d:locktype>
-       <d:owner><d:href>{url}</d:href></d:owner>
-     </d:lockinfo>"""
-    resp = client.http.lock(url, data=d)
-    resp.raise_for_status()
+    lock_resource(client, lock_path)
 
     with pytest.raises(MoveError) as exc_info:
         client.move(move_from, "data2")
@@ -215,6 +229,8 @@ def test_mkdir_but_parent_collection_not_exist(
     """Test creating a collection but parent collection does not exist."""
     with pytest.raises(CreateCollectionError) as exc_info:
         client.mkdir("data/sub")
+
+    assert storage_dir.cat() == {}
     assert (
         str(exc_info.value) == "failed to create collection data/sub - "
         "parent of the collection does not exist"
@@ -228,12 +244,94 @@ def test_mkdir_collection_already_exists(storage_dir: TmpDir, client: Client):
     storage_dir.gen({"data": {"foo": "foo"}})
     with pytest.raises(CreateCollectionError) as exc_info:
         client.mkdir("data")
+
+    assert storage_dir.cat() == {"data": {"foo": "foo"}}
     assert (
         str(exc_info.value) == "failed to create collection data - "
         "collection already exists"
     )
     assert exc_info.value.status_code == 405
     assert exc_info.value.path == "data"
+
+
+def test_remove_collection(storage_dir: TmpDir, client: Client):
+    """Test trying to remove a collection resource."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+    client.remove("data")
+    assert storage_dir.cat() == {}
+
+
+def test_remove_non_collection(storage_dir: TmpDir, client: Client):
+    """Test trying to remove a non-collection resource."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+    client.remove("data/foo")
+    assert storage_dir.cat() == {"data": {}}
+
+
+def test_remove_not_existing_resource(client: Client):
+    """Test trying to remove a resource that does not exist."""
+    with pytest.raises(RemoveError) as exc_info:
+        client.remove("data")
+    assert (
+        str(exc_info.value) == "failed to remove data - "
+        "the resource could not be found"
+    )
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.path == "data"
+
+
+def test_try_remove_locked_resource_non_coll(
+    storage_dir: TmpDir, client: Client
+):
+    """Test trying to remove a resource that is locked."""
+    storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
+    lock_resource(client, "data/foo")
+
+    with pytest.raises(RemoveError) as exc_info:
+        client.remove("data/foo")
+
+    assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
+    assert (
+        str(exc_info.value) == "failed to remove data/foo - "
+        "the resource is locked"
+    )
+    assert exc_info.value.status_code == 423
+    assert exc_info.value.path == "data/foo"
+
+
+def test_try_remove_locked_resource_coll(storage_dir: TmpDir, client: Client):
+    """Test trying to remove a resource that is locked."""
+    storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
+    lock_resource(client, "data")
+
+    with pytest.raises(RemoveError) as exc_info:
+        client.remove("data")
+
+    assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
+
+    statuses = {
+        "/data/bar": "Locked",
+        "/data/foo": "Locked",
+        "/data/": "Locked",
+    }
+    assert str(exc_info.value) == (
+        "failed to remove data - "
+        + "multiple errors received: "
+        + str(statuses)
+    )
+    assert not exc_info.value.status_code
+    assert exc_info.value.path == "data"
+
+
+def test_check_multistatus():
+    """Test MultiStatusError string representation."""
+    statuses = {"/data/bar": "Locked"}
+    error = MultiStatusError(statuses)
+    assert str(error) == str(statuses)
+
+    statuses = {"/data/bar": "Locked", "http://example.org": "Bad Gateway"}
+    error = MultiStatusError(statuses)
+    assert str(error) == "multiple errors received: " + str(statuses)
 
 
 @pytest.mark.parametrize(

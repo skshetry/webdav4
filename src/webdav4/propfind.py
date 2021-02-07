@@ -1,5 +1,6 @@
 """Parsing propfind response."""
 
+from http.client import responses
 from typing import TYPE_CHECKING, Dict, Optional, Union
 from xml.etree.ElementTree import Element, ElementTree, SubElement
 from xml.etree.ElementTree import fromstring as str2xml
@@ -109,19 +110,22 @@ class Response:
         return path
 
     @property
-    def status(self) -> int:
-        """Returns status code of the specific resource.
+    def status_code(self) -> Optional[int]:
+        """Returns status code from multistatus response."""
+        status_line = self.xml_resp.findtext("{DAV:}status")
+        if not status_line:
+            return None
 
-        it's in the shape of <d:status>HTTP/1.1 200 OK<d:status/>
-        we just extract the later 200 code.
-
-        Status should always be present.
-        """
-        status_line = self.xml_resp.findtext("{DAV:}propstat/{DAV:}status")
-        assert status_line
         _, code, *_ = status_line.split()
         assert code
         return int(code)
+
+    @property
+    def reason_phrase(self) -> Optional[str]:
+        """Reason phrase from the status code."""
+        if not self.status_code:
+            return None
+        return responses[self.status_code]
 
     @property
     def props(self) -> ResourceProps:
