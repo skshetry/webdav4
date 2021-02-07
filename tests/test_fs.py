@@ -25,3 +25,4 @@ def test_fs_ls(
     assert fs.ls("/data/", detail=False) == ["/data/bar"]
     assert fs.size("/data/bar") == 3
     assert fs.modified("/data/bar")
+    assert fs.cat("/data/bar") == b"bar"

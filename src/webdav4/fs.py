@@ -92,7 +92,16 @@ class WebdavFileSystem(AbstractFileSystem):
         **kwargs
     ) -> WebdavFile:
         """Return a file-like object from the filesystem."""
-        return WebdavFile(self, path, mode=mode, **kwargs)
+        return WebdavFile(
+            self,
+            self.client.join(path),
+            session=self.client.http,
+            block_size=block_size,
+            mode=mode,
+            size=kwargs.get("size") or self.size(path),
+            cache_options=cache_options,
+            **kwargs
+        )
 
     def checksum(self, path: str) -> Optional[str]:
         """Returns checksum/etag of the path."""
