@@ -338,7 +338,7 @@ class Client:
 
     def isfile(self, path: str) -> bool:
         """Checks whether the resource with the given path is a file."""
-        return not self._get_props(path).collection
+        return not self.isdir(path)
 
     def content_length(self, path: str) -> Optional[int]:
         """Returns content-length of the resource with the given path."""
