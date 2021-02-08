@@ -3,10 +3,12 @@
 import os
 import threading
 from contextlib import contextmanager
+from typing import Tuple
 
 import pytest
 from cheroot import wsgi
 from httpx import URL
+from pytest import TempPathFactory
 from wsgidav.wsgidav_app import WsgiDAVApp
 
 from webdav4.client import Client
@@ -15,13 +17,13 @@ from .utils import TmpDir
 
 
 @pytest.fixture
-def auth():
+def auth() -> Tuple[str, str]:
     """Auth for the server."""
     return "user1", "password1"
 
 
 @contextmanager
-def run_server_on_thread(server: "wsgi.Server"):
+def run_server_on_thread(server: wsgi.Server) -> wsgi.Server:
     """Runs server on a separate thread."""
     server.prepare()
     thread = threading.Thread(target=server.serve)
@@ -36,14 +38,18 @@ def run_server_on_thread(server: "wsgi.Server"):
 
 
 @pytest.fixture
-def storage_dir(tmp_path_factory):
+def storage_dir(tmp_path_factory) -> TmpDir:
     """Storage for webdav server to keep files in."""
     path = os.fspath(tmp_path_factory.mktemp("webdav"))
-    yield TmpDir(path)
+    return TmpDir(path)
 
 
 @pytest.fixture
-def server(tmp_path_factory, storage_dir, auth):
+def server(
+    tmp_path_factory: TempPathFactory,
+    storage_dir: TmpDir,
+    auth: Tuple[str, str],
+) -> wsgi.Server:
     """Creates a server fixture for testing purpose."""
     host, port = "localhost", 0
     dirmap = {"/": str(storage_dir)}
@@ -63,12 +69,12 @@ def server(tmp_path_factory, storage_dir, auth):
 
 
 @pytest.fixture
-def server_address(server):
+def server_address(server: wsgi.Server) -> URL:
     """Address of the server to contact."""
     return URL("http://{0}:{1}".format("localhost", server.bind_addr[1]))
 
 
 @pytest.fixture
-def client(auth, server_address):
+def client(auth: Tuple[str, str], server_address: URL) -> Client:
     """Webdav client to interact with the server."""
-    yield Client(server_address, auth=auth)
+    return Client(server_address, auth=auth)

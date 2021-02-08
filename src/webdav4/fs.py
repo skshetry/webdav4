@@ -30,7 +30,7 @@ class WebdavFileSystem(AbstractFileSystem):
         self.client = client or Client(base_url, auth=auth)
 
     def ls(
-        self, path: str, detail: bool = True, **kwargs
+        self, path: str, detail: bool = True, **kwargs: Any
     ) -> List[Union[str, Dict[str, Any]]]:
         """`ls` implementation for fsspec, see fsspec for more information."""
         data = self.client.ls(path, detail=detail)
@@ -53,7 +53,9 @@ class WebdavFileSystem(AbstractFileSystem):
         """Old API for deleting single file, please use `rm_file` instead."""
         return self.rm_file(path)
 
-    def mkdir(self, path: str, create_parents: bool = True, **kwargs) -> None:
+    def mkdir(
+        self, path: str, create_parents: bool = True, **kwargs: Any
+    ) -> None:
         """Create directory."""
         if create_parents:
             return self.makedirs(path, exist_ok=True)
@@ -72,22 +74,27 @@ class WebdavFileSystem(AbstractFileSystem):
         return self.client.modified(path) or ""
 
     def mv(
-        self, path1, path2, recursive=False, maxdepth=None, **kwargs
+        self,
+        path1: str,
+        path2: str,
+        recursive: bool = False,
+        maxdepth: bool = None,
+        **kwargs: Any
     ) -> None:
         """Move a file/directory from one path to the other."""
         return self.client.move(path1, path2)
 
-    def cp_file(self, path1: str, path2: str, **kwargs) -> None:
+    def cp_file(self, path1: str, path2: str, **kwargs: Any) -> None:
         """Copy a file/directory from one path to the other."""
         return self.client.copy(path1, path2)
 
     def open(
         self,
         path: str,
-        mode="rb",
-        block_size=None,
-        cache_options=None,
-        **kwargs
+        mode: str = "rb",
+        block_size: int = None,
+        cache_options: Dict[str, str] = None,
+        **kwargs: Any
     ) -> WebdavFile:
         """Return a file-like object from the filesystem."""
         size = kwargs.get("size")
@@ -109,6 +116,6 @@ class WebdavFileSystem(AbstractFileSystem):
         """Returns checksum/etag of the path."""
         return self.client.etag(path)
 
-    def sign(self, path: str, expiration: int = 100, **kwargs) -> None:
+    def sign(self, path: str, expiration: int = 100, **kwargs: Any) -> None:
         """Create a signed URL representing the given path."""
         raise NotImplementedError

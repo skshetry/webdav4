@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class ClientError(Exception):
     """Custom exception thrown by the Client."""
 
-    def __init__(self, msg: str, *args) -> None:
+    def __init__(self, msg: str, *args: Any) -> None:
         """Instantiate exception with a msg."""
         self.msg: str = msg
         super().__init__(msg, *args)
@@ -25,7 +25,7 @@ class ClientError(Exception):
 class MultiStatusError(ClientError):
     """Raised when multistatus response has failures in it."""
 
-    def __init__(self, statuses: Dict[str, str]):
+    def __init__(self, statuses: Dict[str, str]) -> None:
         """Pass multiple statuses, which is displayed when error is raised."""
         self.statuses = statuses
 
@@ -36,10 +36,10 @@ class MultiStatusError(ClientError):
         super().__init__(msg)
 
 
-def check_error_in_multistatus(response: "HTTPResponse"):
+def check_error_in_multistatus(response: "HTTPResponse") -> None:
     """Check if there are errors received in multistatus response."""
     if response.status_code != 207:
-        return
+        return None
 
     data = PropfindData(response)
     raise MultiStatusError(
@@ -63,7 +63,7 @@ class RemoveError(ClientError):
 
     def __init__(
         self, path: str, status_code: int = None, default_msg: str = None
-    ):
+    ) -> None:
         """Exception when trying to delete a resource.
 
         Args:
@@ -97,7 +97,7 @@ class CreateCollectionError(ClientError):
         507: "insufficient storage",
     }
 
-    def __init__(self, path: str, response: "HTTPResponse"):
+    def __init__(self, path: str, response: "HTTPResponse") -> None:
         """Exception when creating a collection.
 
         Args:
@@ -209,7 +209,7 @@ class Client:
         props = self._get_props(path, name=name, namespace=namespace)
         return getattr(props, name, "")
 
-    def set_property(self):
+    def set_property(self) -> None:
         """Setting additional property to a resource."""
 
     def move(
@@ -236,10 +236,10 @@ class Client:
 
     def copy(self, from_path: str, to_path: str, depth: int = 1) -> None:
         """Copy resource."""
-        from_path = self.join(from_path)
-        to_path = self.join(to_path)
-        headers = {"Destination": str(to_path), "Depth": depth}
-        self.http.copy(from_path, headers=headers)
+        from_url = self.join(from_path)
+        to_url = self.join(to_path)
+        headers = {"Destination": str(to_url), "Depth": depth}
+        self.http.copy(from_url, headers=headers)
 
     def mkdir(self, path: str) -> None:
         """Create a collection."""

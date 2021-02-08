@@ -1,6 +1,6 @@
 """HTTP related utilities."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
@@ -11,10 +11,12 @@ URL = httpx.URL
 HTTPStatusError = httpx.HTTPStatusError
 
 
-def request(method: str):
+def request(method: str):  # type: ignore[no-untyped-def]
     """Extending with new verb `method`."""
 
-    def func(client: "Client", url: "URLTypes", **kwargs) -> "HTTPResponse":
+    def func(
+        client: "Client", url: "URLTypes", **kwargs: Any
+    ) -> "HTTPResponse":
         return client.request(method, url, **kwargs)
 
     return func

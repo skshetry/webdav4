@@ -1,4 +1,5 @@
 """Tests for webdav client."""
+from typing import Any, Dict
 
 import pytest
 
@@ -9,7 +10,6 @@ from webdav4.client import (
     MultiStatusError,
     RemoveError,
 )
-from webdav4.http import URL
 from webdav4.http import Client as HTTPClient
 
 from .utils import TmpDir
@@ -185,7 +185,6 @@ def test_move_to_a_dest_whose_parent_does_not_exist(
 )
 def test_try_moving_a_resource_locked(
     storage_dir: TmpDir,
-    server_address: URL,
     client: Client,
     move_from: str,
     lock_path: str,
@@ -342,8 +341,8 @@ def test_check_multistatus():
     ],
 )
 def test_client_propfind(
-    structure,
-    path,
+    structure: Dict[str, Any],
+    path: str,
     storage_dir: "TmpDir",
     client: Client,
 ):

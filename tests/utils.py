@@ -1,6 +1,7 @@
 """Test utilities here."""
 import os
 from pathlib import PosixPath, WindowsPath
+from typing import Any, Dict, Iterable, Union, cast
 
 PathClass = PosixPath if os.name == "posix" else WindowsPath
 
@@ -8,7 +9,7 @@ PathClass = PosixPath if os.name == "posix" else WindowsPath
 class TmpDir(PathClass):  # type: ignore
     """Extends Path with `cat` and `gen` methods."""
 
-    def cat(self):
+    def cat(self) -> Union[str, Dict[str, Any]]:
         """Returns (potentially multiple) paths' contents.
 
         Returns:
@@ -17,9 +18,11 @@ class TmpDir(PathClass):  # type: ignore
         """
         if self.is_dir():
             return {path.name: path.cat() for path in self.iterdir()}
-        return self.read_text()
+        return cast(str, self.read_text())
 
-    def gen(self, struct, text=""):
+    def gen(
+        self, struct: Union[str, Dict[str, Any]], text: str = ""
+    ) -> Iterable[str]:
         """Creates folder structure locally from the provided structure.
 
         Args:
@@ -45,4 +48,5 @@ class TmpDir(PathClass):  # type: ignore
                     path.write_bytes(contents)
                 else:
                     path.write_text(contents, encoding="utf-8")
+
         return struct.keys()

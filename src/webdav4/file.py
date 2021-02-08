@@ -1,6 +1,16 @@
 """A File abstraction that could be used in `fs.open()` calls."""
 
-from typing import TYPE_CHECKING
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Iterable,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Type,
+    cast,
+)
 
 from fsspec.caching import AllBytes
 from fsspec.spec import AbstractBufferedFile
@@ -14,16 +24,11 @@ if TYPE_CHECKING:
 
 def yield_chunks(
     response: "HTTPResponse",
-    chunk_size: int = 2 ** 20,
     expected_size: int = None,
-):
+) -> Iterable[bytes]:
     """Yield chunks in chunk_size, errors out if it crosses expected size."""
     size = 0
-    while True:
-        chunk = response.content.read(chunk_size)
-        if not chunk:
-            return
-
+    for chunk in response.iter_bytes():
         size += len(chunk)
         # data size unknown, let's see if it goes too big
         if expected_size and size > expected_size:
@@ -42,12 +47,12 @@ class WebdavFile(AbstractBufferedFile):
         self,
         fs: "WebdavFileSystem",
         url: "URLTypes",
-        block_size=None,
+        block_size: int = None,
         mode: str = "rb",
         cache_type: str = "bytes",
-        size=None,
-        **kwargs,
-    ):
+        size: int = None,
+        **kwargs: Any,
+    ) -> None:
         """Instantiate a file-like object with the provided options.
 
         See fsspec for more information.
@@ -69,7 +74,7 @@ class WebdavFile(AbstractBufferedFile):
         self.size: int = self.size
         self.cache: "BaseCache" = self.cache
 
-    def read(self, length: int = -1):
+    def read(self, length: int = -1) -> bytes:
         """Read bytes from file.
 
         Parameters
@@ -92,7 +97,7 @@ class WebdavFile(AbstractBufferedFile):
                 self._fetch_all()
         else:
             length = min(self.size - self.loc, length)
-        return super().read(length)
+        return cast(bytes, super().read(length))
 
     def _fetch_all(self) -> None:
         """Read whole file in one shot, without caching.
@@ -111,7 +116,7 @@ class WebdavFile(AbstractBufferedFile):
         )
         self.size = len(out)
 
-    def _fetch_range(self, start: int, end: int):
+    def _fetch_range(self, start: int, end: int) -> bytes:
         """Download a block of data.
 
         The expectation is that the server returns only the requested bytes,
@@ -120,25 +125,25 @@ class WebdavFile(AbstractBufferedFile):
         we requested, an exception is raised.
         """
         expected_size = end - start
-        response = self.http.get(
-            self.url, headers={"Range": {f"bytes={start}-{end - 1}"}}
-        )
-        if response.status == 416:
-            return b""  # range request outside file
+        with self.http.stream(
+            "GET", self.url, headers={"Range": f"bytes={start}-{end - 1}"}
+        ) as response:
+            if response.status_code == 416:
+                return b""  # range request outside file
 
-        response.raise_for_status()
-        if response.status == 206:
-            return response.read()  # partial content, as expected
+            response.raise_for_status()
+            if response.status_code == 206:
+                return response.read()  # partial content, as expected
 
-        if "Content-Length" in response.headers:
-            content_length = int(response.headers["Content-Length"])
-            if content_length <= expected_size:
-                return response.read()  # data size OK
-            msg = (
-                "Got more bytes "
-                f"({content_length}) than requested ({expected_size})"
-            )
-            raise ValueError(msg)
+            if "Content-Length" in response.headers:
+                content_length = int(response.headers["Content-Length"])
+                if content_length <= expected_size:
+                    return response.read()  # data size OK
+                msg = (
+                    "Got more bytes "
+                    f"({content_length}) than requested ({expected_size})"
+                )
+                raise ValueError(msg)
 
         return b"".join(yield_chunks(response, expected_size=expected_size))
 
@@ -150,9 +155,12 @@ class WebdavFile(AbstractBufferedFile):
         """Discard temp. file."""
         return self.fs.rm_file(self.location)
 
-    def __reduce__(self):
+    def __reduce__(
+        self,
+    ) -> Tuple[Callable[["ReopenArgs"], Type["WebdavFile"]], "ReopenArgs"]:
         """Recreate/reopen file when restored."""
-        return WebdavFile, (
+        return reopen, ReopenArgs(
+            WebdavFile,
             self.fs,
             self.url,
             self.blocksize,
@@ -160,3 +168,27 @@ class WebdavFile(AbstractBufferedFile):
             self.cache.name,
             self.size,
         )
+
+
+class ReopenArgs(NamedTuple):  # pylint: disable=inherit-non-class
+    """Args to reopen the file."""
+
+    file: Type["WebdavFile"]
+    fs: "WebdavFileSystem"
+    url: "URLTypes"
+    blocksize: Optional[int]
+    mode: str
+    cache: Optional[str]
+    size: Optional[int]
+
+
+def reopen(args: "ReopenArgs") -> "WebdavFile":
+    """Reopen file when unpickled."""
+    return args.file(
+        args.fs,
+        args.url,
+        blocksize=args.blocksize,
+        mode=args.mode,
+        cache=args.cache,
+        size=args.size,
+    )
