@@ -1,12 +1,26 @@
 """Client for the webdav."""
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+import locale
+from contextlib import contextmanager
+from io import TextIOWrapper
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    BinaryIO,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    TextIO,
+    Union,
+)
 from urllib.parse import urljoin
 
 from .http import URL
 from .http import Client as HTTPClient
 from .http import HTTPStatusError
 from .propfind import PropfindData, Response, prepare_propfind_request_data
+from .stream import IterStream
 
 if TYPE_CHECKING:
     from ._types import AuthTypes, HTTPResponse, URLTypes
@@ -363,3 +377,30 @@ class Client:
     def content_language(self, path: str) -> Optional[str]:
         """Returns content language of the resource with the given path."""
         return self._get_props(path, "content_language").content_language
+
+    @contextmanager
+    def open(
+        self,
+        path: str,
+        mode: str = "r",
+        encoding: str = None,
+        block_size: int = None,
+    ) -> Iterator[Union[TextIO, BinaryIO]]:
+        """Returns file-like object to a resource."""
+        if self.isdir(path):
+            raise ValueError("Cannot open a collection.")
+
+        assert mode in {"r", "rt", "rb"}
+
+        with IterStream(  # type: ignore[abstract]
+            self.http, self.join(path), chunk_size=block_size
+        ) as buffer:
+            if mode == "rb":
+                yield buffer
+            else:
+                encoding = (
+                    encoding
+                    or buffer.encoding
+                    or locale.getpreferredencoding(False)
+                )
+                yield TextIOWrapper(buffer, encoding=encoding)

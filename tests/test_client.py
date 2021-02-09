@@ -349,3 +349,13 @@ def test_client_propfind(
     """Test http client's propfind response."""
     storage_dir.gen(structure)
     print(client.ls(path, detail=False))
+
+
+def test_open(storage_dir: TmpDir, client: Client):
+    """Test opening a remote file from webdav."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+    with client.open("/data/foo") as f:
+        assert f.read() == "foo"
+
+    with client.open("/data/foo", mode="rb") as f:
+        assert f.read() == b"foo"

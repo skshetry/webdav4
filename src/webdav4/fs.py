@@ -1,11 +1,24 @@
 """fsspec compliant webdav file system."""
 
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    BinaryIO,
+    Callable,
+    Dict,
+    List,
+    NamedTuple,
+    Optional,
+    TextIO,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
-from fsspec import AbstractFileSystem
+from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
 
 from .client import Client
-from .file import WebdavFile
 
 if TYPE_CHECKING:
     from ._types import AuthTypes, URLTypes
@@ -79,7 +92,7 @@ class WebdavFileSystem(AbstractFileSystem):
         path2: str,
         recursive: bool = False,
         maxdepth: bool = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Move a file/directory from one path to the other."""
         return self.client.move(path1, path2)
@@ -94,8 +107,8 @@ class WebdavFileSystem(AbstractFileSystem):
         mode: str = "rb",
         block_size: int = None,
         cache_options: Dict[str, str] = None,
-        **kwargs: Any
-    ) -> WebdavFile:
+        **kwargs: Any,
+    ) -> "WebdavFile":
         """Return a file-like object from the filesystem."""
         size = kwargs.get("size")
         if mode == "rb" and not size:
@@ -103,13 +116,12 @@ class WebdavFileSystem(AbstractFileSystem):
 
         return WebdavFile(
             self,
-            self.client.join(path),
-            session=self.client.http,
+            path,
             block_size=block_size,
             mode=mode,
             size=size,
             cache_options=cache_options,
-            **kwargs
+            **kwargs,
         )
 
     def checksum(self, path: str) -> Optional[str]:
@@ -119,3 +131,109 @@ class WebdavFileSystem(AbstractFileSystem):
     def sign(self, path: str, expiration: int = 100, **kwargs: Any) -> None:
         """Create a signed URL representing the given path."""
         raise NotImplementedError
+
+
+class WebdavFile(AbstractBufferedFile):
+    """WebdavFile that provides file-like access to remote file."""
+
+    def __init__(
+        self,
+        fs: "WebdavFileSystem",
+        path: str,
+        mode: str = "rb",
+        block_size: int = None,
+        autocommit: bool = True,
+        cache_type: str = "readahead",
+        cache_options: Dict[str, str] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Instantiate a file-like object with the provided options.
+
+        See fsspec for more information.
+        """
+        if mode != "rb":
+            raise NotImplementedError("File mode not supported")
+
+        size = kwargs.get("size") or self.size()
+        self.details = {"name": path, "size": size, "type": "file"}
+        super().__init__(
+            fs,
+            path,
+            mode=mode,
+            block_size=block_size,
+            autocommit=autocommit,
+            cache_type=cache_type,
+            cache_options=cache_options,
+            **kwargs,
+        )
+        encoding = kwargs.get("encoding")
+        self.fobj = fs.client.open(
+            self.path,
+            mode=self.mode,
+            encoding=encoding,
+            block_size=self.blocksize,
+        )
+        self.reader: Optional[Union[TextIO, BinaryIO]] = None
+
+    def read(self, length: int = -1) -> Union[str, bytes, None]:
+        """Read chunk of bytes."""
+        assert self.reader
+        chunk = self.reader.read(length)
+        if chunk is not None:
+            self.loc += len(chunk)
+        return chunk
+
+    def __enter__(self) -> "WebdavFile":
+        """Start streaming."""
+        self.reader = self.fobj.__enter__()
+        return self
+
+    def _fetch_range(self, start: int, end: int) -> None:
+        """Not essential. Creating stub to make pylint happy."""
+        raise NotImplementedError
+
+    def close(self) -> None:
+        """Close stream."""
+        closed = cast(bool, self.closed)
+        if closed:
+            return
+
+        closed = True
+        if self.reader:
+            self.reader.close()
+            self.reader = None
+
+    def __reduce_ex__(
+        self, protocol: int
+    ) -> Tuple[Callable[["ReopenArgs"], Type["WebdavFile"]], "ReopenArgs"]:
+        """Recreate/reopen file when restored."""
+        return reopen, ReopenArgs(
+            WebdavFile,
+            self.fs,
+            self.path,
+            self.blocksize,
+            self.mode,
+            self.size,
+        )
+
+
+class ReopenArgs(NamedTuple):  # pylint: disable=inherit-non-class
+    """Args to reopen the file."""
+
+    file: Type[WebdavFile]
+    fs: "WebdavFileSystem"
+    path: str
+    blocksize: Optional[int]
+    mode: str
+    size: Optional[int]
+
+
+def reopen(args: ReopenArgs) -> WebdavFile:
+    """Reopen file when unpickled."""
+    return args.file(
+        args.fs,
+        args.path,
+        blocksize=args.blocksize,
+        mode=args.mode,
+        size=args.size,
+    )

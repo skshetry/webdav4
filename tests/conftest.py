@@ -3,7 +3,7 @@
 import os
 import threading
 from contextlib import contextmanager
-from typing import Tuple
+from typing import Iterator, Tuple
 
 import pytest
 from cheroot import wsgi
@@ -23,7 +23,7 @@ def auth() -> Tuple[str, str]:
 
 
 @contextmanager
-def run_server_on_thread(server: wsgi.Server) -> wsgi.Server:
+def run_server_on_thread(server: wsgi.Server) -> Iterator[wsgi.Server]:
     """Runs server on a separate thread."""
     server.prepare()
     thread = threading.Thread(target=server.serve)
