@@ -2,7 +2,15 @@
 
 import typing
 from io import DEFAULT_BUFFER_SIZE
-from typing import TYPE_CHECKING, BinaryIO, Iterator, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    BinaryIO,
+    Callable,
+    Iterator,
+    Optional,
+    Union,
+)
 
 if TYPE_CHECKING:
     from array import ArrayType
@@ -16,7 +24,11 @@ class IterStream(BinaryIO):  # pylint: disable=abstract-method
     """Create a streaming file-like object."""
 
     def __init__(
-        self, client: "HTTPClient", url: "URLTypes", chunk_size: int = None
+        self,
+        client: "HTTPClient",
+        url: "URLTypes",
+        chunk_size: int = None,
+        callback: Callable[[int], Any] = None,
     ) -> None:
         """Pass a iterator to stream through."""
         self.buffer = b""
@@ -27,7 +39,23 @@ class IterStream(BinaryIO):  # pylint: disable=abstract-method
         self.client = client
         self.url = url
         self.response: Optional["HTTPResponse"] = None
+        self._loc: int = 0
+        self.callback = callback
         super().__init__()
+
+    @property
+    def loc(self) -> int:
+        """Keep track of location of the stream/file for callbacks."""
+        return self._loc
+
+    @loc.setter
+    def loc(self, value: int) -> None:
+        """Update location, and run callbacks."""
+        self._loc = value
+        if not self.callback:
+            return
+
+        self.callback(self._loc)
 
     def __enter__(self) -> "IterStream":
         """Send a streaming response."""
@@ -52,8 +80,14 @@ class IterStream(BinaryIO):  # pylint: disable=abstract-method
     @property
     def iterator(self) -> Iterator[bytes]:
         """Iterating through streaming response."""
-        assert self.response
-        return self.response.iter_bytes()
+
+        def with_callback() -> Iterator[bytes]:
+            assert self.response
+            for chunk in self.response.iter_bytes():
+                self.loc += len(chunk)
+                yield chunk
+
+        yield from with_callback()
 
     def close(self) -> None:
         """Close response if not already."""
@@ -81,7 +115,7 @@ class IterStream(BinaryIO):  # pylint: disable=abstract-method
 
     def readall(self) -> bytes:
         """Read all of the bytes."""
-        return b"".join(self.iterator)
+        return self.read()
 
     def read(self, n: int = -1) -> bytes:
         """Read n bytes at max."""

@@ -1,4 +1,6 @@
 """Tests for webdav client."""
+from io import BytesIO
+from pathlib import Path
 from typing import Any, Dict
 
 import pytest
@@ -348,7 +350,7 @@ def test_client_propfind(
 ):
     """Test http client's propfind response."""
     storage_dir.gen(structure)
-    print(client.ls(path, detail=False))
+    client.ls(path, detail=False)
 
 
 def test_open(storage_dir: TmpDir, client: Client):
@@ -359,3 +361,50 @@ def test_open(storage_dir: TmpDir, client: Client):
 
     with client.open("/data/foo", mode="rb") as f:
         assert f.read() == b"foo"
+
+
+def test_download_fobj(storage_dir: TmpDir, client: Client):
+    """Test downloading a resource to a file object."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+    buff = BytesIO()
+    client.download_fileobj("/data/foo", buff)
+    assert buff.getvalue() == b"foo"
+
+
+def test_download_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
+    """Test downloading a remote resource to a local file."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+    file_path = tmp_path / "foo.txt"
+    client.download_file("/data/foo", file_path)
+    assert file_path.read_text()
+
+
+def test_upload_fobj(storage_dir: TmpDir, client: Client):
+    """Test uploading a resource from a file object."""
+    buff = BytesIO()
+    buff.write(b"foo")
+
+    # to decide size of file in bytesio, we need to seek to the start.
+    # otherwise, it'll fail to determine size of file object
+    # which will then try using chunked upload which is not supported by
+    # cheroot server which we use for testing.
+    buff.seek(0)
+
+    client.upload_fileobj(buff, "foo")
+
+    assert client.exists("/foo")
+    assert client.isfile("/foo")
+    assert not client.isdir("/foo")
+    assert storage_dir.cat() == {"foo": "foo"}
+
+
+def test_upload_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
+    """Test downloading a remote resource to a local file."""
+    file_path = tmp_path / "foo.txt"
+    file_path.write_text("foo")
+    client.upload_file(file_path, "foo")
+
+    assert client.exists("/foo")
+    assert client.isfile("/foo")
+    assert not client.isdir("/foo")
+    assert storage_dir.cat() == {"foo": "foo"}

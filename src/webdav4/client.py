@@ -2,17 +2,19 @@
 
 import locale
 from contextlib import contextmanager
-from io import TextIOWrapper
+from io import TextIOWrapper, UnsupportedOperation
 from typing import (
     TYPE_CHECKING,
     Any,
     BinaryIO,
+    Callable,
     Dict,
     Iterator,
     List,
     Optional,
     TextIO,
     Union,
+    cast,
 )
 from urllib.parse import urljoin
 
@@ -21,8 +23,11 @@ from .http import Client as HTTPClient
 from .http import HTTPStatusError
 from .propfind import PropfindData, Response, prepare_propfind_request_data
 from .stream import IterStream
+from .utils import patch_file_like_read, try_to_guess_filelength
 
 if TYPE_CHECKING:
+    from os import PathLike
+
     from ._types import AuthTypes, HTTPResponse, URLTypes
     from .propfind import ResourceProps
 
@@ -253,7 +258,9 @@ class Client:
         from_url = self.join(from_path)
         to_url = self.join(to_path)
         headers = {"Destination": str(to_url), "Depth": depth}
-        self.http.copy(from_url, headers=headers)
+        http_resp = self.http.copy(from_url, headers=headers)
+        http_resp.raise_for_status()
+        check_error_in_multistatus(http_resp)
 
     def mkdir(self, path: str) -> None:
         """Create a collection."""
@@ -339,12 +346,13 @@ class Client:
 
     def exists(self, path: str) -> bool:
         """Checks whether the resource with the given path exists or not."""
-        http_resp = self.http.propfind(self.join(path), headers={"Depth": "1"})
-
-        if http_resp.status_code == 404:
-            return False
-        http_resp.raise_for_status()
-        return http_resp.status_code in (200,)
+        try:
+            self._get_props(path)
+            return True
+        except HTTPStatusError as exc:
+            if exc.response.status_code == 404:
+                return False
+            raise
 
     def isdir(self, path: str) -> bool:
         """Checks whether the resource with the given path is a directory."""
@@ -385,6 +393,7 @@ class Client:
         mode: str = "r",
         encoding: str = None,
         block_size: int = None,
+        callback: Callable[[int], Any] = None,
     ) -> Iterator[Union[TextIO, BinaryIO]]:
         """Returns file-like object to a resource."""
         if self.isdir(path):
@@ -393,7 +402,10 @@ class Client:
         assert mode in {"r", "rt", "rb"}
 
         with IterStream(  # type: ignore[abstract]
-            self.http, self.join(path), chunk_size=block_size
+            self.http,
+            self.join(path),
+            chunk_size=block_size,
+            callback=callback,
         ) as buffer:
             if mode == "rb":
                 yield buffer
@@ -404,3 +416,54 @@ class Client:
                     or locale.getpreferredencoding(False)
                 )
                 yield TextIOWrapper(buffer, encoding=encoding)
+
+    def download_fileobj(
+        self,
+        from_path: str,
+        file_obj: BinaryIO,
+        callback: Callable[[int], Any] = None,
+    ) -> None:
+        """Write stream from path to given file object."""
+        with self.open(from_path, mode="rb", callback=callback) as remote_obj:
+            # TODO: fix typings for open to always return BinaryIO on mode=rb
+            remote_obj = cast(BinaryIO, remote_obj)
+            file_obj.write(remote_obj.read())
+
+    def download_file(
+        self,
+        from_path: str,
+        to_path: "PathLike[str]",
+        callback: Callable[[int], Any] = None,
+    ) -> None:
+        """Download file from remote path to local path."""
+        with open(to_path, mode="wb") as fobj:
+            self.download_fileobj(from_path, fobj, callback=callback)
+
+    def upload_file(
+        self,
+        from_path: "PathLike[str]",
+        to_path: str,
+        callback: Callable[[int], Any] = None,
+    ) -> None:
+        """Upload file from local path to a given remote path."""
+        with open(from_path, mode="rb") as fobj:
+            self.upload_fileobj(fobj, to_path, callback=callback)
+
+    def upload_fileobj(
+        self,
+        file_obj: BinaryIO,
+        to_path: str,
+        callback: Callable[[int], Any] = None,
+    ) -> None:
+        """Upload file from file object to given path."""
+        try:
+            length = try_to_guess_filelength(file_obj)
+        except (TypeError, AttributeError, UnsupportedOperation):
+            length = 0
+
+        headers = {"Content-Length": str(length)} if length else None
+
+        patch_file_like_read(file_obj, callback)
+        url = self.join(to_path)
+        http_resp = self.http.put(url, content=file_obj, headers=headers)
+        http_resp.raise_for_status()
