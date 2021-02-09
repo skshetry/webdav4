@@ -1,6 +1,7 @@
 """Client for the webdav."""
 
 import locale
+import logging
 from contextlib import contextmanager
 from io import TextIOWrapper, UnsupportedOperation
 from typing import (
@@ -30,6 +31,9 @@ if TYPE_CHECKING:
 
     from ._types import AuthTypes, HTTPResponse, URLTypes
     from .propfind import ResourceProps
+
+
+logger = logging.getLogger(__name__)
 
 
 class ClientError(Exception):
@@ -104,6 +108,53 @@ class RemoveError(ClientError):
         super().__init__(f"failed to remove {path} - {hint}")
 
 
+class CopyError(ClientError):
+    """Error returned during `copy` operation."""
+
+    ERROR_MESSAGE = {
+        403: "the source and the destination could be same",
+        404: "the resource could not be found",
+        409: "there was conflict when trying to move the resource",
+        412: "the destination URL already exists",
+        423: "the source or the destination resource is locked",
+        502: "the destination server may have refused to accept the resource",
+        507: "insufficient storage to execute the operation",
+    }
+    OPERATION = "copy"
+
+    def __init__(
+        self,
+        from_path: str,
+        to_path: str,
+        status_code: int = None,
+        default_msg: str = None,
+    ) -> None:
+        """Exception when trying to delete a resource.
+
+        Args:
+            from_path: the source path trying to move the resource from
+            to_path: the destination path to move the resource to
+            status_code: optional, status code of the response received
+            default_msg: optional, msg to show instead, useful in multistatus
+                responses
+
+        Either status_code or default_msg should be passed.
+        """
+        self.from_path = from_path
+        self.to_path = to_path
+        self.status_code = status_code
+
+        assert status_code or default_msg
+        hint = (
+            self.ERROR_MESSAGE.get(status_code, f"received {status_code}")
+            if status_code
+            else default_msg
+        )
+        super().__init__(
+            f"failed to {self.OPERATION} {from_path} to {to_path} - {hint}"
+        )
+
+
 class CreateCollectionError(ClientError):
     """Error returned during `mkcol` operation."""
 
@@ -131,49 +182,14 @@ class CreateCollectionError(ClientError):
         super().__init__(f"failed to create collection {path} - {hint}")
 
 
-class MoveError(ClientError):
+class MoveError(CopyError):
     """Error returned during `move` operation."""
 
-    ERROR_MESSAGE = {
-        403: "the source and the destination could be same",
-        404: "the resource could not be found",
-        409: "there was conflict when trying to move the resource",
-        412: "the destination URL already exists",
-        423: "the source or the destination resource is locked",
-        502: "the destination server may have refused to accept the resource",
-    }
+    OPERATION = "move"
 
-    def __init__(
-        self,
-        from_path: str,
-        to_path: str,
-        status_code: int = None,
-        default_msg: str = None,
-    ) -> None:
-        """Exception when moving file from one path to the other.
 
-        Args:
-            from_path: the source path trying to move the resource from
-            to_path: the destination path to move the resource to
-            status_code: optional, status code of the response received
-            default_msg: optional, msg to show instead, useful in multistatus
-                responses
-
-        Either status_code or default_msg should be passed.
-        """
-        self.status_code = status_code
-        self.from_path = from_path
-        self.to_path = to_path
-
-        self.status_code = status_code
-
-        assert status_code or default_msg
-        hint = (
-            self.ERROR_MESSAGE.get(status_code, f"received {status_code}")
-            if status_code
-            else default_msg
-        )
-        super().__init__(f"failed to move {from_path} to {to_path} - {hint}")
+class ResourceAlreadyExists(ClientError):
+    """Error returned if the resource already exists."""
 
 
 class Client:
@@ -253,14 +269,49 @@ class Client:
         except MultiStatusError as exc:
             raise MoveError(from_path, to_path, default_msg=exc.msg) from exc
 
-    def copy(self, from_path: str, to_path: str, depth: int = 1) -> None:
+        logger.debug(
+            "move %s->%s - received %s, overwrite: %s",
+            from_path,
+            to_path,
+            http_resp.status_code,
+            overwrite,
+        )
+
+    def copy(
+        self,
+        from_path: str,
+        to_path: str,
+        shallow: bool = True,
+        overwrite: bool = False,
+    ) -> None:
         """Copy resource."""
         from_url = self.join(from_path)
         to_url = self.join(to_path)
-        headers = {"Destination": str(to_url), "Depth": depth}
+        headers = {
+            "Destination": str(to_url),
+            "Depth": "0" if shallow else "infinity",
+            "Overwrite": "T" if overwrite else "F",
+        }
         http_resp = self.http.copy(from_url, headers=headers)
-        http_resp.raise_for_status()
-        check_error_in_multistatus(http_resp)
+
+        try:
+            http_resp.raise_for_status()
+        except HTTPStatusError as exc:
+            raise CopyError(from_path, to_path, http_resp.status_code) from exc
+
+        try:
+            check_error_in_multistatus(http_resp)
+        except MultiStatusError as exc:
+            raise CopyError(from_path, to_path, default_msg=exc.msg) from exc
+
+        logger.debug(
+            "move %s->%s - received %s, depth: %s, overwrite: %s",
+            from_path,
+            to_path,
+            http_resp.status_code,
+            headers["Depth"],
+            overwrite,
+        )
 
     def mkdir(self, path: str) -> None:
         """Create a collection."""
@@ -302,6 +353,8 @@ class Client:
             check_error_in_multistatus(http_resp)
         except MultiStatusError as exc:
             raise RemoveError(path, default_msg=exc.msg) from exc
+
+        logger.debug("remove %s - received %s", path, http_resp.status_code)
 
     def ls(  # pylint: disable=invalid-name
         self, path: str, detail: bool = True
@@ -443,16 +496,20 @@ class Client:
         self,
         from_path: "PathLike[str]",
         to_path: str,
+        overwrite: bool = True,
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Upload file from local path to a given remote path."""
         with open(from_path, mode="rb") as fobj:
-            self.upload_fileobj(fobj, to_path, callback=callback)
+            self.upload_fileobj(
+                fobj, to_path, overwrite=overwrite, callback=callback
+            )
 
     def upload_fileobj(
         self,
         file_obj: BinaryIO,
         to_path: str,
+        overwrite: bool = True,
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Upload file from file object to given path."""
@@ -462,8 +519,11 @@ class Client:
             length = 0
 
         headers = {"Content-Length": str(length)} if length else None
-
         patch_file_like_read(file_obj, callback)
+
+        if not overwrite and self.exists(to_path):
+            raise ResourceAlreadyExists(f"{to_path} already exists.")
+
         url = self.join(to_path)
         http_resp = self.http.put(url, content=file_obj, headers=headers)
         http_resp.raise_for_status()
