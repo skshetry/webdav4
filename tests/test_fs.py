@@ -40,11 +40,13 @@ def test_fs_ls(
     info = fs.ls("/data/")
     assert len(info) == 2
 
+    d = {}
     for i in info:
         assert not isinstance(i, str)
         i.pop("etag", None)
+        d[i["name"]] = i
 
-    assert info[0] == {
+    assert d["data/bar"] == {
         "name": "data/bar",
         "href": join_url(server_address, "data/bar").path,
         "size": 3,
@@ -58,7 +60,7 @@ def test_fs_ls(
         "content_type": "application/octet-stream",
         "type": "file",
     }
-    assert info[1] == {
+    assert d["data/foo"] == {
         "name": "data/foo",
         "href": join_url(server_address, "data/foo").path,
         "size": 3,
