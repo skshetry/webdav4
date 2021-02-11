@@ -7,11 +7,11 @@ from typing import Iterator, Tuple
 
 import pytest
 from cheroot import wsgi
-from httpx import URL
 from pytest import TempPathFactory
 from wsgidav.wsgidav_app import WsgiDAVApp
 
 from webdav4.client import Client
+from webdav4.urls import URL
 
 from .utils import TmpDir
 

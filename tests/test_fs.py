@@ -1,9 +1,10 @@
 """Testing fsspec based WebdavFileSystem."""
 
+from datetime import datetime, timezone
 from typing import Tuple
 
 from webdav4.fs import WebdavFileSystem
-from webdav4.http import URL
+from webdav4.urls import URL, join_url
 
 from .utils import TmpDir
 
@@ -13,16 +14,67 @@ def test_fs_ls(
 ):
     """Tests fsspec for webdav."""
     fs = WebdavFileSystem(server_address, auth)
+
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
+    stat = (storage_dir / "data").stat()
     assert fs.ls("/") == [
-        {"name": "/data/", "size": None, "type": "directory"},
+        {
+            "size": None,
+            "created": datetime.fromtimestamp(
+                int(stat.st_ctime), tz=timezone.utc
+            ),
+            "modified": datetime.fromtimestamp(
+                int(stat.st_mtime), tz=timezone.utc
+            ),
+            "content_language": None,
+            "content_type": None,
+            "etag": None,
+            "type": "directory",
+            "name": "data",
+            "href": join_url(server_address, "data").path + "/",
+        }
     ]
-    assert fs.ls("/data/") == [
-        {"name": "/data/bar", "size": 3, "type": "file"},
-        {"name": "/data/foo", "size": 3, "type": "file"},
-    ]
+    foo_stat = (storage_dir / "data" / "foo").stat()
+    bar_stat = (storage_dir / "data" / "bar").stat()
+
+    info = fs.ls("/data/")
+    assert len(info) == 2
+
+    for i in info:
+        assert not isinstance(i, str)
+        i.pop("etag", None)
+
+    assert info[0] == {
+        "name": "data/bar",
+        "href": join_url(server_address, "data/bar").path,
+        "size": 3,
+        "created": datetime.fromtimestamp(
+            int(bar_stat.st_ctime), tz=timezone.utc
+        ),
+        "modified": datetime.fromtimestamp(
+            int(bar_stat.st_ctime), tz=timezone.utc
+        ),
+        "content_language": None,
+        "content_type": "application/octet-stream",
+        "type": "file",
+    }
+    assert info[1] == {
+        "name": "data/foo",
+        "href": join_url(server_address, "data/foo").path,
+        "size": 3,
+        "created": datetime.fromtimestamp(
+            int(foo_stat.st_ctime), tz=timezone.utc
+        ),
+        "modified": datetime.fromtimestamp(
+            int(foo_stat.st_ctime), tz=timezone.utc
+        ),
+        "content_language": None,
+        "content_type": "application/octet-stream",
+        "type": "file",
+    }
+
     fs.rm("/data/foo")
-    assert fs.ls("/data/", detail=False) == ["/data/bar"]
+    assert fs.ls("/data/", detail=False) == ["data/bar"]
     assert fs.size("/data/bar") == 3
     assert fs.modified("/data/bar")
     assert fs.cat("/data/bar") == b"bar"

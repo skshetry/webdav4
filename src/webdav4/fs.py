@@ -21,6 +21,8 @@ from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
 from .client import Client
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ._types import AuthTypes, URLTypes
 
 
@@ -50,11 +52,13 @@ class WebdavFileSystem(AbstractFileSystem):
         if not detail:
             return data
 
-        mapping = {"content_length": "size", "href": "name", "type": "type"}
+        mapping = {"content_length": "size", "path": "name", "type": "type"}
 
         def extract_info(item: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
             assert not isinstance(item, str)
-            return {key: item[proxy] for proxy, key in mapping.items()}
+            return {
+                mapping.get(key, key): value for key, value in item.items()
+            }
 
         return [extract_info(item) for item in data]
 
@@ -78,13 +82,13 @@ class WebdavFileSystem(AbstractFileSystem):
         """Creates directory to the given path."""
         return self.client.makedirs(path, exist_ok=exist_ok)
 
-    def created(self, path: str) -> str:
+    def created(self, path: str) -> Optional["datetime"]:
         """Returns creation time/date."""
-        return self.client.created(path) or ""
+        return self.client.created(path)
 
-    def modified(self, path: str) -> str:
+    def modified(self, path: str) -> Optional["datetime"]:
         """Returns last modified time/data."""
-        return self.client.modified(path) or ""
+        return self.client.modified(path)
 
     def mv(
         self,
@@ -127,6 +131,10 @@ class WebdavFileSystem(AbstractFileSystem):
     def checksum(self, path: str) -> Optional[str]:
         """Returns checksum/etag of the path."""
         return self.client.etag(path)
+
+    def size(self, path: str) -> Optional[int]:
+        """Returns size of the path."""
+        return self.client.content_length(path)
 
     def sign(self, path: str, expiration: int = 100, **kwargs: Any) -> None:
         """Create a signed URL representing the given path."""

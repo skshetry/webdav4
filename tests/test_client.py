@@ -1,25 +1,30 @@
 """Tests for webdav client."""
+from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Callable, Dict
+from unittest.mock import MagicMock
 
 import pytest
 
 from webdav4.client import (
     Client,
+    CopyError,
     CreateCollectionError,
     MoveError,
     MultiStatusError,
     RemoveError,
+    ResourceNotFound,
 )
 from webdav4.http import Client as HTTPClient
+from webdav4.urls import URL
 
 from .utils import TmpDir
 
 
 def lock_resource(client: Client, path: str):
     """Exclusive lock on a resource."""
-    url = client.base_url.join(path)
+    url = client.join_url(path)
     d = f"""<?xml version="1.0" encoding="utf-8" ?>
      <d:lockinfo xmlns:d='DAV:'>
        <d:lockscope><d:exclusive/></d:lockscope>
@@ -45,7 +50,7 @@ def test_init_pass_client():
 
     If we test this, then it might be easier to mock in other tests.
     """
-    base_url = "http://example.org"
+    base_url = "http://example.org/"
     auth = ("user", "password")
 
     http_client = HTTPClient(auth=auth)
@@ -81,17 +86,15 @@ def test_try_move_resource_that_does_not_exist(
     storage_dir: TmpDir, client: Client
 ):
     """Test trying to move a resource that does not exist at all."""
-    with pytest.raises(MoveError) as exc_info:
+    with pytest.raises(ResourceNotFound) as exc_info:
         client.move("data", "data2")
 
     assert storage_dir.cat() == {}
     assert str(exc_info.value) == (
-        "failed to move data to data2 - the resource could not be found"
+        "The resource data could not be found in the server"
     )
 
-    assert exc_info.value.status_code == 404
-    assert exc_info.value.from_path == "data"
-    assert exc_info.value.to_path == "data2"
+    assert exc_info.value.path == "data"
 
 
 def test_move_file_dest_exists_already(storage_dir: TmpDir, client: Client):
@@ -104,7 +107,6 @@ def test_move_file_dest_exists_already(storage_dir: TmpDir, client: Client):
         "the destination URL already exists"
     )
 
-    assert exc_info.value.status_code == 412
     assert exc_info.value.from_path == "data/foo"
     assert exc_info.value.to_path == "data/bar"
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
@@ -121,7 +123,6 @@ def test_move_collection_dest_exists_already(
     assert str(exc_info.value) == (
         "failed to move data to data2 - " "the destination URL already exists"
     )
-    assert exc_info.value.status_code == 412
     assert exc_info.value.from_path == "data"
     assert exc_info.value.to_path == "data2"
     assert storage_dir.cat() == {
@@ -158,7 +159,6 @@ def test_move_to_a_dest_whose_parent_does_not_exist(
         f"failed to move {from_path} to data3/bar - "
         "there was conflict when trying to move the resource"
     )
-    assert exc_info.value.status_code == 409
     assert exc_info.value.from_path == from_path
     assert exc_info.value.to_path == "data3/bar"
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
@@ -207,7 +207,6 @@ def test_try_moving_a_resource_locked(
         str(exc_info.value) == f"failed to move {move_from} to data2 - "
         "the source or the destination resource is locked"
     )
-    assert exc_info.value.status_code == 423
     assert exc_info.value.from_path == move_from
     assert exc_info.value.to_path == "data2"
 
@@ -216,6 +215,50 @@ def test_try_moving_a_resource_locked(
         "data": {"foo": "foo", "bar": "bar"},
         "data2": {"foobar": "foobar"},
     }
+
+
+@pytest.mark.parametrize("method", ["copy", "move"])
+def test_move_multistatus_failure(client: Client, method: str):
+    """Test multistatus error in move and copy.
+
+    Since it's hard to reproduce them with the current wsgidav, went with the
+    xml raw response content to test with.
+    """
+    from httpx import Request, Response
+
+    url = "http://www.example.com/container/"
+    request = Request("move", url)
+    response = Response(
+        status_code=207,
+        request=request,
+        content="""<?xml version="1.0" encoding="utf-8" ?>
+        <d:multistatus xmlns:d='DAV:'>
+            <d:response>
+                <d:href>/othercontainer/C2/</d:href>
+                <d:status>HTTP/1.1 423 Locked</d:status>
+                <d:error><d:lock-token-submitted/></d:error>
+            </d:response>
+        </d:multistatus>""",
+    )
+
+    client.http.request = MagicMock(  # type: ignore[assignment]
+        return_value=response
+    )
+    func = getattr(client, method)
+    exc_map = {
+        "move": MoveError,
+        "copy": CopyError,
+    }
+    with pytest.raises(exc_map[method]) as exc_info:
+        func("/container", "/othercontainer")
+
+    assert (
+        str(exc_info.value)
+        == f"failed to {method} /container to /othercontainer - "
+        "{'/othercontainer/C2/': 'Locked'}"
+    )
+    assert exc_info.value.from_path == "/container"
+    assert exc_info.value.to_path == "/othercontainer"
 
 
 def test_mkdir(storage_dir: TmpDir, client: Client):
@@ -236,7 +279,6 @@ def test_mkdir_but_parent_collection_not_exist(
         str(exc_info.value) == "failed to create collection data/sub - "
         "parent of the collection does not exist"
     )
-    assert exc_info.value.status_code == 409
     assert exc_info.value.path == "data/sub"
 
 
@@ -251,8 +293,24 @@ def test_mkdir_collection_already_exists(storage_dir: TmpDir, client: Client):
         str(exc_info.value) == "failed to create collection data - "
         "collection already exists"
     )
-    assert exc_info.value.status_code == 405
     assert exc_info.value.path == "data"
+
+
+def test_makedirs(storage_dir: TmpDir, client: Client):
+    """Test makedirs."""
+    client.makedirs("/data/foo/bar")
+    assert storage_dir.cat() == {"data": {"foo": {"bar": {}}}}
+
+    with pytest.raises(CreateCollectionError) as exc_info:
+        client.makedirs("/data/foo/bar")
+
+    assert (
+        str(exc_info.value) == "failed to create collection data - "
+        "collection already exists"
+    )
+    assert exc_info.value.path == "data"
+
+    client.makedirs("/data/foo/bar", exist_ok=True)
 
 
 def test_remove_collection(storage_dir: TmpDir, client: Client):
@@ -271,13 +329,13 @@ def test_remove_non_collection(storage_dir: TmpDir, client: Client):
 
 def test_remove_not_existing_resource(client: Client):
     """Test trying to remove a resource that does not exist."""
-    with pytest.raises(RemoveError) as exc_info:
+    with pytest.raises(ResourceNotFound) as exc_info:
         client.remove("data")
+
     assert (
-        str(exc_info.value) == "failed to remove data - "
-        "the resource could not be found"
+        str(exc_info.value)
+        == "The resource data could not be found in the server"
     )
-    assert exc_info.value.status_code == 404
     assert exc_info.value.path == "data"
 
 
@@ -296,11 +354,12 @@ def test_try_remove_locked_resource_non_coll(
         str(exc_info.value) == "failed to remove data/foo - "
         "the resource is locked"
     )
-    assert exc_info.value.status_code == 423
     assert exc_info.value.path == "data/foo"
 
 
-def test_try_remove_locked_resource_coll(storage_dir: TmpDir, client: Client):
+def test_try_remove_locked_resource_coll(
+    storage_dir: TmpDir, client: Client, server_address: URL
+):
     """Test trying to remove a resource that is locked."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
     lock_resource(client, "data")
@@ -311,16 +370,15 @@ def test_try_remove_locked_resource_coll(storage_dir: TmpDir, client: Client):
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
 
     statuses = {
-        "/data/bar": "Locked",
-        "/data/foo": "Locked",
-        "/data/": "Locked",
+        client.join_url("/data/bar").path: "Locked",
+        client.join_url("/data/foo").path: "Locked",
+        client.join_url("/data").path + "/": "Locked",
     }
     assert str(exc_info.value) == (
         "failed to remove data - "
         + "multiple errors received: "
         + str(statuses)
     )
-    assert not exc_info.value.status_code
     assert exc_info.value.path == "data"
 
 
@@ -408,3 +466,92 @@ def test_upload_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
     assert client.isfile("/foo")
     assert not client.isdir("/foo")
     assert storage_dir.cat() == {"foo": "foo"}
+
+
+def test_isdir_isfile(storage_dir: TmpDir, client: Client):
+    """Test isdir and isfile checks."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    assert client.isdir("/data/")
+    assert not client.isfile("/data/")
+
+    assert client.isfile("/data/foo")
+    assert not client.isdir("/data/foo")
+
+    with pytest.raises(ResourceNotFound) as exc_info:
+        client.isdir("/data/file")
+
+    assert exc_info.value.path == "/data/file"
+    assert (
+        str(exc_info.value)
+        == "The resource /data/file could not be found in the server"
+    )
+
+    with pytest.raises(ResourceNotFound) as exc_info:
+        client.isdir("/data/file")
+
+    assert exc_info.value.path == "/data/file"
+    assert (
+        str(exc_info.value)
+        == "The resource /data/file could not be found in the server"
+    )
+
+
+def test_exists(storage_dir: TmpDir, client: Client):
+    """Test exists."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    assert client.exists("/data/")
+    assert client.exists("/data/foo")
+    assert not client.exists("/data/bar")
+
+
+def test_attributes(storage_dir: TmpDir, client: Client):
+    """Test APIs that provides attributes of the resource."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    stat = (storage_dir / "data" / "foo").stat()
+    assert client.content_length("/data/foo") == 3
+    assert client.content_type("/data/foo") == "application/octet-stream"
+    assert client.content_language("/data/foo") == ""
+    etag = client.etag("/data/foo")
+    assert etag and isinstance(etag, str)
+    assert client.modified("/data/foo") == datetime.fromtimestamp(
+        int(stat.st_mtime), tz=timezone.utc
+    )
+    assert client.created("/data/foo") == datetime.fromtimestamp(
+        int(stat.st_ctime), tz=timezone.utc
+    )
+
+
+def test_attributes_dir(storage_dir: TmpDir, client: Client):
+    """Test attributes response on a directory."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    stat = (storage_dir / "data").stat()
+    assert client.content_length("/data/") is None
+    assert client.content_type("/data/") == ""
+    assert client.content_language("/data/") == ""
+    etag = client.etag("/data/")
+    assert etag == ""
+    assert client.modified("/data/") == datetime.fromtimestamp(
+        int(stat.st_mtime), tz=timezone.utc
+    )
+    assert client.created("/data/") == datetime.fromtimestamp(
+        int(stat.st_ctime), tz=timezone.utc
+    )
+
+
+def test_attributes_file_not_exist(client: Client):
+    """Test attributes' API throws exception if the file does not exist."""
+
+    def assert_raises(func: Callable[[str], Any]) -> None:
+        with pytest.raises(ResourceNotFound):
+            func("data")
+
+    assert_raises(client.content_length)
+    assert_raises(client.content_type)
+    assert_raises(client.content_language)
+    assert_raises(client.etag)
+    assert_raises(client.modified)
+    assert_raises(client.created)
