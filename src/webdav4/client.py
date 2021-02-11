@@ -400,7 +400,7 @@ class Client:
             return {
                 "name": rel,
                 "href": response.href,
-                **response.properties.asdict(),
+                **response.properties.as_dict(),
             }
 
         msr = self.propfind(path, headers={"Depth": "1"})

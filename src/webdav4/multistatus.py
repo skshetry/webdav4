@@ -83,7 +83,7 @@ class DAVProperties:
         self.resource_type = "directory" if self.collection else "file"
         self.display_name = extract_text("display_name")
 
-    def asdict(self, raw: bool = False) -> Dict[str, Any]:
+    def as_dict(self, raw: bool = False) -> Dict[str, Any]:
         """Returns all properties that it supports parsing.
 
         Args:
