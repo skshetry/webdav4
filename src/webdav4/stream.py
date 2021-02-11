@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     from array import ArrayType
     from mmap import mmap
 
-    from ._types import HTTPResponse, URLTypes
     from .http import Client as HTTPClient
+    from .types import HTTPResponse, URLTypes
 
 
 class IterStream(RawIOBase):

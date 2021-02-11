@@ -7,8 +7,8 @@ from xml.etree.ElementTree import Element, ElementTree, SubElement
 from xml.etree.ElementTree import fromstring as str2xml
 from xml.etree.ElementTree import tostring as xml2string
 
+from .date_utils import fromisoformat
 from .urls import URL, join_url_path, relative_url_to, strip_leading_slash
-from .utils import fromisoformat
 
 if TYPE_CHECKING:
     from httpx import Response as HTTPResponse

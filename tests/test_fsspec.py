@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 from typing import Tuple
 
-from webdav4.fs import WebdavFileSystem
+from webdav4.fsspec import WebdavFileSystem
 from webdav4.urls import URL, join_url
 
 from .utils import TmpDir

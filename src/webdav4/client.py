@@ -19,6 +19,7 @@ from typing import (
     cast,
 )
 
+from .fs_utils import patch_file_like_read, try_to_guess_filelength
 from .http import Client as HTTPClient
 from .http import HTTPStatusError
 from .http import Method as HTTPMethod
@@ -30,14 +31,13 @@ from .multistatus import (
 )
 from .stream import IterStream
 from .urls import URL, join_url
-from .utils import patch_file_like_read, try_to_guess_filelength
 
 if TYPE_CHECKING:
     from datetime import datetime
     from os import PathLike
 
-    from ._types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
     from .multistatus import DAVProperties
+    from .types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
 
 
 logger = logging.getLogger(__name__)

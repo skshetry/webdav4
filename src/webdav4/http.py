@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import httpx
 
 if TYPE_CHECKING:
-    from ._types import HTTPResponse, URLTypes
+    from .types import HTTPResponse, URLTypes
 
 HTTPStatusError = httpx.HTTPStatusError
 

@@ -23,7 +23,7 @@ from .client import Client
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from ._types import AuthTypes, URLTypes
+    from .types import AuthTypes, URLTypes
 
 
 class WebdavFileSystem(AbstractFileSystem):
