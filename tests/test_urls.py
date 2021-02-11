@@ -1,7 +1,5 @@
 """Testing url parsing and processing logic."""
 
-from typing import Tuple
-
 import pytest
 
 from webdav4.urls import URL, join_url, relative_url_to
@@ -26,9 +24,7 @@ from webdav4.urls import URL, join_url, relative_url_to
         ("https://example.org/foo/", "/bar/", "https://example.org/foo/bar"),
     ],
 )
-def test_join_url(
-    auth: Tuple[str, str], base_url: str, path: str, expected: str
-):
+def test_join_url(base_url: str, path: str, expected: str):
     """Testing join_url operation in the client."""
     assert join_url(URL(base_url), path) == expected
 
