@@ -25,6 +25,8 @@ class IterStream(RawIOBase):
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Pass a iterator to stream through."""
+        super().__init__()
+
         self.buffer = b""
         # setting chunk_size is not possible yet with httpx
         # though it is to be released in a new version.
@@ -35,7 +37,7 @@ class IterStream(RawIOBase):
         self.response: Optional["HTTPResponse"] = None
         self._loc: int = 0
         self.callback = callback
-        super().__init__()
+        self._iterator: Optional[Iterator[bytes]] = None
 
     @property
     def loc(self) -> int:
@@ -74,14 +76,13 @@ class IterStream(RawIOBase):
     @property
     def iterator(self) -> Iterator[bytes]:
         """Iterating through streaming response."""
-
-        def with_callback() -> Iterator[bytes]:
+        if self._iterator is None:
             assert self.response
-            for chunk in self.response.iter_bytes():
-                self.loc += len(chunk)
-                yield chunk
+            self._iterator = self.response.iter_bytes()
 
-        yield from with_callback()
+        for chunk in self._iterator:
+            self.loc += len(chunk)
+            yield chunk
 
     def close(self) -> None:
         """Close response if not already."""

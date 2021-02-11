@@ -2,6 +2,7 @@
 
 import locale
 import logging
+import shutil
 from contextlib import contextmanager
 from io import TextIOWrapper, UnsupportedOperation
 from typing import (
@@ -19,7 +20,8 @@ from typing import (
     cast,
 )
 
-from .fs_utils import patch_file_like_read, try_to_guess_filelength
+from .callback_wrapper import CallbackIOWrapper
+from .fs_utils import peek_filelike_length
 from .http import Client as HTTPClient
 from .http import HTTPStatusError
 from .http import Method as HTTPMethod
@@ -491,10 +493,11 @@ class Client:
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Write stream from path to given file object."""
-        with self.open(from_path, mode="rb", callback=callback) as remote_obj:
+        with self.open(from_path, mode="rb") as remote_obj:
             # TODO: fix typings for open to always return BinaryIO on mode=rb
             remote_obj = cast(BinaryIO, remote_obj)
-            file_obj.write(remote_obj.read())
+            wrapped = CallbackIOWrapper(file_obj, callback, method="write")
+            shutil.copyfileobj(remote_obj, wrapped)
 
     def download_file(
         self,
@@ -528,17 +531,17 @@ class Client:
     ) -> None:
         """Upload file from file object to given path."""
         try:
-            length = try_to_guess_filelength(file_obj)
+            length = peek_filelike_length(file_obj)
         except (TypeError, AttributeError, UnsupportedOperation):
             length = 0
 
         headers = {"Content-Length": str(length)} if length else None
-        patch_file_like_read(file_obj, callback)
 
         if not overwrite and self.exists(to_path):
             raise ResourceAlreadyExists(f"{to_path} already exists.")
 
+        wrapped = CallbackIOWrapper(file_obj, callback)
         http_resp = self.request(
-            HTTPMethod.PUT, to_path, content=file_obj, headers=headers
+            HTTPMethod.PUT, to_path, content=wrapped, headers=headers
         )
         http_resp.raise_for_status()
