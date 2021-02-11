@@ -99,7 +99,7 @@ class IterStream(BinaryIO):  # pylint: disable=abstract-method
             self.buffer = b""
 
     @property
-    def closed(self) -> bool:
+    def closed(self) -> bool:  # pylint: disable=invalid-overridden-method
         """Check whether the stream was closed or not."""
         return self.response is None
 
