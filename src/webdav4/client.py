@@ -20,7 +20,7 @@ from typing import (
     cast,
 )
 
-from .callback_wrapper import CallbackIOWrapper
+from .callback import CallbackIOWrapper
 from .fs_utils import peek_filelike_length
 from .http import Client as HTTPClient
 from .http import HTTPStatusError
