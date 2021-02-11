@@ -370,9 +370,9 @@ def test_try_remove_locked_resource_coll(
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
 
     statuses = {
+        client.join_url("/data").path + "/": "Locked",
         client.join_url("/data/bar").path: "Locked",
         client.join_url("/data/foo").path: "Locked",
-        client.join_url("/data").path + "/": "Locked",
     }
     assert str(exc_info.value) == (
         "failed to remove data - "

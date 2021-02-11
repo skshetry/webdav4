@@ -235,6 +235,7 @@ class MultiStatusResponse:
             and resp.status_code
             and 400 <= resp.status_code <= 599
         }
+        statuses = dict(sorted(statuses.items()))
         if statuses:
             raise MultiStatusError(statuses)
 
