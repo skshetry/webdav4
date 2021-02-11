@@ -1,6 +1,5 @@
 """Parsing propfind response."""
 
-from datetime import datetime
 from email.utils import parsedate_to_datetime
 from http.client import responses
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
@@ -9,6 +8,7 @@ from xml.etree.ElementTree import fromstring as str2xml
 from xml.etree.ElementTree import tostring as xml2string
 
 from .urls import URL, join_url_path, relative_url_to, strip_leading_slash
+from .utils import fromisoformat
 
 if TYPE_CHECKING:
     from httpx import Response as HTTPResponse
@@ -61,11 +61,7 @@ class DAVProperties:
             return text
 
         created = extract_text("created")
-        self.created = (
-            datetime.strptime(created, "%Y-%m-%dT%H:%M:%S%z")
-            if created
-            else None
-        )
+        self.created = fromisoformat(created) if created else None
 
         modified = extract_text("modified")
         self.modified = parsedate_to_datetime(modified) if modified else None
