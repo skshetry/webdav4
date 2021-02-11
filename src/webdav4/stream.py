@@ -1,16 +1,8 @@
 """Handle streaming response for file."""
 
 import typing
-from io import DEFAULT_BUFFER_SIZE
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    BinaryIO,
-    Callable,
-    Iterator,
-    Optional,
-    Union,
-)
+from io import DEFAULT_BUFFER_SIZE, RawIOBase
+from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, Union
 
 from .http import Method as HTTPMethod
 
@@ -22,7 +14,7 @@ if TYPE_CHECKING:
     from .http import Client as HTTPClient
 
 
-class IterStream(BinaryIO):  # pylint: disable=abstract-method
+class IterStream(RawIOBase):
     """Create a streaming file-like object."""
 
     def __init__(

@@ -466,21 +466,23 @@ class Client:
 
         assert mode in {"r", "rt", "rb"}
 
-        with IterStream(  # type: ignore[abstract]
+        with IterStream(
             self.http,
             self.join_url(path),
             chunk_size=block_size,
             callback=callback,
         ) as buffer:
+            buff = cast(BinaryIO, buffer)
+
             if mode == "rb":
-                yield buffer
+                yield buff
             else:
                 encoding = (
                     encoding
                     or buffer.encoding
                     or locale.getpreferredencoding(False)
                 )
-                yield TextIOWrapper(buffer, encoding=encoding)
+                yield TextIOWrapper(buff, encoding=encoding)
 
     def download_fileobj(
         self,
