@@ -13,30 +13,30 @@ def test_webdav_methods():
 
     with mock.patch.object(client, "request", return_value=response) as m:
         assert client.propfind(url, data="<xml/>") == response
-        m.assert_called_once_with("propfind", url, data="<xml/>")
+        m.assert_called_once_with("PROPFIND", url, data="<xml/>")
 
     with mock.patch.object(client, "request", return_value=response) as m:
         assert client.proppatch(url, data="<xml/>") == response
-        m.assert_called_once_with("proppatch", url, data="<xml/>")
+        m.assert_called_once_with("PROPPATCH", url, data="<xml/>")
 
     with mock.patch.object(client, "request", return_value=response) as m:
         assert client.mkcol(url) == response
-        m.assert_called_once_with("mkcol", url)
+        m.assert_called_once_with("MKCOL", url)
 
     headers = {"Destination": "https://example.com"}
 
     with mock.patch.object(client, "request", return_value=response) as m:
         assert client.copy(url, headers=headers) == response
-        m.assert_called_once_with("copy", url, headers=headers)
+        m.assert_called_once_with("COPY", url, headers=headers)
 
     with mock.patch.object(client, "request", return_value=response) as m:
         assert client.move(url, headers=headers) == response
-        m.assert_called_once_with("move", url, headers=headers)
+        m.assert_called_once_with("MOVE", url, headers=headers)
 
     with mock.patch.object(client, "request", return_value=response) as m:
         assert client.lock(url) == response
-        m.assert_called_once_with("lock", url)
+        m.assert_called_once_with("LOCK", url)
 
     with mock.patch.object(client, "request", return_value=response) as m:
         assert client.unlock(url) == response
-        m.assert_called_once_with("unlock", url)
+        m.assert_called_once_with("UNLOCK", url)

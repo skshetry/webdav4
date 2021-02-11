@@ -21,6 +21,7 @@ from typing import (
 
 from .http import Client as HTTPClient
 from .http import HTTPStatusError
+from .http import Method as HTTPMethod
 from .multistatus import (
     MultiStatusError,
     MultiStatusResponse,
@@ -225,7 +226,9 @@ class Client:
         self, path: str, data: str = None, headers: "HeaderTypes" = None
     ) -> "MultiStatusResponse":
         """Returns properties of the specific resource by propfind request."""
-        http_resp = self._request("propfind", path, data=data, headers=headers)
+        http_resp = self._request(
+            HTTPMethod.PROPFIND, path, data=data, headers=headers
+        )
         return MultiStatusResponse(http_resp)
 
     def get_props(
@@ -307,7 +310,9 @@ class Client:
         }
 
         with error_handler(MoveError, from_path, to_path):
-            http_resp = self.request("move", from_path, headers=headers)
+            http_resp = self.request(
+                HTTPMethod.MOVE, from_path, headers=headers
+            )
 
         status_code = http_resp.status_code
         log_msg = ("move %s -> %s (overwrite: %s) - received %s",)
@@ -329,7 +334,9 @@ class Client:
         }
 
         with error_handler(CopyError, from_path, to_path):
-            http_resp = self.request("copy", from_path, headers=headers)
+            http_resp = self.request(
+                HTTPMethod.COPY, from_path, headers=headers
+            )
 
         logger.debug(
             "move %s->%s (depth: %s, overwrite: %s) - received %s",
@@ -344,7 +351,7 @@ class Client:
         """Create a collection."""
         with error_handler(CreateCollectionError, path):
             try:
-                http_resp = self.request("mkcol", path)
+                http_resp = self.request(HTTPMethod.MKCOL, path)
             except HTTPError as exc:
                 if exist_ok and exc.status_code == 405:
                     return
@@ -369,7 +376,7 @@ class Client:
     def remove(self, path: str) -> None:
         """Remove a resource."""
         with error_handler(RemoveError, path):
-            http_resp = self.request("delete", path)
+            http_resp = self.request(HTTPMethod.DELETE, path)
 
         logger.debug("remove %s - received %s", path, http_resp.status_code)
 
@@ -530,6 +537,6 @@ class Client:
             raise ResourceAlreadyExists(f"{to_path} already exists.")
 
         http_resp = self.request(
-            "put", to_path, content=file_obj, headers=headers
+            HTTPMethod.PUT, to_path, content=file_obj, headers=headers
         )
         http_resp.raise_for_status()

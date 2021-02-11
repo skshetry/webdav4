@@ -12,6 +12,8 @@ from typing import (
     Union,
 )
 
+from .http import Method as HTTPMethod
+
 if TYPE_CHECKING:
     from array import ArrayType
     from mmap import mmap
@@ -35,7 +37,7 @@ class IterStream(BinaryIO):  # pylint: disable=abstract-method
         # setting chunk_size is not possible yet with httpx
         # though it is to be released in a new version.
         self.chunk_size = chunk_size or DEFAULT_BUFFER_SIZE
-        self.request = client.build_request("GET", url)
+        self.request = client.build_request(HTTPMethod.GET, url)
         self.client = client
         self.url = url
         self.response: Optional["HTTPResponse"] = None
