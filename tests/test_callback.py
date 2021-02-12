@@ -1,10 +1,9 @@
 """Test IO callback wrapper."""
 from collections.abc import Iterable
 from io import StringIO
-from os import linesep
 from pathlib import Path
-from typing import Union
-from unittest.mock import MagicMock
+from typing import Union, no_type_check
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -19,6 +18,7 @@ def test_wrap_file_like():
     assert isinstance(result, CallbackIOWrapper)
 
 
+@no_type_check
 def test_callback_read():
     """Test reports read callback correctly."""
     line = "foo\n"
@@ -52,9 +52,10 @@ def test_callback_read():
     # setattr works
     wrapper.add_something_here = True
     assert wrapper.add_something_here
-    assert buff.add_something_here  # type: ignore
+    assert buff.add_something_here
 
 
+@no_type_check
 def test_callback_write():
     """Test reports write callback correctly."""
     line = "foo\n"
@@ -91,29 +92,31 @@ def test_callback_write():
     # setattr works
     wrapper.add_something_here = True
     assert wrapper.add_something_here
-    assert write_buffer.add_something_here  # type: ignore
+    assert write_buffer.add_something_here
 
 
 @pytest.mark.parametrize("mode", ["r", "rb"])
+@no_type_check
 def test_callback_read_iter(tmp_path: Path, mode: str):
     """Test __iter__ callbacks."""
     path = tmp_path / "file.txt"
-    line = "foo" + linesep
-    path.write_text(line * 100, "utf-8")
+
+    with path.open(mode="w", newline="\n", encoding="utf-8") as f:
+        for _ in range(100):
+            f.write("foo\n")
 
     callback = MagicMock()
+
+    def decode(ch: Union[str, bytes]) -> Union[str, bytes]:
+        return ch.decode("utf-8") if isinstance(ch, bytes) else ch
 
     with path.open(mode=mode) as f:
         wrapper = CallbackIOWrapper(f, callback)
 
-        expected: Union[str, bytes] = (
-            line.encode("utf-8") if mode == "rb" else line
-        )
+        chunks = list(wrapper)
+        assert ["foo\n" for _ in chunks] == list(map(decode, chunks))
 
-        for chunk in wrapper:
-            assert chunk == expected
-            callback.assert_called_once_with(len(expected))
-            callback.reset_mock()
+    callback.assert_has_calls([call(4) for _ in chunks])
 
 
 def test_callback_illegal_method():
