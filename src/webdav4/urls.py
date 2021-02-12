@@ -38,7 +38,5 @@ def relative_url_to(base_url: URL, rel: str) -> str:
     if not base and rel:
         return rel
 
-    if base not in rel:
-        raise ValueError("substring match failed.")
     index = len(base) + 1
     return rel[index:]

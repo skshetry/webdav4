@@ -2,7 +2,14 @@
 
 import pytest
 
-from webdav4.urls import URL, join_url, join_url_path, relative_url_to
+from webdav4.urls import (
+    URL,
+    join_url,
+    join_url_path,
+    normalize_path,
+    relative_url_to,
+    strip_leading_slash,
+)
 
 
 @pytest.mark.parametrize(
@@ -98,8 +105,43 @@ def test_path_relative_to(base: str, rel: str, expected: str):
         ("/foo/", "/bar", "/foo/bar"),
         ("/foo/", "bar/", "/foo/bar"),
         ("/foo/", "/bar/", "/foo/bar"),
+        ("/foo/bar", "foobar", "/foo/bar/foobar"),
+        ("/foo/bar/", "foobar", "/foo/bar/foobar"),
+        ("/foo/bar", "foobar/", "/foo/bar/foobar"),
+        ("/foo/bar", "foobar/foobar", "/foo/bar/foobar/foobar"),
     ],
 )
 def test_join_url_path(base_path: str, path: str, expected: str):
     """Test joining base path and path together, while normalizing the url."""
     assert join_url_path(base_path, path) == expected
+
+
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        ("/", "/"),
+        ("foo", "foo"),
+        ("/foo", "/foo"),
+        ("/foo/bar/", "/foo/bar"),
+        ("/foo//bar//", "/foo/bar"),
+        ("/////foo////bar////", "/foo/bar"),
+    ],
+)
+def test_normalize_url(path: str, expected: str):
+    """Test that it normalizes urls removing too many "/" and leading slash."""
+    assert normalize_path(path) == expected
+
+
+@pytest.mark.parametrize(
+    "path, expected",
+    [
+        ("", ""),
+        ("/", "/"),
+        ("foo", "foo"),
+        ("foo/bar/", "foo/bar"),
+        ("/foo/bar/", "/foo/bar"),
+    ],
+)
+def test_strip_leading_slash(path: str, expected: str):
+    """Test that it strips leading slash, except the "/" only urls."""
+    assert strip_leading_slash(path) == expected
