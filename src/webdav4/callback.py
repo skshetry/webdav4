@@ -35,8 +35,8 @@ class CallbackIOWrapper(Iterable[AnyStr]):
         swrite = stream.write
 
         @wraps(swrite)
-        def fwrite(chunk: AnyStr) -> int:
-            result = swrite(chunk)
+        def fwrite(chunk: AnyStr, *args: Any, **kwargs: Any) -> int:
+            result = swrite(chunk, *args, **kwargs)  # type: ignore[call-arg]
             cb_func(len(chunk))
             return result
 
