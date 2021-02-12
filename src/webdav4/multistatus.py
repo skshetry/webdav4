@@ -1,13 +1,12 @@
 """Parsing propfind response."""
 
-from email.utils import parsedate_to_datetime
 from http.client import responses
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 from xml.etree.ElementTree import Element, ElementTree, SubElement
 from xml.etree.ElementTree import fromstring as str2xml
 from xml.etree.ElementTree import tostring as xml2string
 
-from .date_utils import fromisoformat
+from .date_utils import from_rfc1123, fromisoformat
 from .urls import URL, join_url_path, relative_url_to, strip_leading_slash
 
 if TYPE_CHECKING:
@@ -64,7 +63,7 @@ class DAVProperties:
         self.created = fromisoformat(created) if created else None
 
         modified = extract_text("modified")
-        self.modified = parsedate_to_datetime(modified) if modified else None
+        self.modified = from_rfc1123(modified) if modified else None
 
         self.etag = extract_text("etag")
         self.content_type = extract_text("content_type")
