@@ -27,8 +27,8 @@ from .http import HTTPStatusError
 from .http import Method as HTTPMethod
 from .multistatus import (
     MultiStatusError,
-    MultiStatusResponse,
     Response,
+    parse_multistatus_response,
     prepare_propfind_request_data,
 )
 from .stream import IterStream
@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from datetime import datetime
     from os import PathLike
 
-    from .multistatus import DAVProperties
+    from .multistatus import DAVProperties, MultiStatusResponse
     from .types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
 
 
@@ -231,7 +231,7 @@ class Client:
         http_resp = self._request(
             HTTPMethod.PROPFIND, path, data=data, headers=headers
         )
-        return MultiStatusResponse(http_resp)
+        return parse_multistatus_response(http_resp)
 
     def get_props(
         self,
@@ -295,7 +295,7 @@ class Client:
             # or, a partial success (however you see it).
             # except for the propfind, for which we use `_request` directly)
             # in the above `propfind` function.
-            msr = MultiStatusResponse(http_resp)
+            msr = parse_multistatus_response(http_resp)
             msr.raise_for_status()
         return http_resp
 
@@ -419,7 +419,7 @@ class Client:
 
         return True
 
-    def isdir(self, path: str) -> bool:
+    def isdir(self, path: str) -> Optional[bool]:
         """Checks whether the resource with the given path is a directory."""
         return self.get_props(path).collection
 

@@ -72,14 +72,20 @@ class DAVProperties:
         self.content_length = int(content_length) if content_length else None
         self.content_language = extract_text("content_language")
 
-        collection_xml = None
-        if propstat_xml:
-            collection_xml = propstat_xml.find(
-                ".//{DAV:}resourcetype/{DAV:}collection"
-            )
+        collection: Optional[bool] = None
+        resource_type: Optional[str] = None
+        resource_xml: Optional[Element] = None
 
-        self.collection = collection_xml is not None
-        self.resource_type = "directory" if self.collection else "file"
+        if propstat_xml is not None:
+            resource_xml = propstat_xml.find(".//{DAV:}resourcetype")
+
+        if resource_xml is not None:
+            collection = resource_xml.find(".//{DAV:}collection") is not None
+            resource_type = "directory" if collection else "file"
+
+        self.collection = collection
+        self.resource_type = resource_type
+
         self.display_name = extract_text("display_name")
 
     def as_dict(self, raw: bool = False) -> Dict[str, Any]:
@@ -99,6 +105,7 @@ class DAVProperties:
             "content_type": self.content_type,
             "etag": self.etag,
             "type": self.resource_type,
+            "display_name": self.display_name,
         }
 
 
@@ -155,12 +162,12 @@ class Response:
         self.properties = DAVProperties(propstat_xml)
 
     def __str__(self) -> str:
-        """User representation for the resource."""
-        return f"Resource: {(self.path_norm)}"
+        """User representation for the response."""
+        return f"Response: {self.path_norm}"
 
     def __repr__(self) -> str:
-        """Repr for the resource."""
-        return f"Response:'{self.path}'"
+        """Repr for the response."""
+        return f"Response: {self.path}"
 
     def path_relative_to(self, base_url: URL) -> str:
         """Relative path of the resource from the response."""
@@ -183,7 +190,7 @@ class MultiStatusError(Exception):
 
 
 class MultiStatusResponse:
-    """Parse multistatus responses from the received http response.
+    """Parse multistatus responses from the received http content.
 
     Propfind response can contain multiple responses for multiple resources.
     The format is in xml, so we try to parse it into an easier format, and
@@ -193,17 +200,15 @@ class MultiStatusResponse:
     properties may not exist if we are doing propfind with named properties.
     """
 
-    def __init__(self, http_response: "HTTPResponse") -> None:
-        """Parse the http response from propfind request.
+    def __init__(self, content: str) -> None:
+        """Parse the http content from propfind request.
 
         Args:
-             http_response: response received from PROPFIND call
+             content: body received from PROPFIND call
         """
-        self.http_response = http_response
-        if self.http_response.status_code != 207:
-            raise ValueError("http_response is not a multistatus response.")
+        self.content = content
+        self.tree = tree = str2xml(content)
 
-        tree = str2xml(http_response.text)
         self.response_description: Optional[str] = prop(
             tree, "responsedescription"
         )
@@ -256,3 +261,12 @@ def prepare_propfind_request_data(
         SubElement(root, "prop"), "{DAV:}" + name, xmlns=namespace or ""
     )
     return xml2string(root, encoding="unicode")
+
+
+def parse_multistatus_response(
+    http_response: "HTTPResponse",
+) -> MultiStatusResponse:
+    """Parses multistatus response from the given http response."""
+    if http_response.status_code != 207:
+        raise ValueError("http response is not a multistatus response")
+    return MultiStatusResponse(http_response.text)

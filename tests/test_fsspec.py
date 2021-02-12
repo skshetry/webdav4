@@ -31,6 +31,7 @@ def test_fs_ls(
             "etag": None,
             "type": "directory",
             "name": "data",
+            "display_name": "data",
             "href": join_url(server_address, "data").path + "/",
         }
     ]
@@ -59,6 +60,7 @@ def test_fs_ls(
         "content_language": None,
         "content_type": "application/octet-stream",
         "type": "file",
+        "display_name": "bar",
     }
     assert d["data/foo"] == {
         "name": "data/foo",
@@ -70,6 +72,7 @@ def test_fs_ls(
         "modified": datetime.fromtimestamp(
             int(foo_stat.st_ctime), tz=timezone.utc
         ),
+        "display_name": "foo",
         "content_language": None,
         "content_type": "application/octet-stream",
         "type": "file",
