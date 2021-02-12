@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from typing_extensions import Literal
 
 
-class CallbackIOWrapper(Iterable[AnyStr]):
+class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
     """Wrap a file-like's read/write method to report length to callback."""
 
     def __init__(
