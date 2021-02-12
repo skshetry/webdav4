@@ -35,4 +35,9 @@ jobs:
         run: "python -c 'import webdav4; print(webdav4.__version__)'"
       - uses: pre-commit/action@v2.0.0
       - name: Run tests
-        run: python -m pytest
+        run: python -m pytest --cov-report=xml
+      - name: upload coverage report
+        uses: codecov/codecov-action@v1.0.13
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
