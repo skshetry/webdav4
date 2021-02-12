@@ -244,9 +244,7 @@ class Client:
 
         Can also selectively request the properties by passing name or data.
         """
-        if not data and name:
-            data = prepare_propfind_request_data(name, namespace)
-
+        data = data or prepare_propfind_request_data(name, namespace)
         headers = {"Content-Type": "application/xml"} if data else {}
         msr = self.propfind(path, headers=headers, data=data)
         response = msr.get_response_for_path(self.base_url.path, path)
