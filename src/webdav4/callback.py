@@ -1,21 +1,24 @@
 """Utilities to wrap file objects for callback purposes."""
 from collections.abc import Iterable
 from functools import wraps
-from typing import IO, Any, AnyStr, Callable, Iterator
+from typing import IO, TYPE_CHECKING, Any, AnyStr, Callable, Iterator
+
+if TYPE_CHECKING:
+    from typing_extensions import Literal
 
 
-class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
+class CallbackIOWrapper(Iterable[AnyStr]):
     """Wrap a file-like's read/write method to report length to callback."""
 
     def __init__(
         self,
         stream: IO[AnyStr],
         callback: Callable[[int], Any] = None,
-        method: str = "read",
+        method: "Literal['read', 'write']" = "read",
     ) -> None:
         """Pass stream and callback and appropriate method to wrap."""
         if method not in {"read", "write"}:
-            raise KeyError("Can only wrap read/write methods")
+            raise ValueError("Can only wrap read/write methods")
 
         def do_nothing(_: int) -> Any:
             pass
