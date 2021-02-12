@@ -1,13 +1,22 @@
 """Test IO callback wrapper."""
 from collections.abc import Iterable
 from io import StringIO
+from os import linesep
 from pathlib import Path
 from typing import Union
 from unittest.mock import MagicMock
 
 import pytest
 
-from webdav4.callback import CallbackIOWrapper
+from webdav4.callback import CallbackIOWrapper, wrap_file_like
+
+
+def test_wrap_file_like():
+    """Test wrapper."""
+    buff = StringIO()
+    callback = MagicMock()
+    result = wrap_file_like(buff, callback)
+    assert isinstance(result, CallbackIOWrapper)
 
 
 def test_callback_read():
@@ -89,7 +98,7 @@ def test_callback_write():
 def test_callback_read_iter(tmp_path: Path, mode: str):
     """Test __iter__ callbacks."""
     path = tmp_path / "file.txt"
-    line = "foo\n"
+    line = "foo" + linesep
     path.write_text(line * 100, "utf-8")
 
     callback = MagicMock()

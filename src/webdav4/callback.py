@@ -1,10 +1,13 @@
 """Utilities to wrap file objects for callback purposes."""
 from collections.abc import Iterable
 from functools import wraps
-from typing import IO, TYPE_CHECKING, Any, AnyStr, Callable, Iterator
+from typing import IO, TYPE_CHECKING, Any, AnyStr, Callable, Iterator, cast
 
 if TYPE_CHECKING:
     from typing_extensions import Literal
+
+
+CallbackFn = Callable[[int], Any]
 
 
 class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
@@ -13,7 +16,7 @@ class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
     def __init__(
         self,
         stream: IO[AnyStr],
-        callback: Callable[[int], Any] = None,
+        callback: CallbackFn = None,
         method: "Literal['read', 'write']" = "read",
     ) -> None:
         """Pass stream and callback and appropriate method to wrap."""
@@ -67,3 +70,16 @@ class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
     def __getattr__(self, attr: str) -> Any:
         """Getting attr on the stream."""
         return getattr(self.__wrapped_stream__, attr)
+
+
+def wrap_file_like(
+    file_obj: IO[AnyStr],
+    callback: CallbackFn = None,
+    method: "Literal['read', 'write']" = "read",
+) -> IO[AnyStr]:
+    """Wrap a file-like object that reports to callback on r/w operation.
+
+    This method exists to cast the type to the file-like on return.
+    """
+    wrapper = CallbackIOWrapper(file_obj, callback, method=method)
+    return cast(IO[AnyStr], wrapper)

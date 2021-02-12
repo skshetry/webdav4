@@ -20,7 +20,7 @@ from typing import (
     cast,
 )
 
-from .callback import CallbackIOWrapper
+from .callback import wrap_file_like
 from .fs_utils import peek_filelike_length
 from .http import Client as HTTPClient
 from .http import HTTPStatusError
@@ -494,7 +494,7 @@ class Client:
         with self.open(from_path, mode="rb") as remote_obj:
             # TODO: fix typings for open to always return BinaryIO on mode=rb
             remote_obj = cast(BinaryIO, remote_obj)
-            wrapped = CallbackIOWrapper(file_obj, callback, method="write")
+            wrapped = wrap_file_like(file_obj, callback, method="write")
             shutil.copyfileobj(remote_obj, wrapped)
 
     def download_file(
@@ -538,7 +538,7 @@ class Client:
         if not overwrite and self.exists(to_path):
             raise ResourceAlreadyExists(f"{to_path} already exists.")
 
-        wrapped = CallbackIOWrapper(file_obj, callback)
+        wrapped = wrap_file_like(file_obj, callback)
         http_resp = self.request(
             HTTPMethod.PUT, to_path, content=wrapped, headers=headers
         )
