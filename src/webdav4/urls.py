@@ -24,7 +24,7 @@ def join_url(base_url: URL, path: str) -> URL:
 def join_url_path(hostname: str, path: str) -> str:
     """Returns path absolute."""
     path = path.strip("/")
-    return normalize_path(f"{hostname}/{path}")
+    return normalize_path(f"/{hostname}/{path}")
 
 
 def relative_url_to(base_url: URL, rel: str) -> str:

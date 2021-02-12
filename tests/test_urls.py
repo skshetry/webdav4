@@ -2,7 +2,7 @@
 
 import pytest
 
-from webdav4.urls import URL, join_url, relative_url_to
+from webdav4.urls import URL, join_url, join_url_path, relative_url_to
 
 
 @pytest.mark.parametrize(
@@ -65,3 +65,41 @@ def test_join_url(base_url: str, path: str, expected: str):
 def test_path_relative_to(base: str, rel: str, expected: str):
     """Test relative path calculation."""
     assert relative_url_to(URL(base), rel) == expected
+
+
+@pytest.mark.parametrize(
+    "base_path, path, expected",
+    [
+        ("", "", "/"),
+        ("", "/", "/"),
+        ("/", "", "/"),
+        ("/", "/", "/"),
+        ("", "foo", "/foo"),
+        ("", "/foo", "/foo"),
+        ("", "foo/", "/foo"),
+        ("", "/foo/", "/foo"),
+        ("/", "foo", "/foo"),
+        ("/", "/foo", "/foo"),
+        ("/", "foo/", "/foo"),
+        ("/", "/foo/", "/foo"),
+        ("/foo", "bar", "/foo/bar"),
+        ("/foo", "/bar", "/foo/bar"),
+        ("/foo", "bar/", "/foo/bar"),
+        ("/foo", "/bar/", "/foo/bar"),
+        ("foo/", "bar", "/foo/bar"),
+        ("foo/", "/bar", "/foo/bar"),
+        ("foo/", "bar/", "/foo/bar"),
+        ("foo/", "/bar/", "/foo/bar"),
+        ("foo", "bar", "/foo/bar"),
+        ("foo", "/bar", "/foo/bar"),
+        ("foo", "bar/", "/foo/bar"),
+        ("foo", "/bar/", "/foo/bar"),
+        ("/foo/", "bar", "/foo/bar"),
+        ("/foo/", "/bar", "/foo/bar"),
+        ("/foo/", "bar/", "/foo/bar"),
+        ("/foo/", "/bar/", "/foo/bar"),
+    ],
+)
+def test_join_url_path(base_path: str, path: str, expected: str):
+    """Test joining base path and path together, while normalizing the url."""
+    assert join_url_path(base_path, path) == expected
