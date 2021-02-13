@@ -3,7 +3,7 @@ name: Release webdav4
 on:
   push:
     branches:
-    - master
+    - main
 
 jobs:
   build-and-publish:
