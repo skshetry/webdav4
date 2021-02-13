@@ -8,12 +8,8 @@
 
 # -- Project information -----------------------------------------------------
 import sys
-from pathlib import Path
 
-path = Path(__file__)
-root = path.parents[1]
-module_dir = (root / "src").absolute()
-sys.path.insert(0, str(module_dir))
+sys.path.insert(0, "..")
 
 project = "webdav4"
 copyright = "2021, Saugat Pachhai"  # pylint: disable=redefined-builtin
