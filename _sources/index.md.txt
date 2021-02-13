@@ -3,7 +3,9 @@ hide-toc: true
 ---
 
 ```{include} ../README.md
+:relative-docs: docs/
 ```
+
 
 ```{toctree}
 :caption: API Reference

@@ -143,15 +143,53 @@
 <p><a class="reference external" href="https://www.repostatus.org/#wip"><img alt="Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public." src="https://www.repostatus.org/badges/latest/wip.svg"/></a>
 <img alt="ci" src="https://github.com/skshetry/webdav4/workflows/CI/badge.svg"/>
 <a class="reference external" href="https://codecov.io/gh/skshetry/webdav4"><img alt="codecov" src="https://codecov.io/gh/skshetry/webdav4/branch/main/graph/badge.svg"/></a></p>
-<p>Webdav API with an (optional) fsspec implementation</p>
+<p>Webdav API with an (optional) <a class="reference external" href="#fsspec">fsspec</a> implementation</p>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install webdav4
 </pre></div>
 </div>
+<div class="section" id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="webdav4-client">
+<h4>webdav4 Client<a class="headerlink" href="#webdav4-client" title="Permalink to this headline">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">webdav4.client</span> <span class="kn">import</span> <span class="n">Client</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s2">"https://webdav.com"</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">"username"</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">))</span>
+<span class="n">client</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"Documents/Readme.md"</span><span class="p">)</span>
+
+<span class="n">client</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="s2">"Photos"</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="s2">"Gorilla.jpg"</span><span class="p">,</span> <span class="s2">"Photos/Gorilla.jpg"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Check out <a class="reference internal" href="reference/client.html"><span class="doc std std-doc">Client API</span></a> reference for more information.</p>
+</div>
+<div class="section" id="fsspec">
+<h4>fsspec<a class="headerlink" href="#fsspec" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://filesystem-spec.readthedocs.io"><code class="docutils literal notranslate"><span class="pre">fsspec</span></code></a> tries to provide a
+consistent APIs to different storage backends, by defining standard
+interfaces, so that other code using them could operate without depending
+on the implementations of the backends. This package, in the same way,
+wraps the above <a class="reference external" href="#webdav4-client">webdav client</a> with a consistent file-system API.</p>
+<p>To use it, you need to install <code class="docutils literal notranslate"><span class="pre">fsspec</span></code> additionally which you can do as
+follows:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install webdav4<span class="o">[</span>fsspec<span class="o">]</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">webdav4.fsspec</span> <span class="kn">import</span> <span class="n">WebdavFileSystem</span>
+
+<span class="n">fs</span> <span class="o">=</span> <span class="n">WebdavFileSystem</span><span class="p">(</span><span class="s2">"https://webdav.com"</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">"username"</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">))</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"Documents/Readme.md"</span><span class="p">)</span>
+
+<span class="n">fs</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="s2">"Photos"</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Check out <a class="reference internal" href="reference/fsspec.html"><span class="doc std std-doc">WebdavFileSystem API</span></a> reference for more information.</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="toctree-wrapper compound">
+</div>
+</div>
 </div>
 </div>
 </div>

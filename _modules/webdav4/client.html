@@ -347,18 +347,61 @@
         <span class="n">base_url</span><span class="p">:</span> <span class="s2">"URLTypes"</span><span class="p">,</span>
         <span class="n">auth</span><span class="p">:</span> <span class="s2">"AuthTypes"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">http_client</span><span class="p">:</span> <span class="s2">"HTTPClient"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">client_opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Instantiate client for webdav.</span>
 
+<span class="sd">        Examples:</span>
+<span class="sd">            &gt;&gt;&gt; client = Client("https://webdav.example.org")</span>
+<span class="sd">            &gt;&gt;&gt; client.ls("/")</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            base_url: base url of the Webdav server</span>
-<span class="sd">            auth:  Auth for the webdav</span>
+<span class="sd">            auth: Auth for the webdav.</span>
+<span class="sd">                Auth can be any of the following:</span>
+
+<span class="sd">                - a tuple of (user, password)</span>
+<span class="sd">                - None if no auth is required.</span>
+
+<span class="sd">                Refer to `Customizing Authentication \</span>
+<span class="sd">                &lt;https://www.python-httpx.org/advanced/ \</span>
+<span class="sd">                #customizing-authentication&gt;`_</span>
+<span class="sd">                for more options.</span>
+
 <span class="sd">            http_client: http client to use instead, useful in mocking</span>
 <span class="sd">                (when extending, it is expected to have implemented additional</span>
 <span class="sd">                verbs from webdav)</span>
+
+<span class="sd">        All of the following keyword arguments are passed along to the</span>
+<span class="sd">        `httpx &lt;https://www.python-httpx.org/api/#client&gt;`_, the http library</span>
+<span class="sd">        this client is built on.</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            headers: Dict. of HTTP headers to include when sending requests</span>
+<span class="sd">            cookies: Dict. of Cookie items to include when sending requests</span>
+<span class="sd">            verify: SSL certificates used to verify the identity of requested</span>
+<span class="sd">                hosts. Can be any of:</span>
+
+<span class="sd">                - True (uses default CA bundle),</span>
+<span class="sd">                - a path to an SSL certificate file,</span>
+<span class="sd">                - False (disable verfication), or</span>
+<span class="sd">                - a :py:class:`ssl.SSLContext`</span>
+
+<span class="sd">            cert: An SSL certificate used by the requested host to</span>
+<span class="sd">                authenticate the client.</span>
+<span class="sd">                Either a path to an SSL certificate file,</span>
+<span class="sd">                or two-tuple of (certificate file, key file),</span>
+<span class="sd">                or a three-tuple of (certificate file, key file, password).</span>
+<span class="sd">            proxies: A dictionary mapping proxy keys to proxy URLs</span>
+<span class="sd">            timeout: The timeout configuration to use when sending requests</span>
+<span class="sd">            limits: The limits configuration to use</span>
+<span class="sd">            max_redirects: The maximum number of redirect responses that</span>
+<span class="sd">                should be followed</span>
+<span class="sd">            trust_env: Enables or disables usage of environment variables</span>
+<span class="sd">                for configuration</span>
 <span class="sd">        """</span>
-        <span class="k">assert</span> <span class="n">auth</span> <span class="ow">or</span> <span class="n">http_client</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">http</span> <span class="o">=</span> <span class="n">http_client</span> <span class="ow">or</span> <span class="n">HTTPClient</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+        <span class="n">client_opts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"base_url"</span><span class="p">:</span> <span class="n">base_url</span><span class="p">,</span> <span class="s2">"auth"</span><span class="p">:</span> <span class="n">auth</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">http</span> <span class="o">=</span> <span class="n">http_client</span> <span class="ow">or</span> <span class="n">HTTPClient</span><span class="p">(</span><span class="o">**</span><span class="n">client_opts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">base_url</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Client.join_url"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.join_url">[docs]</a>    <span class="k">def</span> <span class="nf">join_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
