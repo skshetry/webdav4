@@ -17,7 +17,7 @@ jobs:
         if: ${{ !startsWith(github.ref, 'refs/tags') }}
         run: |
           version=$(python setup.py --version | awk -F+ '{print $1}' | tail -1)
-          echo SETUPTOOLS_SCM_PRETEND_VERSION=version >> $GITHUB_ENV
+          echo SETUPTOOLS_SCM_PRETEND_VERSION=$version >> $GITHUB_ENV
           echo version $SETUPTOOLS_SCM_PRETEND_VERSION
       - name: Build
         run: |
