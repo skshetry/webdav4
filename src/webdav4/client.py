@@ -206,18 +206,61 @@ class Client:
         base_url: "URLTypes",
         auth: "AuthTypes" = None,
         http_client: "HTTPClient" = None,
+        **client_opts: Any,
     ) -> None:
         """Instantiate client for webdav.
 
+        Examples:
+            >>> client = Client("https://webdav.example.org")
+            >>> client.ls("/")
+
         Args:
             base_url: base url of the Webdav server
-            auth:  Auth for the webdav
+            auth: Auth for the webdav.
+                Auth can be any of the following:
+
+                - a tuple of (user, password)
+                - None if no auth is required.
+
+                Refer to `Customizing Authentication \
+                <https://www.python-httpx.org/advanced/ \
+                #customizing-authentication>`_
+                for more options.
+
             http_client: http client to use instead, useful in mocking
                 (when extending, it is expected to have implemented additional
                 verbs from webdav)
+
+        All of the following keyword arguments are passed along to the
+        `httpx <https://www.python-httpx.org/api/#client>`_, the http library
+        this client is built on.
+
+        Keyword Args:
+            headers: Dict. of HTTP headers to include when sending requests
+            cookies: Dict. of Cookie items to include when sending requests
+            verify: SSL certificates used to verify the identity of requested
+                hosts. Can be any of:
+
+                - True (uses default CA bundle),
+                - a path to an SSL certificate file,
+                - False (disable verfication), or
+                - a :py:class:`ssl.SSLContext`
+
+            cert: An SSL certificate used by the requested host to
+                authenticate the client.
+                Either a path to an SSL certificate file,
+                or two-tuple of (certificate file, key file),
+                or a three-tuple of (certificate file, key file, password).
+            proxies: A dictionary mapping proxy keys to proxy URLs
+            timeout: The timeout configuration to use when sending requests
+            limits: The limits configuration to use
+            max_redirects: The maximum number of redirect responses that
+                should be followed
+            trust_env: Enables or disables usage of environment variables
+                for configuration
         """
-        assert auth or http_client
-        self.http = http_client or HTTPClient(base_url=base_url, auth=auth)
+        client_opts.update({"base_url": base_url, "auth": auth})
+        self.http = http_client or HTTPClient(**client_opts)
         self.base_url = URL(base_url)
 
     def join_url(self, path: str) -> URL:
