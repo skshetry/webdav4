@@ -44,4 +44,4 @@ jobs:
           file: ./coverage.xml
           fail_ci_if_error: false
       - name: build docs
-        run: python -m sphinx-build docs build/docs
+        run: sphinx-build docs build/docs

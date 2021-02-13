@@ -16,7 +16,7 @@ jobs:
           pip install -U pip wheel
           pip install -e ".[dev]"
       - name: Build documentation
-        run: python -m sphinx-build docs build/docs
+        run: sphinx-build docs build/docs
       - name: Upload to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
