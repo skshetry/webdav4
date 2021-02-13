@@ -1,0 +1,24 @@
+name: Deploy Docs
+on:
+  push:
+    branches: [main]
+
+jobs:
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2.1.4
+      - name: Install requirements
+        run: |
+          pip install -U pip wheel
+          pip install -e ".[dev]"
+      - name: Build documentation
+        run: python -m sphinx-build docs build/docs
+      - name: Upload to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/docs/
