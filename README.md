@@ -15,15 +15,14 @@ $ pip install webdav4
 ### Usage
 
 #### webdav4 Client
-```ipython
->>> from webdav4.client import Client
+```python
+from webdav4.client import Client
 
->>> client = Client("https://webdav.com", auth=("username", "password"))
->>> client.exists("Documents/Readme.md")
-True
->>> client.ls("Photos", detail=False)
-['Photos/Birdie.jpg', 'Photos/Frog.jpg']
->>> client.upload_file("Gorilla.jpg", "Photos/Gorilla.jpg")
+client = Client("https://webdav.com", auth=("username", "password"))
+client.exists("Documents/Readme.md")
+
+client.ls("Photos", detail=False)
+client.upload_file("Gorilla.jpg", "Photos/Gorilla.jpg")
 ```
 
 Check out [Client API](docs/reference/client.md) reference for more information.
@@ -46,13 +45,13 @@ follows:
 $ pip install webdav4[fsspec]
 ```
 
-```ipython
->>> from webdav4.fsspec import WebdavFileSystem
->>> fs = WebdavFileSystem("https://webdav.com", auth=("username", "password"))
->>> fs.exists("Documents/Readme.md")
-True
->>> fs.ls("Photos", detail=False)
-['Photos/Birdie.jpg', 'Photos/Frog.jpg']
+```python
+from webdav4.fsspec import WebdavFileSystem
+
+fs = WebdavFileSystem("https://webdav.com", auth=("username", "password"))
+fs.exists("Documents/Readme.md")
+
+fs.ls("Photos", detail=False)
 ```
 
 Check out [WebdavFileSystem API](docs/reference/fsspec.md) reference for more information.
