@@ -10,6 +10,10 @@ if TYPE_CHECKING:
 CallbackFn = Callable[[int], Any]
 
 
+def do_nothing(_: int) -> Any:
+    """A function that does nothing."""
+
+
 class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
     """Wrap a file-like's read/write method to report length to callback."""
 
@@ -22,9 +26,6 @@ class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
         """Pass stream and callback and appropriate method to wrap."""
         if method not in {"read", "write"}:
             raise ValueError("Can only wrap read/write methods")
-
-        def do_nothing(_: int) -> Any:
-            pass
 
         cb_func = callback or do_nothing
         sread = stream.read

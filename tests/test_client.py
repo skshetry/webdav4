@@ -11,9 +11,11 @@ from webdav4.client import (
     Client,
     CopyError,
     CreateCollectionError,
+    InsufficientStorage,
     MoveError,
     MultiStatusError,
     RemoveError,
+    ResourceAlreadyExists,
     ResourceNotFound,
 )
 from webdav4.http import Client as HTTPClient
@@ -518,6 +520,70 @@ def test_download_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
     assert file_path.read_text()
 
 
+def test_try_download_directory(
+    tmp_path: Path, storage_dir: TmpDir, client: Client
+):
+    """Test downloading a remote resource to a local file."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    with pytest.raises(ValueError) as exc_info:
+        client.download_file("/data", tmp_path / "foo")
+
+    assert str(exc_info.value) == "Cannot open a collection"
+
+
+def test_try_downloading_not_existing_resource(tmp_path: Path, client: Client):
+    """Test trying to download a resource that does not exist at all."""
+    file_path = tmp_path / "foo"
+    with pytest.raises(ResourceNotFound) as exc_info:
+        client.download_file("foo", file_path)
+
+    assert (
+        str(exc_info.value)
+        == "The resource foo could not be found in the server"
+    )
+
+
+def test_open_file(storage_dir: TmpDir, client: Client):
+    """Testing opening a remote url to a file-like object."""
+    storage_dir.gen({"foo": "foo"})
+    with client.open("foo") as f:
+        assert f.read() == "foo"
+        assert f.read() == ""
+        assert f.read() == ""
+
+    with client.open("foo", mode="rb") as f:
+        assert f.read() == b"foo"
+        assert f.read() == b""
+        assert f.read() == b""
+
+    with client.open("foo", mode="rb") as f:
+        assert f.readall() == b"foo"  # type: ignore
+
+    with client.open("foo", mode="rb") as f:
+        b = bytearray(range(10))
+        assert f.readinto(b) == 3  # type: ignore
+        assert b[:3] == bytearray(b"foo")
+
+
+def test_raising_insufficient_storage():
+    """Test that insufficient storage is raised."""
+    from httpx import Request, Response
+
+    client = Client("https://example.org")
+    url = client.join_url("test")
+    req = Request("copy", url)
+    resp = Response(status_code=507, request=req)
+
+    client.http.request = MagicMock(  # type: ignore[assignment]
+        return_value=resp
+    )
+    with pytest.raises(InsufficientStorage) as exc_info:
+        client.request("copy", "test")
+
+    assert str(exc_info.value) == "Insufficient Storage on the server"
+
+
 def test_upload_fobj(storage_dir: TmpDir, client: Client):
     """Test uploading a resource from a file object."""
     buff = BytesIO()
@@ -538,7 +604,7 @@ def test_upload_fobj(storage_dir: TmpDir, client: Client):
 
 
 def test_upload_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
-    """Test downloading a remote resource to a local file."""
+    """Test uploading a local file to a remote."""
     file_path = tmp_path / "foo.txt"
     file_path.write_text("foo")
     client.upload_file(file_path, "foo")
@@ -547,6 +613,34 @@ def test_upload_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
     assert client.isfile("/foo")
     assert not client.isdir("/foo")
     assert storage_dir.cat() == {"foo": "foo"}
+
+
+def test_try_upload_file_that_already_exists(
+    tmp_path: Path, storage_dir: TmpDir, client: Client
+):
+    """Test uploading a local file to a remote path that is already mapped.."""
+    storage_dir.gen({"foo": "foo"})
+
+    file_path = tmp_path / "foobar"
+    file_path.write_text("foobar")
+
+    with pytest.raises(ResourceAlreadyExists) as exc_info:
+        client.upload_file(file_path, "foo")
+
+    assert str(exc_info.value) == "foo already exists."
+
+
+def test_upload_file_with_overwrite(
+    tmp_path: Path, storage_dir: TmpDir, client: Client
+):
+    """Test overwriting an already existing file when uploading."""
+    storage_dir.gen({"foo": "foo"})
+
+    file_path = tmp_path / "foobar"
+    file_path.write_text("foobar")
+
+    client.upload_file(file_path, "foo", overwrite=True)
+    assert storage_dir.cat() == {"foo": "foobar"}
 
 
 def test_isdir_isfile(storage_dir: TmpDir, client: Client):

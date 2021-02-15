@@ -2,8 +2,9 @@
 
 import typing
 from io import DEFAULT_BUFFER_SIZE, RawIOBase
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 
+from .callback import CallbackFn, do_nothing
 from .http import Method as HTTPMethod
 
 if TYPE_CHECKING:
@@ -22,7 +23,7 @@ class IterStream(RawIOBase):
         client: "HTTPClient",
         url: "URLTypes",
         chunk_size: int = None,
-        callback: Callable[[int], Any] = None,
+        callback: CallbackFn = None,
     ) -> None:
         """Pass a iterator to stream through."""
         super().__init__()
@@ -36,7 +37,7 @@ class IterStream(RawIOBase):
         self.url = url
         self.response: Optional["HTTPResponse"] = None
         self._loc: int = 0
-        self.callback = callback
+        self.callback = callback or do_nothing
         self._iterator: Optional[Iterator[bytes]] = None
 
     @property
@@ -48,18 +49,13 @@ class IterStream(RawIOBase):
     def loc(self, value: int) -> None:
         """Update location, and run callbacks."""
         self._loc = value
-        if not self.callback:
-            return
-
-        self.callback(self._loc)
+        self.callback(value - self._loc)
 
     def __enter__(self) -> "IterStream":
         """Send a streaming response."""
         self.response = response = self.client.send(
             self.request, stream=True, allow_redirects=True
         )
-        if response.status_code == 404:
-            raise FileNotFoundError(f"Can't open {self.url}")
         response.raise_for_status()
         return self
 

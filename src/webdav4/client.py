@@ -3,7 +3,7 @@
 import locale
 import logging
 import shutil
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from io import TextIOWrapper, UnsupportedOperation
 from typing import (
     TYPE_CHECKING,
@@ -176,7 +176,7 @@ class InsufficientStorage(ClientError):
     def __init__(self, path: str) -> None:
         """Instantiate exception with the path for which the request failed."""
         self.path = path
-        super().__init__("Insufficient Storage on the server.")
+        super().__init__("Insufficient Storage on the server")
 
 
 @contextmanager
@@ -192,8 +192,8 @@ def error_handler(exc_cls: Type[OperationError], *args: Any) -> Iterator[None]:
         msg = None
         if isinstance(exc, HTTPError):
             code = exc.response.status_code
-            if issubclass(exc_cls, OperationError):
-                msg = exc_cls.ERROR_MESSAGE.get(code)
+            assert issubclass(exc_cls, OperationError)
+            msg = exc_cls.ERROR_MESSAGE.get(code)
 
         raise exc_cls(*args, msg or exc.msg) from exc
 
@@ -505,7 +505,7 @@ class Client:
     ) -> Iterator[Union[TextIO, BinaryIO]]:
         """Returns file-like object to a resource."""
         if self.isdir(path):
-            raise ValueError("Cannot open a collection.")
+            raise ValueError("Cannot open a collection")
 
         assert mode in {"r", "rt", "rb"}
 
@@ -554,7 +554,7 @@ class Client:
         self,
         from_path: "PathLike[str]",
         to_path: str,
-        overwrite: bool = True,
+        overwrite: bool = False,
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Upload file from local path to a given remote path."""
@@ -567,16 +567,15 @@ class Client:
         self,
         file_obj: BinaryIO,
         to_path: str,
-        overwrite: bool = True,
+        overwrite: bool = False,
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Upload file from file object to given path."""
-        try:
+        length = -1
+        with suppress(TypeError, AttributeError, UnsupportedOperation):
             length = peek_filelike_length(file_obj)
-        except (TypeError, AttributeError, UnsupportedOperation):
-            length = 0
 
-        headers = {"Content-Length": str(length)} if length else None
+        headers = {"Content-Length": str(length)} if length >= 0 else None
 
         if not overwrite and self.exists(to_path):
             raise ResourceAlreadyExists(f"{to_path} already exists.")
