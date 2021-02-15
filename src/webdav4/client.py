@@ -365,14 +365,14 @@ class Client:
         self,
         from_path: str,
         to_path: str,
-        shallow: bool = True,
+        depth: Union[int, str] = "infinity",
         overwrite: bool = False,
     ) -> None:
         """Copy resource."""
         to_url = self.join_url(to_path)
         headers = {
             "Destination": str(to_url),
-            "Depth": "0" if shallow else "infinity",
+            "Depth": str(depth),
             "Overwrite": "T" if overwrite else "F",
         }
 

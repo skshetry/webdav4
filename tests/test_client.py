@@ -68,6 +68,87 @@ def test_get_property(storage_dir: TmpDir, client: Client):
     assert client.get_property("/data/", "whatever") == ""
 
 
+def test_copy_file(storage_dir: TmpDir, client: Client):
+    """Test simple file copy."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+    client.copy("data/foo", "data/foobar")
+    assert storage_dir.cat() == {"data": {"foo": "foo", "foobar": "foo"}}
+
+
+def test_copy_collection(storage_dir: TmpDir, client: Client):
+    """Test simple copy for collection."""
+    dir_internals = {"foo": "foo", "sub": {"file": "file"}}
+    storage_dir.gen({"data": dir_internals})
+    client.copy("data", "data2")
+
+    assert storage_dir.cat() == {"data": dir_internals, "data2": dir_internals}
+
+
+def test_try_copy_file_when_destination_already_exists(
+    storage_dir: TmpDir, client: Client
+):
+    """Try copying a resource to a destination that's already mapped/exists."""
+    storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
+    with pytest.raises(CopyError) as exc_info:
+        client.copy("data/foo", "data/bar")
+
+    assert (
+        str(exc_info.value) == "failed to copy data/foo to data/bar - "
+        "the destination URL already exists"
+    )
+    assert exc_info.value.from_path == "data/foo"
+    assert exc_info.value.to_path == "data/bar"
+
+
+def test_try_copy_resource_that_does_not_exist(
+    storage_dir: TmpDir, client: Client
+):
+    """Try to copy a resource that does not exist."""
+    with pytest.raises(ResourceNotFound) as exc_info:
+        client.copy("data", "data2")
+
+    assert storage_dir.cat() == {}
+    assert str(exc_info.value) == (
+        "The resource data could not be found in the server"
+    )
+    assert exc_info.value.path == "data"
+
+
+@pytest.mark.parametrize("from_path", ["data", "data/foo"])
+def test_try_copy_to_destination_parent_does_not_exist(
+    storage_dir: TmpDir, client: Client, from_path: str
+):
+    """Try to copy a path to a destination whose parent does not exist yet."""
+    storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
+
+    with pytest.raises(CopyError) as exc_info:
+        client.copy(from_path, "data3/bar")
+
+    assert str(exc_info.value) == (
+        f"failed to copy {from_path} to data3/bar - "
+        "there was conflict when trying to move the resource"
+    )
+    assert exc_info.value.from_path == from_path
+    assert exc_info.value.to_path == "data3/bar"
+    assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
+
+
+def test_copy_overwrite_file(storage_dir: TmpDir, client: Client):
+    """Test copy file with overwrite."""
+    storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
+    client.copy("/data/foo", "data/bar/", overwrite=True)
+    assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "foo"}}
+
+
+def test_copy_collection_overwrite(storage_dir: TmpDir, client: Client):
+    """Test copy a collection with overwrite."""
+    dir_internals = {"foo": "foo", "sub": {"file": "file"}}
+    storage_dir.gen({"data": dir_internals, "data2": {"foo": "foo"}})
+
+    client.copy("/data", "/data2/", overwrite=True)
+    assert storage_dir.cat() == {"data": dir_internals, "data2": dir_internals}
+
+
 def test_move_file(storage_dir: TmpDir, client: Client):
     """Test simple file move."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
