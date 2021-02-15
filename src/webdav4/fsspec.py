@@ -210,7 +210,7 @@ class WebdavFile(AbstractBufferedFile):
         self, protocol: int
     ) -> Tuple[Callable[["ReopenArgs"], Type["WebdavFile"]], "ReopenArgs"]:
         """Recreate/reopen file when restored."""
-        return reopen, ReopenArgs(
+        return reopen, ReopenArgs(  # pragma: no cover
             WebdavFile,
             self.fs,
             self.path,
@@ -233,7 +233,7 @@ class ReopenArgs(NamedTuple):  # pylint: disable=inherit-non-class
 
 def reopen(args: ReopenArgs) -> WebdavFile:
     """Reopen file when unpickled."""
-    return args.file(
+    return args.file(  # pragma: no cover
         args.fs,
         args.path,
         blocksize=args.blocksize,
