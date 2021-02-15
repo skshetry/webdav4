@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <meta name="generator" content="sphinx-3.4.3, furo 2020.12.30.beta24"/>
+    <meta name="generator" content="sphinx-3.5.0, furo 2020.12.30.beta24"/>
         <title>webdav4.client - webdav4</title>
       <link rel="stylesheet" href="../../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
     <link rel="stylesheet" href="../../_static/pygments.css">
@@ -144,7 +144,7 @@
 <span class="kn">import</span> <span class="nn">locale</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
-<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">suppress</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">TextIOWrapper</span><span class="p">,</span> <span class="n">UnsupportedOperation</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">TYPE_CHECKING</span><span class="p">,</span>
@@ -317,7 +317,7 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Instantiate exception with the path for which the request failed."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">"Insufficient Storage on the server."</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="s2">"Insufficient Storage on the server"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="error_handler"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.error_handler">[docs]</a><span class="nd">@contextmanager</span>
@@ -333,8 +333,8 @@
         <span class="n">msg</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">HTTPError</span><span class="p">):</span>
             <span class="n">code</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span>
-            <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">exc_cls</span><span class="p">,</span> <span class="n">OperationError</span><span class="p">):</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="n">exc_cls</span><span class="o">.</span><span class="n">ERROR_MESSAGE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">exc_cls</span><span class="p">,</span> <span class="n">OperationError</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">exc_cls</span><span class="o">.</span><span class="n">ERROR_MESSAGE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
 
         <span class="k">raise</span> <span class="n">exc_cls</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">msg</span> <span class="ow">or</span> <span class="n">exc</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span></div>
 
@@ -506,14 +506,14 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">from_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">shallow</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">depth</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"infinity"</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Copy resource."""</span>
         <span class="n">to_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">to_path</span><span class="p">)</span>
         <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">"Destination"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">to_url</span><span class="p">),</span>
-            <span class="s2">"Depth"</span><span class="p">:</span> <span class="s2">"0"</span> <span class="k">if</span> <span class="n">shallow</span> <span class="k">else</span> <span class="s2">"infinity"</span><span class="p">,</span>
+            <span class="s2">"Depth"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">depth</span><span class="p">),</span>
             <span class="s2">"Overwrite"</span><span class="p">:</span> <span class="s2">"T"</span> <span class="k">if</span> <span class="n">overwrite</span> <span class="k">else</span> <span class="s2">"F"</span><span class="p">,</span>
         <span class="p">}</span>
 
@@ -646,7 +646,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">]]:</span>
         <span class="sd">"""Returns file-like object to a resource."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot open a collection."</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot open a collection"</span><span class="p">)</span>
 
         <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"r"</span><span class="p">,</span> <span class="s2">"rt"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">}</span>
 
@@ -695,7 +695,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">from_path</span><span class="p">:</span> <span class="s2">"PathLike[str]"</span><span class="p">,</span>
         <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Upload file from local path to a given remote path."""</span>
@@ -708,16 +708,15 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">file_obj</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">,</span>
         <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Upload file from file object to given path."""</span>
-        <span class="k">try</span><span class="p">:</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">UnsupportedOperation</span><span class="p">):</span>
             <span class="n">length</span> <span class="o">=</span> <span class="n">peek_filelike_length</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">UnsupportedOperation</span><span class="p">):</span>
-            <span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
 
-        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Content-Length"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">length</span><span class="p">)}</span> <span class="k">if</span> <span class="n">length</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Content-Length"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">length</span><span class="p">)}</span> <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">to_path</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">ResourceAlreadyExists</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">to_path</span><span class="si">}</span><span class="s2"> already exists."</span><span class="p">)</span>
