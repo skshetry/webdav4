@@ -92,8 +92,9 @@ def test_fs_ls(
     fs.mv("data/bar", "data/foobar")
     assert fs.ls("data", detail=False) == ["data/foobar"]
 
+    foobar_stat = (storage_dir / "data" / "foobar").stat()
     assert fs.created("data/foobar") == datetime.fromtimestamp(
-        int(bar_stat.st_ctime), tz=timezone.utc
+        int(foobar_stat.st_ctime), tz=timezone.utc
     )
 
     fs.cp("data/foobar", "data/bar")
