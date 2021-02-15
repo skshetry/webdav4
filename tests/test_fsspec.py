@@ -81,5 +81,41 @@ def test_fs_ls(
     fs.rm("/data/foo")
     assert fs.ls("/data/", detail=False) == ["data/bar"]
     assert fs.size("/data/bar") == 3
-    assert fs.modified("/data/bar")
+    assert fs.modified("/data/bar") == datetime.fromtimestamp(
+        int(stat.st_mtime), tz=timezone.utc
+    )
     assert fs.cat("/data/bar") == b"bar"
+
+    checksum = fs.checksum("data/bar/")
+    assert checksum and isinstance(checksum, str)
+
+    fs.mv("data/bar", "data/foobar")
+    assert fs.ls("data", detail=False) == ["data/foobar"]
+
+    assert fs.created("data/foobar") == datetime.fromtimestamp(
+        int(bar_stat.st_ctime), tz=timezone.utc
+    )
+
+    fs.cp("data/foobar", "data/bar")
+    assert set(fs.ls("data", detail=False)) == {"data/foobar", "data/bar"}
+
+    fs.makedirs("data/subdir/subsubdir", exist_ok=True)
+    assert fs.isdir("data/subdir/subsubdir")
+
+    fs.mkdir("data/subdir2", create_parents=False)
+    assert fs.isdir("data/subdir2")
+
+    fs.mkdir("data/subdir2/subdir3/subdir4")
+    assert fs.isdir("data/subdir2/subdir3/subdir4")
+
+
+def test_open(storage_dir: TmpDir, server_address: URL, auth: Tuple[str, str]):
+    """Test opening a remote file from webdav."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    fs = WebdavFileSystem(server_address, auth)
+
+    with fs.open("/data/foo") as f:
+        assert f.read() == b"foo"
+        assert f.read() == b""
+        assert f.read() == b""

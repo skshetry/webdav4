@@ -66,9 +66,7 @@ class WebdavFileSystem(AbstractFileSystem):
         """Remove a file."""
         return self.client.remove(path)
 
-    def _rm(self, path: str) -> None:
-        """Old API for deleting single file, please use `rm_file` instead."""
-        return self.rm_file(path)
+    _rm = rm_file
 
     def mkdir(
         self, path: str, create_parents: bool = True, **kwargs: Any
@@ -159,10 +157,10 @@ class WebdavFile(AbstractBufferedFile):
 
         See fsspec for more information.
         """
-        if mode != "rb":
+        if mode not in {"rt", "rb", "r"}:
             raise NotImplementedError("File mode not supported")
 
-        size = kwargs.get("size") or self.size()
+        size = kwargs.get("size")
         self.details = {"name": path, "size": size, "type": "file"}
         super().__init__(
             fs,
