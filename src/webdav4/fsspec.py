@@ -13,7 +13,6 @@ from typing import (
     Tuple,
     Type,
     Union,
-    cast,
 )
 
 from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
@@ -103,16 +102,17 @@ class WebdavFileSystem(AbstractFileSystem):
         """Copy a file/directory from one path to the other."""
         return self.client.copy(path1, path2)
 
-    def open(
+    def _open(
         self,
         path: str,
         mode: str = "rb",
         block_size: int = None,
+        autocommit: bool = True,
         cache_options: Dict[str, str] = None,
         **kwargs: Any,
     ) -> "WebdavFile":
         """Return a file-like object from the filesystem."""
-        size = kwargs.get("size")
+        size = kwargs.pop("size", None)
         if mode == "rb" and not size:
             size = self.size(path)
 
@@ -120,6 +120,7 @@ class WebdavFileSystem(AbstractFileSystem):
             self,
             path,
             block_size=block_size,
+            autocommit=autocommit,
             mode=mode,
             size=size,
             cache_options=cache_options,
@@ -179,19 +180,18 @@ class WebdavFile(AbstractBufferedFile):
             encoding=encoding,
             block_size=self.blocksize,
         )
-        self.reader: Optional[Union[TextIO, BinaryIO]] = None
+        self.reader: Union[TextIO, BinaryIO] = self.fobj.__enter__()
+        self.closed: bool = False
 
     def read(self, length: int = -1) -> Union[str, bytes, None]:
         """Read chunk of bytes."""
-        assert self.reader
         chunk = self.reader.read(length)
-        if chunk is not None:
+        if chunk:
             self.loc += len(chunk)
         return chunk
 
     def __enter__(self) -> "WebdavFile":
         """Start streaming."""
-        self.reader = self.fobj.__enter__()
         return self
 
     def _fetch_range(self, start: int, end: int) -> None:
@@ -200,14 +200,11 @@ class WebdavFile(AbstractBufferedFile):
 
     def close(self) -> None:
         """Close stream."""
-        closed = cast(bool, self.closed)
-        if closed:
+        if self.closed:
             return
 
-        closed = True
-        if self.reader:
-            self.reader.close()
-            self.reader = None
+        self.closed = True
+        self.reader.close()
 
     def __reduce_ex__(
         self, protocol: int

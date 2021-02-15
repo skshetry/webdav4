@@ -120,3 +120,22 @@ def test_open(storage_dir: TmpDir, server_address: URL, auth: Tuple[str, str]):
         assert f.read() == b"foo"
         assert f.read() == b""
         assert f.read() == b""
+
+    with fs.open("/data/foo", mode="r") as f:
+        assert f.read() == "foo"
+        assert f.read() == ""
+        assert f.read() == ""
+
+    stat = (storage_dir / "data" / "foo").stat()
+    with fs.open("/data/foo", mode="r", size=stat.st_size) as f:
+        assert f.read() == "foo"
+        assert f.read() == ""
+        assert f.read() == ""
+
+    fobj = fs.open("/data/foo")
+
+    assert not fobj.closed
+    fobj.close()
+    assert fobj.closed
+    fobj.close()
+    assert fobj.closed
