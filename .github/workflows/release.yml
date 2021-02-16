@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
             python-version: 3.7
-      - name: Force version on Test PyPI
+      - name: Force version for Test PyPI uploads
         if: ${{ !startsWith(github.ref, 'refs/tags') }}
         run: |
           version=$(python setup.py --version | awk -F+ '{print $1}' | tail -1)
