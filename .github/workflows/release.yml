@@ -16,6 +16,12 @@ jobs:
       - uses: actions/setup-python@v2
         with:
             python-version: 3.7
+      - name: Force version on Test PyPI
+        if: ${{ !startsWith(github.ref, 'refs/tags') }}
+        run: |
+          version=$(python setup.py --version | awk -F+ '{print $1}' | tail -1)
+          echo SETUPTOOLS_SCM_PRETEND_VERSION=$version >> $GITHUB_ENV
+          echo version $version
       - name: Build
         run: |
           python -m pip install --user build
