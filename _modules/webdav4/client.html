@@ -146,9 +146,11 @@
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">suppress</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">TextIOWrapper</span><span class="p">,</span> <span class="n">UnsupportedOperation</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">PathLike</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">TYPE_CHECKING</span><span class="p">,</span>
     <span class="n">Any</span><span class="p">,</span>
+    <span class="n">AnyStr</span><span class="p">,</span>
     <span class="n">BinaryIO</span><span class="p">,</span>
     <span class="n">Callable</span><span class="p">,</span>
     <span class="n">Dict</span><span class="p">,</span>
@@ -177,7 +179,6 @@
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
-    <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">PathLike</span>
 
     <span class="kn">from</span> <span class="nn">.multistatus</span> <span class="kn">import</span> <span class="n">DAVProperties</span><span class="p">,</span> <span class="n">MultiStatusResponse</span>
     <span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">AuthTypes</span><span class="p">,</span> <span class="n">HeaderTypes</span><span class="p">,</span> <span class="n">HTTPResponse</span><span class="p">,</span> <span class="n">URLTypes</span>
@@ -684,7 +685,7 @@
 <div class="viewcode-block" id="Client.download_file"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.download_file">[docs]</a>    <span class="k">def</span> <span class="nf">download_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">from_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">to_path</span><span class="p">:</span> <span class="s2">"PathLike[str]"</span><span class="p">,</span>
+        <span class="n">to_path</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">[</span><span class="n">AnyStr</span><span class="p">],</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Download file from remote path to local path."""</span>
@@ -693,7 +694,7 @@
 
 <div class="viewcode-block" id="Client.upload_file"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.upload_file">[docs]</a>    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">from_path</span><span class="p">:</span> <span class="s2">"PathLike[str]"</span><span class="p">,</span>
+        <span class="n">from_path</span><span class="p">:</span> <span class="n">PathLike</span><span class="p">[</span><span class="n">AnyStr</span><span class="p">],</span>
         <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
