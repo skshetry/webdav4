@@ -5,11 +5,9 @@ import logging
 import shutil
 from contextlib import contextmanager, suppress
 from io import TextIOWrapper, UnsupportedOperation
-from os import PathLike
 from typing import (
     TYPE_CHECKING,
     Any,
-    AnyStr,
     BinaryIO,
     Callable,
     Dict,
@@ -38,10 +36,11 @@ from .urls import URL, join_url
 
 if TYPE_CHECKING:
     from datetime import datetime
+    from os import PathLike
+    from typing import AnyStr
 
     from .multistatus import DAVProperties, MultiStatusResponse
     from .types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
-
 
 logger = logging.getLogger(__name__)
 
@@ -544,7 +543,7 @@ class Client:
     def download_file(
         self,
         from_path: str,
-        to_path: PathLike[AnyStr],
+        to_path: "PathLike[AnyStr]",
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Download file from remote path to local path."""
@@ -553,7 +552,7 @@ class Client:
 
     def upload_file(
         self,
-        from_path: PathLike[AnyStr],
+        from_path: "PathLike[AnyStr]",
         to_path: str,
         overwrite: bool = False,
         callback: Callable[[int], Any] = None,
