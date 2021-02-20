@@ -325,7 +325,9 @@ def test_move_multistatus_failure(client: Client, method: str):
         </d:multistatus>""",
     )
 
-    client.http.request = MagicMock(return_value=response)
+    client.http.request = MagicMock(  # type: ignore[assignment]
+        return_value=response
+    )
     func = getattr(client, method)
     exc_map = {
         "move": MoveError,
@@ -557,11 +559,11 @@ def test_open_file(storage_dir: TmpDir, client: Client):
         assert f.read() == b""
 
     with client.open("foo", mode="rb") as f:
-        assert f.readall() == b"foo"
+        assert f.readall() == b"foo"  # type: ignore
 
     with client.open("foo", mode="rb") as f:
         b = bytearray(range(10))
-        assert f.readinto(b) == 3
+        assert f.readinto(b) == 3  # type: ignore
         assert b[:3] == bytearray(b"foo")
 
 
@@ -574,7 +576,9 @@ def test_raising_insufficient_storage():
     req = Request(HTTPMethod.COPY, url)
     resp = Response(status_code=507, request=req)
 
-    client.http.request = MagicMock(return_value=resp)
+    client.http.request = MagicMock(  # type: ignore[assignment]
+        return_value=resp
+    )
     with pytest.raises(InsufficientStorage) as exc_info:
         client.request("copy", "test")
 
