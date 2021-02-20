@@ -31,7 +31,7 @@ def server(
     auth: Tuple[str, str],
 ) -> wsgi.Server:
     """Creates a server fixture for testing purpose."""
-    with run_server("localhost", 0, storage_dir, auth) as httpd:
+    with run_server("localhost", 0, str(storage_dir), auth) as httpd:
         yield httpd
 
 

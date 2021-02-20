@@ -2,8 +2,7 @@
 
 import threading
 from contextlib import contextmanager
-from os import PathLike
-from typing import AnyStr, ContextManager, Iterator, Tuple
+from typing import ContextManager, Iterator, Tuple
 
 from cheroot import wsgi
 from httpx import URL
@@ -40,11 +39,11 @@ def run_server_on_thread(srvr: wsgi.Server) -> Iterator[wsgi.Server]:
 def run_server(
     host: str,
     port: int,
-    directory: PathLike[AnyStr],
+    directory: str,
     authentication: Tuple[str, str],
 ) -> ContextManager[wsgi.Server]:
     """Runs a webdav server."""
-    dirmap = {"/": str(directory)}
+    dirmap = {"/": directory}
 
     user, pwd = authentication
     app = WsgiDAVApp(
