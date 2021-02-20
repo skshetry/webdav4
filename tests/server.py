@@ -57,3 +57,31 @@ def run_server(
     return run_server_on_thread(
         wsgi.Server(bind_addr=(host, port), wsgi_app=app)
     )
+
+
+if __name__ == "__main__":
+    # usage: python -m tests.server
+
+    import code
+    import tempfile
+    from contextlib import suppress
+
+    from webdav4.client import Client
+
+    from .utils import TmpDir
+
+    storage_dir = TmpDir(tempfile.mkdtemp("repl"))
+    with run_server("localhost", 0, str(storage_dir), AUTH) as server:
+        server_address = get_server_address(server)
+        client = Client(server_address, auth=AUTH)
+
+        try:
+            from IPython import embed
+
+            embed(colors="neutral")
+        except ImportError:
+            with suppress(ImportError):
+                import readline  # noqa: F401
+
+            shell = code.InteractiveConsole({**globals(), **locals()})
+            shell.interact()
