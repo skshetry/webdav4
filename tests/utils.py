@@ -49,4 +49,4 @@ class TmpDir(PathClass):  # type: ignore
                 else:
                     path.write_text(contents, encoding="utf-8")
 
-        return struct.keys()
+        return list(struct.keys())

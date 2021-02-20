@@ -19,6 +19,7 @@ from webdav4.client import (
     ResourceNotFound,
 )
 from webdav4.http import Client as HTTPClient
+from webdav4.http import Method as HTTPMethod
 from webdav4.urls import URL
 
 from .utils import TmpDir
@@ -310,7 +311,7 @@ def test_move_multistatus_failure(client: Client, method: str):
     from httpx import Request, Response
 
     url = "http://www.example.com/container/"
-    request = Request("move", url)
+    request = Request(HTTPMethod.MOVE, url)
     response = Response(
         status_code=207,
         request=request,
@@ -324,9 +325,7 @@ def test_move_multistatus_failure(client: Client, method: str):
         </d:multistatus>""",
     )
 
-    client.http.request = MagicMock(  # type: ignore[assignment]
-        return_value=response
-    )
+    client.http.request = MagicMock(return_value=response)
     func = getattr(client, method)
     exc_map = {
         "move": MoveError,
@@ -558,11 +557,11 @@ def test_open_file(storage_dir: TmpDir, client: Client):
         assert f.read() == b""
 
     with client.open("foo", mode="rb") as f:
-        assert f.readall() == b"foo"  # type: ignore
+        assert f.readall() == b"foo"
 
     with client.open("foo", mode="rb") as f:
         b = bytearray(range(10))
-        assert f.readinto(b) == 3  # type: ignore
+        assert f.readinto(b) == 3
         assert b[:3] == bytearray(b"foo")
 
 
@@ -572,12 +571,10 @@ def test_raising_insufficient_storage():
 
     client = Client("https://example.org")
     url = client.join_url("test")
-    req = Request("copy", url)
+    req = Request(HTTPMethod.COPY, url)
     resp = Response(status_code=507, request=req)
 
-    client.http.request = MagicMock(  # type: ignore[assignment]
-        return_value=resp
-    )
+    client.http.request = MagicMock(return_value=resp)
     with pytest.raises(InsufficientStorage) as exc_info:
         client.request("copy", "test")
 
