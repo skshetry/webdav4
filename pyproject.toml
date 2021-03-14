@@ -9,7 +9,7 @@ write_to_template = "version = '{version}'\n"
 [tool.coverage.run]
 parallel = true
 branch = true
-source = ["src"]
+source = ["src", "tests"]
 
 [tool.coverage.report]
 show_missing = true
