@@ -3,9 +3,9 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="WebdavFileSystem" href="fsspec.html" /><link rel="prev" title="webdav4" href="../index.html" />
 
-    <meta name="generator" content="sphinx-3.5.1, furo 2020.12.30.beta24"/>
+    <meta name="generator" content="sphinx-3.5.2, furo 2021.02.28.beta28"/>
         <title>Client - webdav4</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=33d2fc4f3f180ec1ffc6524e273e21d7d58cbe49">
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=be5985a4059b5c2cd56ed0804790452beca62674">
     <link rel="stylesheet" href="../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
@@ -37,14 +37,7 @@
   
   }
 </style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=26485485040e7aaf717c13fd0188a5ad2c2deb60">
-    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-    <script defer="defer" src="../_static/jquery.js"></script>
-    <script defer="defer" src="../_static/underscore.js"></script>
-    <script defer="defer" src="../_static/doctools.js"></script>
-    <script defer="defer" src="../_static/clipboard.min.js"></script>
-    <script defer="defer" src="../_static/copybutton.js"></script>
-    <script defer src="../_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></head>
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=d391b54134226e4196576da3bdb6dddb7e05ba2b"></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -141,6 +134,13 @@
         <div class="section" id="module-webdav4.client">
 <span id="client"></span><h1>Client<a class="headerlink" href="#module-webdav4.client" title="Permalink to this headline">¶</a></h1>
 <p>Client for the webdav.</p>
+<dl class="py exception">
+<dt id="webdav4.client.BadGatewayError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">BadGatewayError</span></code><a class="reference internal" href="../_modules/webdav4/client.html#BadGatewayError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.BadGatewayError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#webdav4.client.ClientError" title="webdav4.client.ClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.ClientError</span></code></a></p>
+<p>Error when bad gateway error is thrown.</p>
+<p>Raised when 502 status code is raised by the server.</p>
+</dd></dl>
 <dl class="py class">
 <dt id="webdav4.client.Client">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">Client</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">URLTypes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auth</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">AuthTypes</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_client</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">HTTPClient</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">client_opts</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#Client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client" title="Permalink to this definition">¶</a></dt>
@@ -324,6 +324,11 @@ in a dictionary</p></li>
 <dd><p>Returns file-like object to a resource.</p>
 </dd></dl>
 <dl class="py method">
+<dt id="webdav4.client.Client.options">
+<code class="sig-name descname"><span class="pre">options</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> → <span class="pre">Set</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/webdav4/client.html#Client.options"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client.options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns features detected in the webdav server.</p>
+</dd></dl>
+<dl class="py method">
 <dt id="webdav4.client.Client.propfind">
 <code class="sig-name descname"><span class="pre">propfind</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headers</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">HeaderTypes</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> → <span class="pre">MultiStatusResponse</span><a class="reference internal" href="../_modules/webdav4/client.html#Client.propfind"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client.propfind" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns properties of the specific resource by propfind request.</p>
@@ -357,42 +362,17 @@ in a dictionary</p></li>
 </dd></dl>
 <dl class="py exception">
 <dt id="webdav4.client.ClientError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">ClientError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#ClientError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.ClientError" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">ClientError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#ClientError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.ClientError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
 <p>Custom exception thrown by the Client.</p>
 <p>Instantiate exception with a msg.</p>
 </dd></dl>
 <dl class="py exception">
-<dt id="webdav4.client.CopyError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">CopyError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#CopyError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.CopyError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#webdav4.client.OperationError" title="webdav4.client.OperationError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.OperationError</span></code></a></p>
-<p>Error returned during <cite>copy</cite> operation.</p>
-<p>Exception when trying to delete a resource.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>from_path</strong> – the source path trying to move the resource from</p></li>
-<li><p><strong>to_path</strong> – the destination path to move the resource to</p></li>
-<li><p><strong>msg</strong> – msg to show instead</p></li>
-</ul>
-</dd>
-</dl>
-<p>Either status_code or default_msg should be passed.</p>
-</dd></dl>
-<dl class="py exception">
-<dt id="webdav4.client.CreateCollectionError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">CreateCollectionError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#CreateCollectionError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.CreateCollectionError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#webdav4.client.OperationError" title="webdav4.client.OperationError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.OperationError</span></code></a></p>
-<p>Error returned during <cite>mkcol</cite> operation.</p>
-<p>Exception when creating a collection.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> – the path trying to create a collection</p></li>
-<li><p><strong>msg</strong> – message to show</p></li>
-</ul>
-</dd>
-</dl>
+<dt id="webdav4.client.ForbiddenOperation">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">ForbiddenOperation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#ForbiddenOperation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.ForbiddenOperation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#webdav4.client.ClientError" title="webdav4.client.ClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.ClientError</span></code></a></p>
+<p>Raised when the operation was forbidden (got 403).</p>
+<p>Instantiate exception with a msg.</p>
 </dd></dl>
 <dl class="py exception">
 <dt id="webdav4.client.HTTPError">
@@ -409,50 +389,31 @@ in a dictionary</p></li>
 <p>Instantiate exception with the path for which the request failed.</p>
 </dd></dl>
 <dl class="py exception">
-<dt id="webdav4.client.MoveError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">MoveError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">from_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">to_path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#MoveError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.MoveError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#webdav4.client.CopyError" title="webdav4.client.CopyError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.CopyError</span></code></a></p>
-<p>Error returned during <cite>move</cite> operation.</p>
-<p>Exception when trying to delete a resource.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>from_path</strong> – the source path trying to move the resource from</p></li>
-<li><p><strong>to_path</strong> – the destination path to move the resource to</p></li>
-<li><p><strong>msg</strong> – msg to show instead</p></li>
-</ul>
-</dd>
-</dl>
-<p>Either status_code or default_msg should be passed.</p>
-</dd></dl>
-<dl class="py exception">
-<dt id="webdav4.client.OperationError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">OperationError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#OperationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.OperationError" title="Permalink to this definition">¶</a></dt>
+<dt id="webdav4.client.MultiStatusError">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">MultiStatusError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#MultiStatusError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.MultiStatusError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#webdav4.client.ClientError" title="webdav4.client.ClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.ClientError</span></code></a></p>
-<p>Base Exception for Webdav operations/requests.</p>
+<p>Wrapping MultiStatusResponseError with ClientError.</p>
 <p>Instantiate exception with a msg.</p>
 </dd></dl>
 <dl class="py exception">
-<dt id="webdav4.client.RemoveError">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">RemoveError</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#RemoveError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.RemoveError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#webdav4.client.OperationError" title="webdav4.client.OperationError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.OperationError</span></code></a></p>
-<p>Error returned during <cite>delete</cite> operation.</p>
-<p>Exception when trying to delete a resource.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> – the path trying to create a collection</p></li>
-<li><p><strong>msg</strong> – message to show</p></li>
-</ul>
-</dd>
-</dl>
-<p>Either status_code or default_msg should be passed.</p>
-</dd></dl>
-<dl class="py exception">
 <dt id="webdav4.client.ResourceAlreadyExists">
-<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">ResourceAlreadyExists</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#ResourceAlreadyExists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.ResourceAlreadyExists" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">ResourceAlreadyExists</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#ResourceAlreadyExists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.ResourceAlreadyExists" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#webdav4.client.ClientError" title="webdav4.client.ClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.ClientError</span></code></a></p>
 <p>Error returned if the resource already exists.</p>
+<p>Instantiate exception with the path that already exists.</p>
+</dd></dl>
+<dl class="py exception">
+<dt id="webdav4.client.ResourceConflict">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">ResourceConflict</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#ResourceConflict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.ResourceConflict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#webdav4.client.ClientError" title="webdav4.client.ClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.ClientError</span></code></a></p>
+<p>Raised when there was conflict during the operation (got 409).</p>
+<p>Instantiate exception with a msg.</p>
+</dd></dl>
+<dl class="py exception">
+<dt id="webdav4.client.ResourceLocked">
+<em class="property"><span class="pre">exception</span> </em><code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">ResourceLocked</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/webdav4/client.html#ResourceLocked"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.ResourceLocked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#webdav4.client.ClientError" title="webdav4.client.ClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.ClientError</span></code></a></p>
+<p>Error raised when the resource is locked.</p>
 <p>Instantiate exception with a msg.</p>
 </dd></dl>
 <dl class="py exception">
@@ -461,13 +422,6 @@ in a dictionary</p></li>
 <dd><p>Bases: <a class="reference internal" href="#webdav4.client.ClientError" title="webdav4.client.ClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">webdav4.client.ClientError</span></code></a></p>
 <p>Error when the resource does not exist on the server.</p>
 <p>Instantiate exception with path that does not exist.</p>
-</dd></dl>
-<dl class="py function">
-<dt id="webdav4.client.error_handler">
-<code class="sig-prename descclassname"><span class="pre">webdav4.client.</span></code><code class="sig-name descname"><span class="pre">error_handler</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_cls</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#webdav4.client.OperationError" title="webdav4.client.OperationError"><span class="pre">webdav4.client.OperationError</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> → <span class="pre">Iterator</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/webdav4/client.html#error_handler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.error_handler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Handle error message properly for exceptions.</p>
-<p>Provides hints for common status codes, and handles multistatus error
-messages as well.</p>
 </dd></dl>
 </div>
 
@@ -520,5 +474,11 @@ messages as well.</p>
     </aside>
   </main>
 </div>
-  </body>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></body>
 </html>
