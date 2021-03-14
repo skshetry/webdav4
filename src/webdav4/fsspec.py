@@ -1,5 +1,6 @@
 """fsspec compliant webdav file system."""
-
+import io
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -21,6 +22,8 @@ from .client import Client
 
 if TYPE_CHECKING:
     from datetime import datetime
+    from os import PathLike
+    from typing import AnyStr
 
     from .types import AuthTypes, URLTypes
 
@@ -137,6 +140,38 @@ class WebdavFileSystem(AbstractFileSystem):
 
     def sign(self, path: str, expiration: int = 100, **kwargs: Any) -> None:
         """Create a signed URL representing the given path."""
+        raise NotImplementedError
+
+    def pipe_file(self, path: str, value: bytes, **kwargs: Any) -> None:
+        """Upload the contents to given file in the remote webdav server."""
+        buff = io.BytesIO(value)
+        kwargs.setdefault("overwrite", True)
+        # maybe it's not a bad idea to make a `self.open` for `mode="rb"`
+        # on top of `io.BytesIO`?
+        self.client.upload_fileobj(buff, path, **kwargs)
+
+    def put_file(
+        self, lpath: "PathLike[AnyStr]", rpath: str, **kwargs: Any
+    ) -> None:
+        """Copy file to remote webdav server."""
+        if os.path.isdir(lpath):
+            self.makedirs(rpath, exist_ok=True)
+        else:
+            self.mkdirs(os.path.dirname(rpath), exist_ok=True)
+            kwargs.setdefault("overwrite", True)
+            self.client.upload_file(lpath, rpath, **kwargs)
+
+    def touch(self, path: str, truncate: bool = True, **kwargs: Any) -> None:
+        """Create empty file, or update timestamp (not supported yet)."""
+        if truncate or not self.exists(path):
+            kwargs.setdefault("overwrite", True)
+            return self.client.upload_fileobj(io.BytesIO(), path, **kwargs)
+
+        # might be a bad idea to add support for
+        # ownCloud/nextCloud do seem to support this
+        # if there is a need for this, we would need
+        # to add support for `PROPSET` to update `lastmodified`
+        # in the `Client`.
         raise NotImplementedError
 
 

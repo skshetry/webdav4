@@ -139,3 +139,18 @@ def test_open(storage_dir: TmpDir, server_address: URL, auth: Tuple[str, str]):
     assert fobj.closed
     fobj.close()
     assert fobj.closed
+
+    fs.put_file(storage_dir / "data" / "foo", "dir/somewhere/data2")
+    assert fs.cat("dir/somewhere/data2") == b"foo"
+
+    fs.put_file(storage_dir / "data", "dir/somewhere2")
+    assert fs.isdir("dir/somewhere2")
+
+    fs.pipe_file("dir/somewhere2/foo", b"foo")
+    assert fs.cat("dir/somewhere2/foo") == b"foo"
+
+    fs.touch("dir/file")
+    assert fs.cat("dir/file") == b""
+
+    fs.touch("dir/somewhere2/foo")
+    assert fs.cat("dir/somewhere2/foo") == b""

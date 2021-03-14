@@ -74,7 +74,7 @@ def test_get_property(storage_dir: TmpDir, client: Client):
 
 def test_copy_file(storage_dir: TmpDir, client: Client):
     """Test simple file copy."""
-    storage_dir.gen({"data": {"foo": "foo"}})
+    storage_dir.gen({"data": {"foo": b"foo"}})
     client.copy("data/foo", "data/foobar")
     assert storage_dir.cat() == {"data": {"foo": "foo", "foobar": "foo"}}
 
@@ -544,7 +544,7 @@ def test_try_downloading_not_existing_resource(tmp_path: Path, client: Client):
 
 def test_open_file(storage_dir: TmpDir, client: Client):
     """Testing opening a remote url to a file-like object."""
-    storage_dir.gen({"foo": "foo"})
+    storage_dir.gen("foo", "foo")
     with client.open("foo") as f:
         assert f.read() == "foo"
         assert f.read() == ""
