@@ -1,7 +1,6 @@
 """Client for the webdav."""
 
 import locale
-import logging
 import shutil
 from contextlib import contextmanager, suppress
 from io import TextIOWrapper, UnsupportedOperation
@@ -14,8 +13,8 @@ from typing import (
     Iterator,
     List,
     Optional,
+    Set,
     TextIO,
-    Type,
     Union,
     cast,
 )
@@ -26,7 +25,7 @@ from .http import Client as HTTPClient
 from .http import HTTPStatusError
 from .http import Method as HTTPMethod
 from .multistatus import (
-    MultiStatusError,
+    MultiStatusResponseError,
     Response,
     parse_multistatus_response,
     prepare_propfind_request_data,
@@ -42,107 +41,68 @@ if TYPE_CHECKING:
     from .multistatus import DAVProperties, MultiStatusResponse
     from .types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
 
-logger = logging.getLogger(__name__)
-
 
 class ClientError(Exception):
     """Custom exception thrown by the Client."""
 
-    def __init__(self, msg: str, *args: Any) -> None:
+    def __init__(self, msg: str) -> None:
         """Instantiate exception with a msg."""
         self.msg: str = msg
-        super().__init__(msg, *args)
+        super().__init__(msg)
+
+    def __str__(self) -> str:
+        """Provide str repr of the msg."""
+        return self.msg
 
 
-class OperationError(ClientError):
-    """Base Exception for Webdav operations/requests."""
-
-    ERROR_MESSAGE: Dict[int, str] = {}
+class ResourceConflict(ClientError):
+    """Raised when there was conflict during the operation (got 409)."""
 
 
-class RemoveError(OperationError):
-    """Error returned during `delete` operation."""
-
-    ERROR_MESSAGE = {
-        404: "the resource could not be found",
-        423: "the resource is locked",
-    }
-
-    def __init__(self, path: str, msg: str) -> None:
-        """Exception when trying to delete a resource.
-
-        Args:
-            path: the path trying to create a collection
-            msg: message to show
-
-        Either status_code or default_msg should be passed.
-        """
-        self.path = path
-        super().__init__(f"failed to remove {path} - {msg}")
-
-
-class CopyError(OperationError):
-    """Error returned during `copy` operation."""
-
-    ERROR_MESSAGE = {
-        403: "the source and the destination could be same",
-        404: "the resource could not be found",
-        409: "there was conflict when trying to move the resource",
-        412: "the destination URL already exists",
-        423: "the source or the destination resource is locked",
-        502: "the destination server may have refused to accept the resource",
-        507: "insufficient storage to execute the operation",
-    }
-    OPERATION = "copy"
-
-    def __init__(self, from_path: str, to_path: str, msg: str) -> None:
-        """Exception when trying to delete a resource.
-
-        Args:
-            from_path: the source path trying to move the resource from
-            to_path: the destination path to move the resource to
-            msg:  msg to show instead
-
-        Either status_code or default_msg should be passed.
-        """
-        self.from_path = from_path
-        self.to_path = to_path
-        super().__init__(
-            f"failed to {self.OPERATION} {from_path} to {to_path} - {msg}"
-        )
-
-
-class MoveError(CopyError):
-    """Error returned during `move` operation."""
-
-    OPERATION = "move"
-
-
-class CreateCollectionError(OperationError):
-    """Error returned during `mkcol` operation."""
-
-    ERROR_MESSAGE = {
-        403: "the server does not allow creation in the namespace"
-        "or cannot accept members",
-        405: "collection already exists",
-        409: "parent of the collection does not exist",
-        415: "the server does not support the request body type",
-        507: "insufficient storage",
-    }
-
-    def __init__(self, path: str, msg: str) -> None:
-        """Exception when creating a collection.
-
-        Args:
-            path: the path trying to create a collection
-            msg: message to show
-        """
-        self.path = path
-        super().__init__(f"failed to create collection {path} - {msg}")
+class ForbiddenOperation(ClientError):
+    """Raised when the operation was forbidden (got 403)."""
 
 
 class ResourceAlreadyExists(ClientError):
     """Error returned if the resource already exists."""
+
+    def __init__(self, path: str) -> None:
+        """Instantiate exception with the path that already exists."""
+        self.path = path
+        super().__init__(f"The resource {path} already exists")
+
+
+class InsufficientStorage(ClientError):
+    """Error when the resource does not exist on the server."""
+
+    def __init__(self, path: str) -> None:
+        """Instantiate exception with the path for which the request failed."""
+        self.path = path
+        super().__init__("Insufficient Storage on the server")
+
+
+class BadGatewayError(ClientError):
+    """Error when bad gateway error is thrown."""
+
+    def __init__(self) -> None:
+        """Raised when 502 status code is raised by the server."""
+        msg = "The destination server may have refused to accept the resource"
+        super().__init__(msg)
+
+
+class ResourceLocked(ClientError):
+    """Error raised when the resource is locked."""
+
+
+class ResourceNotFound(ClientError):
+    """Error when the resource does not exist on the server."""
+
+    def __init__(self, path: str) -> None:
+        """Instantiate exception with path that does not exist."""
+        self.path = path
+        super().__init__(
+            f"The resource {path} could not be found in the server"
+        )
 
 
 class HTTPError(ClientError):
@@ -159,43 +119,8 @@ class HTTPError(ClientError):
         )
 
 
-class ResourceNotFound(ClientError):
-    """Error when the resource does not exist on the server."""
-
-    def __init__(self, path: str) -> None:
-        """Instantiate exception with path that does not exist."""
-        self.path = path
-        super().__init__(
-            f"The resource {path} could not be found in the server"
-        )
-
-
-class InsufficientStorage(ClientError):
-    """Error when the resource does not exist on the server."""
-
-    def __init__(self, path: str) -> None:
-        """Instantiate exception with the path for which the request failed."""
-        self.path = path
-        super().__init__("Insufficient Storage on the server")
-
-
-@contextmanager
-def error_handler(exc_cls: Type[OperationError], *args: Any) -> Iterator[None]:
-    """Handle error message properly for exceptions.
-
-    Provides hints for common status codes, and handles multistatus error
-    messages as well.
-    """
-    try:
-        yield
-    except (HTTPError, MultiStatusError) as exc:
-        msg = None
-        if isinstance(exc, HTTPError):
-            code = exc.response.status_code
-            assert issubclass(exc_cls, OperationError)
-            msg = exc_cls.ERROR_MESSAGE.get(code)
-
-        raise exc_cls(*args, msg or exc.msg) from exc
+class MultiStatusError(ClientError):
+    """Wrapping MultiStatusResponseError with ClientError."""
 
 
 class Client:
@@ -263,6 +188,12 @@ class Client:
         self.http = http_client or HTTPClient(**client_opts)
         self.base_url = URL(base_url)
 
+    def options(self, path: str = "") -> Set[str]:
+        """Returns features detected in the webdav server."""
+        resp = self.http.options(path)
+        dav_header = resp.headers.get("dav", "")
+        return {f.strip() for f in dav_header.split(",")}
+
     def join_url(self, path: str) -> URL:
         """Join resource path with base url of the webdav server."""
         return join_url(self.base_url, path)
@@ -289,8 +220,8 @@ class Client:
         """
         data = data or prepare_propfind_request_data(name, namespace)
         headers = {"Content-Type": "application/xml"} if data else {}
-        msr = self.propfind(path, headers=headers, data=data)
-        response = msr.get_response_for_path(self.base_url.path, path)
+        result = self.propfind(path, headers=headers, data=data)
+        response = result.get_response_for_path(self.base_url.path, path)
         return response.properties
 
     def get_property(self, path: str, name: str, namespace: str = None) -> Any:
@@ -319,6 +250,8 @@ class Client:
             raise ResourceNotFound(path)
         if http_resp.status_code == 507:
             raise InsufficientStorage(path)
+        if http_resp.status_code == 502:
+            raise BadGatewayError
 
         try:
             http_resp.raise_for_status()
@@ -338,28 +271,59 @@ class Client:
             # or, a partial success (however you see it).
             # except for the propfind, for which we use `_request` directly)
             # in the above `propfind` function.
-            msr = parse_multistatus_response(http_resp)
-            msr.raise_for_status()
+            result = parse_multistatus_response(http_resp)
+            try:
+                result.raise_for_status()
+            except MultiStatusResponseError as exc:
+                raise MultiStatusError(exc.msg) from exc
+
         return http_resp
 
     def move(
         self, from_path: str, to_path: str, overwrite: bool = False
     ) -> None:
         """Move resource to a new destination (with or without overwriting)."""
+        return self._transfer(
+            HTTPMethod.MOVE, from_path, to_path, overwrite=overwrite
+        )
+
+    def _transfer(
+        self,
+        operation: str,
+        from_path: str,
+        to_path: str,
+        overwrite: bool,
+        depth: Union[int, str] = "infinity",
+    ) -> None:
+        """Transfer a resource by copying/moving from a path to the other."""
+        assert operation in {HTTPMethod.MOVE, HTTPMethod.COPY}
+
         to_url = self.join_url(to_path)
         headers = {
             "Destination": str(to_url),
             "Overwrite": "T" if overwrite else "F",
+            "Depth": str(depth),
         }
 
-        with error_handler(MoveError, from_path, to_path):
-            http_resp = self.request(
-                HTTPMethod.MOVE, from_path, headers=headers
-            )
+        try:
+            self.request(operation, from_path, headers=headers)
+        except HTTPError as exc:
+            if exc.status_code == 403:
+                msg = "the source and the destination could be the same"
+                raise ForbiddenOperation(msg) from exc
+            if exc.status_code == 409:
+                msg = (
+                    "there was a conflict when trying to "
+                    f"{operation.lower()} the resource"
+                )
+                raise ResourceConflict(msg) from exc
+            if exc.status_code == 412:
+                raise ResourceAlreadyExists(to_path) from exc
+            if exc.status_code == 423:
+                msg = "the source or the destination resource is locked"
+                raise ResourceLocked(msg) from exc
 
-        status_code = http_resp.status_code
-        log_msg = ("move %s -> %s (overwrite: %s) - received %s",)
-        logger.debug(log_msg, from_path, to_path, overwrite, status_code)
+            raise
 
     def copy(
         self,
@@ -369,39 +333,36 @@ class Client:
         overwrite: bool = False,
     ) -> None:
         """Copy resource."""
-        to_url = self.join_url(to_path)
-        headers = {
-            "Destination": str(to_url),
-            "Depth": str(depth),
-            "Overwrite": "T" if overwrite else "F",
-        }
-
-        with error_handler(CopyError, from_path, to_path):
-            http_resp = self.request(
-                HTTPMethod.COPY, from_path, headers=headers
-            )
-
-        logger.debug(
-            "move %s->%s (depth: %s, overwrite: %s) - received %s",
+        return self._transfer(
+            HTTPMethod.COPY,
             from_path,
             to_path,
-            headers["Depth"],
-            overwrite,
-            http_resp.status_code,
+            depth=depth,
+            overwrite=overwrite,
         )
 
     def mkdir(self, path: str, exist_ok: bool = False) -> None:
         """Create a collection."""
-        with error_handler(CreateCollectionError, path):
-            try:
-                http_resp = self.request(HTTPMethod.MKCOL, path)
-            except HTTPError as exc:
-                if exist_ok and exc.status_code == 405:
+        try:
+            http_resp = self.request(HTTPMethod.MKCOL, path)
+        except HTTPError as exc:
+            if exc.status_code == 405:
+                if exist_ok:
                     return
-                raise
+                raise ResourceAlreadyExists(path) from exc
+            if exc.status_code == 403:
+                msg = (
+                    "the server does not allow creation in the namespace"
+                    "or cannot accept members"
+                )
+                raise ForbiddenOperation(msg) from exc
+            if exc.status_code == 409:
+                msg = "parent of the collection does not exist"
+                raise ResourceConflict(msg) from exc
+
+            raise
 
         assert http_resp.status_code in (200, 201)
-        logger.debug("mkcol %s - received %s", path, http_resp.status_code)
 
     def makedirs(self, path: str, exist_ok: bool = False) -> None:
         """Creates a directory and its intermediate paths.
@@ -418,10 +379,12 @@ class Client:
 
     def remove(self, path: str) -> None:
         """Remove a resource."""
-        with error_handler(RemoveError, path):
-            http_resp = self.request(HTTPMethod.DELETE, path)
-
-        logger.debug("remove %s - received %s", path, http_resp.status_code)
+        try:
+            self.request(HTTPMethod.DELETE, path)
+        except HTTPError as exc:
+            if exc.status_code == 423:
+                raise ResourceLocked("the resource is locked") from exc
+            raise
 
     def ls(  # pylint: disable=invalid-name
         self, path: str, detail: bool = True
@@ -444,8 +407,8 @@ class Client:
                 **response.properties.as_dict(),
             }
 
-        msr = self.propfind(path, headers={"Depth": "1"})
-        responses = msr.responses
+        result = self.propfind(path, headers={"Depth": "1"})
+        responses = result.responses
 
         if len(responses) > 1:
             url = self.join_url(path)
@@ -578,7 +541,7 @@ class Client:
         headers = {"Content-Length": str(length)} if length >= 0 else None
 
         if not overwrite and self.exists(to_path):
-            raise ResourceAlreadyExists(f"{to_path} already exists.")
+            raise ResourceAlreadyExists(to_path)
 
         wrapped = wrap_file_like(file_obj, callback)
         http_resp = self.request(

@@ -8,14 +8,15 @@ from unittest.mock import MagicMock
 import pytest
 
 from webdav4.client import (
+    BadGatewayError,
     Client,
-    CopyError,
-    CreateCollectionError,
+    ForbiddenOperation,
+    HTTPError,
     InsufficientStorage,
-    MoveError,
     MultiStatusError,
-    RemoveError,
     ResourceAlreadyExists,
+    ResourceConflict,
+    ResourceLocked,
     ResourceNotFound,
 )
 from webdav4.http import Client as HTTPClient
@@ -92,15 +93,11 @@ def test_try_copy_file_when_destination_already_exists(
 ):
     """Try copying a resource to a destination that's already mapped/exists."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
-    with pytest.raises(CopyError) as exc_info:
+    with pytest.raises(ResourceAlreadyExists) as exc_info:
         client.copy("data/foo", "data/bar")
 
-    assert (
-        str(exc_info.value) == "failed to copy data/foo to data/bar - "
-        "the destination URL already exists"
-    )
-    assert exc_info.value.from_path == "data/foo"
-    assert exc_info.value.to_path == "data/bar"
+    assert str(exc_info.value) == "The resource data/bar already exists"
+    assert exc_info.value.path == "data/bar"
 
 
 def test_try_copy_resource_that_does_not_exist(
@@ -124,15 +121,12 @@ def test_try_copy_to_destination_parent_does_not_exist(
     """Try to copy a path to a destination whose parent does not exist yet."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
 
-    with pytest.raises(CopyError) as exc_info:
+    with pytest.raises(ResourceConflict) as exc_info:
         client.copy(from_path, "data3/bar")
 
     assert str(exc_info.value) == (
-        f"failed to copy {from_path} to data3/bar - "
-        "there was conflict when trying to move the resource"
+        "there was a conflict when trying to copy the resource"
     )
-    assert exc_info.value.from_path == from_path
-    assert exc_info.value.to_path == "data3/bar"
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
 
 
@@ -184,15 +178,9 @@ def test_try_move_resource_that_does_not_exist(
 def test_move_file_dest_exists_already(storage_dir: TmpDir, client: Client):
     """Test moving file to a destination that already exists."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
-    with pytest.raises(MoveError) as exc_info:
+    with pytest.raises(ResourceAlreadyExists) as exc_info:
         client.move("data/foo", "data/bar")
-    assert str(exc_info.value) == (
-        "failed to move data/foo to data/bar - "
-        "the destination URL already exists"
-    )
-
-    assert exc_info.value.from_path == "data/foo"
-    assert exc_info.value.to_path == "data/bar"
+    assert str(exc_info.value) == ("The resource data/bar already exists")
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
 
 
@@ -201,14 +189,10 @@ def test_move_collection_dest_exists_already(
 ):
     """Test moving a collection to a destination that already exists."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}, "data2": {}})
-    with pytest.raises(MoveError) as exc_info:
+    with pytest.raises(ResourceAlreadyExists) as exc_info:
         client.move("data", "data2")
 
-    assert str(exc_info.value) == (
-        "failed to move data to data2 - " "the destination URL already exists"
-    )
-    assert exc_info.value.from_path == "data"
-    assert exc_info.value.to_path == "data2"
+    assert str(exc_info.value) == ("The resource data2 already exists")
     assert storage_dir.cat() == {
         "data": {"foo": "foo", "bar": "bar"},
         "data2": {},
@@ -236,15 +220,12 @@ def test_move_to_a_dest_whose_parent_does_not_exist(
     """Test moving a resource to a dest. whose parent don't exists yet."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
 
-    with pytest.raises(MoveError) as exc_info:
+    with pytest.raises(ResourceConflict) as exc_info:
         client.move(from_path, "data3/bar")
 
     assert str(exc_info.value) == (
-        f"failed to move {from_path} to data3/bar - "
-        "there was conflict when trying to move the resource"
+        "there was a conflict when trying to move the resource"
     )
-    assert exc_info.value.from_path == from_path
-    assert exc_info.value.to_path == "data3/bar"
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
 
 
@@ -284,15 +265,13 @@ def test_try_moving_a_resource_locked(
     )
     lock_resource(client, lock_path)
 
-    with pytest.raises(MoveError) as exc_info:
+    with pytest.raises(ResourceLocked) as exc_info:
         client.move(move_from, "data2")
 
     assert (
-        str(exc_info.value) == f"failed to move {move_from} to data2 - "
-        "the source or the destination resource is locked"
+        str(exc_info.value)
+        == "the source or the destination resource is locked"
     )
-    assert exc_info.value.from_path == move_from
-    assert exc_info.value.to_path == "data2"
 
     # should not have been moved at all
     assert storage_dir.cat() == {
@@ -302,7 +281,7 @@ def test_try_moving_a_resource_locked(
 
 
 @pytest.mark.parametrize("method", ["copy", "move"])
-def test_move_multistatus_failure(client: Client, method: str):
+def test_transfer_multistatus_failure(client: Client, method: str):
     """Test multistatus error in move and copy.
 
     Since it's hard to reproduce them with the current wsgidav, went with the
@@ -329,20 +308,38 @@ def test_move_multistatus_failure(client: Client, method: str):
         return_value=response
     )
     func = getattr(client, method)
-    exc_map = {
-        "move": MoveError,
-        "copy": CopyError,
-    }
-    with pytest.raises(exc_map[method]) as exc_info:
+    with pytest.raises(MultiStatusError) as exc_info:
         func("/container", "/othercontainer")
 
-    assert (
-        str(exc_info.value)
-        == f"failed to {method} /container to /othercontainer - "
-        "{'/othercontainer/C2/': 'Locked'}"
+    assert str(exc_info.value) == "The resource /othercontainer/C2/ is locked"
+
+
+@pytest.mark.parametrize("method", ["copy", "move"])
+def test_transfer_forbidden_operations(
+    client: Client, server_address: URL, method: str
+):
+    """Test that copy and move handle forbidden operations.
+
+    This might happen due to number of issues, but mainly it's because
+    the source and destination resource are the same.
+    """
+    from httpx import Request, Response
+
+    url = server_address.join("container")
+    request = Request(HTTPMethod.MKCOL, url)
+    response = Response(status_code=403, request=request)
+
+    client.http.request = MagicMock(  # type: ignore[assignment]
+        return_value=response
     )
-    assert exc_info.value.from_path == "/container"
-    assert exc_info.value.to_path == "/othercontainer"
+
+    func = getattr(client, method)
+    with pytest.raises(ForbiddenOperation) as exc_info:
+        func("container", "othercontainer")
+
+    assert str(exc_info.value) == (
+        "the source and the destination could be the same"
+    )
 
 
 def test_mkdir(storage_dir: TmpDir, client: Client):
@@ -355,29 +352,50 @@ def test_mkdir_but_parent_collection_not_exist(
     storage_dir: TmpDir, client: Client
 ):
     """Test creating a collection but parent collection does not exist."""
-    with pytest.raises(CreateCollectionError) as exc_info:
+    with pytest.raises(ResourceConflict) as exc_info:
         client.mkdir("data/sub")
 
     assert storage_dir.cat() == {}
-    assert (
-        str(exc_info.value) == "failed to create collection data/sub - "
-        "parent of the collection does not exist"
-    )
-    assert exc_info.value.path == "data/sub"
+    assert str(exc_info.value) == "parent of the collection does not exist"
 
 
 def test_mkdir_collection_already_exists(storage_dir: TmpDir, client: Client):
     """Test trying to create an already-existing collection."""
     storage_dir.gen({"data": {"foo": "foo"}})
-    with pytest.raises(CreateCollectionError) as exc_info:
+    with pytest.raises(ResourceAlreadyExists) as exc_info:
         client.mkdir("data")
 
     assert storage_dir.cat() == {"data": {"foo": "foo"}}
-    assert (
-        str(exc_info.value) == "failed to create collection data - "
-        "collection already exists"
-    )
+    assert str(exc_info.value) == "The resource data already exists"
     assert exc_info.value.path == "data"
+
+
+def test_mkdir_forbidden_operations(client: Client, server_address: URL):
+    """Test forbidden operations for mkdir.
+
+    Notes:
+        This indicates at least one of two conditions (from rfc4918):
+        1) the server does not allow the creation of collections at the
+            given location in its URL namespace, or
+        2) the parent collection of the Request-URI exists but cannot accept
+            members
+    """
+    from httpx import Request, Response
+
+    url = server_address.join("container")
+    request = Request(HTTPMethod.MKCOL, url)
+    response = Response(status_code=403, request=request)
+
+    client.http.request = MagicMock(  # type: ignore[assignment]
+        return_value=response
+    )
+    with pytest.raises(ForbiddenOperation) as exc_info:
+        client.mkdir("container")
+
+    assert str(exc_info.value) == (
+        "the server does not allow creation in the namespace"
+        "or cannot accept members"
+    )
 
 
 def test_makedirs(storage_dir: TmpDir, client: Client):
@@ -385,13 +403,10 @@ def test_makedirs(storage_dir: TmpDir, client: Client):
     client.makedirs("/data/foo/bar")
     assert storage_dir.cat() == {"data": {"foo": {"bar": {}}}}
 
-    with pytest.raises(CreateCollectionError) as exc_info:
+    with pytest.raises(ResourceAlreadyExists) as exc_info:
         client.makedirs("/data/foo/bar")
 
-    assert (
-        str(exc_info.value) == "failed to create collection data - "
-        "collection already exists"
-    )
+    assert str(exc_info.value) == "The resource data already exists"
     assert exc_info.value.path == "data"
 
     client.makedirs("/data/foo/bar", exist_ok=True)
@@ -430,15 +445,11 @@ def test_try_remove_locked_resource_non_coll(
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
     lock_resource(client, "data/foo")
 
-    with pytest.raises(RemoveError) as exc_info:
+    with pytest.raises(ResourceLocked) as exc_info:
         client.remove("data/foo")
 
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
-    assert (
-        str(exc_info.value) == "failed to remove data/foo - "
-        "the resource is locked"
-    )
-    assert exc_info.value.path == "data/foo"
+    assert str(exc_info.value) == "the resource is locked"
 
 
 def test_try_remove_locked_resource_coll(
@@ -448,7 +459,7 @@ def test_try_remove_locked_resource_coll(
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
     lock_resource(client, "data")
 
-    with pytest.raises(RemoveError) as exc_info:
+    with pytest.raises(MultiStatusError) as exc_info:
         client.remove("data")
 
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
@@ -459,22 +470,8 @@ def test_try_remove_locked_resource_coll(
         client.join_url("/data/foo").path: "Locked",
     }
     assert str(exc_info.value) == (
-        "failed to remove data - "
-        + "multiple errors received: "
-        + str(statuses)
+        "multiple errors received: " + str(statuses)
     )
-    assert exc_info.value.path == "data"
-
-
-def test_check_multistatus():
-    """Test MultiStatusError string representation."""
-    statuses = {"/data/bar": "Locked"}
-    error = MultiStatusError(statuses)
-    assert str(error) == str(statuses)
-
-    statuses = {"/data/bar": "Locked", "http://example.org": "Bad Gateway"}
-    error = MultiStatusError(statuses)
-    assert str(error) == "multiple errors received: " + str(statuses)
 
 
 @pytest.mark.parametrize(
@@ -628,7 +625,7 @@ def test_try_upload_file_that_already_exists(
     with pytest.raises(ResourceAlreadyExists) as exc_info:
         client.upload_file(file_path, "foo")
 
-    assert str(exc_info.value) == "foo already exists."
+    assert str(exc_info.value) == "The resource foo already exists"
 
 
 def test_upload_file_with_overwrite(
@@ -731,3 +728,73 @@ def test_attributes_file_not_exist(client: Client):
     assert_raises(client.etag)
     assert_raises(client.modified)
     assert_raises(client.created)
+
+
+def test_client_bad_gateway_error(client: Client, server_address: URL):
+    """Test bad gateway errors.
+
+    This are raised mostly on proxy errors. But on webdav, it might
+    also happen if the destination for the `COPY` or `MOVE` operations
+    are in remote server and the remote server refused the request or
+    is unavailable to address the request.
+    """
+    from httpx import Request, Response
+
+    url = server_address.join("container")
+    request = Request(HTTPMethod.PROPFIND, url)
+    response = Response(status_code=502, request=request)
+
+    client.http.request = MagicMock(  # type: ignore[assignment]
+        return_value=response
+    )
+    with pytest.raises(BadGatewayError) as exc_info:
+        client.request(HTTPMethod.PROPFIND, "/container")
+
+    assert (
+        str(exc_info.value) == "The destination server may have refused"
+        " to accept the resource"
+    )
+
+
+def test_options(client: Client):
+    """Test features of the webdav server.
+
+    Note that, right now, we are only testing with `WsgiDav` server.
+    If this changes, we will need to figure out how to change this
+    expectation here.
+    """
+    assert client.options() == {"1", "2"}
+
+
+def test_auth_errors(server_address: URL):
+    """Test that auth errors are raised as http error.
+
+    This test serves another purpose as well: it is testing that
+    unhandled exceptions are re-raising `HTTPError`.
+    """
+    client = Client(server_address, ("wrong", "password"))
+    expected = "received 401 (Not Authorized)"
+    path = "resource-that-does-not-exist"
+    with pytest.raises(HTTPError) as exc_info:
+        client.get_props(path)
+    assert str(exc_info.value) == expected
+
+    with pytest.raises(HTTPError) as exc_info:
+        client.propfind(path)
+    assert str(exc_info.value) == expected
+
+    with pytest.raises(HTTPError) as exc_info:
+        client.mkdir(path)
+    assert str(exc_info.value) == expected
+
+    with pytest.raises(HTTPError) as exc_info:
+        client.remove(path)
+    assert str(exc_info.value) == expected
+
+    with pytest.raises(HTTPError) as exc_info:
+        client.move(path, "resource2")
+    assert str(exc_info.value) == expected
+
+    with pytest.raises(HTTPError) as exc_info:
+        client.copy(path, "resource2")
+    assert str(exc_info.value) == expected

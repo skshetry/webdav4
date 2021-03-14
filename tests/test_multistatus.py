@@ -9,8 +9,8 @@ from httpx import Response as HTTPResponse
 
 from webdav4.multistatus import (
     DAVProperties,
-    MultiStatusError,
     MultiStatusResponse,
+    MultiStatusResponseError,
     Response,
     parse_multistatus_response,
     prepare_propfind_request_data,
@@ -311,7 +311,7 @@ def test_raise_for_status():
     </d:multistatus>
     """
     response = MultiStatusResponse(content)
-    with pytest.raises(MultiStatusError) as exc_info:
+    with pytest.raises(MultiStatusResponseError) as exc_info:
         response.raise_for_status()
 
     expected = {
@@ -370,3 +370,14 @@ def test_parse_multistatus_response():
     assert res.content == "<d></d>"
 
     res.raise_for_status()
+
+
+def test_check_multistatus():
+    """Test MultiStatusError string representation."""
+    statuses = {"/data/bar": "Locked"}
+    error = MultiStatusResponseError(statuses)
+    assert str(error) == "The resource /data/bar is locked"
+
+    statuses = {"/data/bar": "Locked", "http://example.org": "Bad Gateway"}
+    error = MultiStatusResponseError(statuses)
+    assert str(error) == "multiple errors received: " + str(statuses)

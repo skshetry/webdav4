@@ -174,16 +174,19 @@ class Response:
         return relative_url_to(base_url, self.path_norm)
 
 
-class MultiStatusError(Exception):
+class MultiStatusResponseError(Exception):
     """Raised when multistatus response has failures in it."""
 
     def __init__(self, statuses: Dict[str, str]) -> None:
         """Pass multiple statuses, which is displayed when error is raised."""
         self.statuses = statuses
 
-        msg = str(self.statuses)
+        assert self.statuses
         if len(self.statuses) > 1:
-            msg = "multiple errors received: " + msg
+            msg = "multiple errors received: " + str(statuses)
+        else:
+            path, status = list(statuses.items())[0]
+            msg = f"The resource {path} is {status.lower()}"
 
         self.msg = msg
         super().__init__(msg)
@@ -241,7 +244,7 @@ class MultiStatusResponse:
         }
         statuses = dict(sorted(statuses.items()))
         if statuses:
-            raise MultiStatusError(statuses)
+            raise MultiStatusResponseError(statuses)
 
 
 # TODO: support `allprop`?
