@@ -35,7 +35,7 @@ def lock_resource(client: Client, path: str):
        <d:locktype><d:write/></d:locktype>
        <d:owner><d:href>{url}</d:href></d:owner>
      </d:lockinfo>"""
-    resp = client.http.lock(url, data=d)
+    resp = client.http.lock(url, content=d)
     resp.raise_for_status()
 
 

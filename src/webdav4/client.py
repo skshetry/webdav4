@@ -185,7 +185,7 @@ class Client:
                 for configuration
         """
         client_opts.update({"base_url": base_url, "auth": auth})
-        self.http = http_client or HTTPClient(**client_opts)
+        self.http: HTTPClient = http_client or HTTPClient(**client_opts)
         self.base_url = URL(base_url)
 
     def options(self, path: str = "") -> Set[str]:
@@ -203,7 +203,7 @@ class Client:
     ) -> "MultiStatusResponse":
         """Returns properties of the specific resource by propfind request."""
         http_resp = self._request(
-            HTTPMethod.PROPFIND, path, data=data, headers=headers
+            HTTPMethod.PROPFIND, path, content=data, headers=headers
         )
         return parse_multistatus_response(http_resp)
 
