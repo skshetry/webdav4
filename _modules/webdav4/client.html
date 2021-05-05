@@ -1,11 +1,12 @@
 <!doctype html>
 <html class="no-js">
   <head><meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <meta name="generator" content="sphinx-3.5.2, furo 2021.02.28.beta28"/>
+    <meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
         <title>webdav4.client - webdav4</title>
-      <link rel="stylesheet" href="../../_static/styles/furo.css?digest=be5985a4059b5c2cd56ed0804790452beca62674">
+      <link rel="stylesheet" href="../../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
     <link rel="stylesheet" href="../../_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../../_static/pygments_dark.css">
     
@@ -319,7 +320,7 @@
 <span class="sd">                for configuration</span>
 <span class="sd">        """</span>
         <span class="n">client_opts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"base_url"</span><span class="p">:</span> <span class="n">base_url</span><span class="p">,</span> <span class="s2">"auth"</span><span class="p">:</span> <span class="n">auth</span><span class="p">})</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">http</span> <span class="o">=</span> <span class="n">http_client</span> <span class="ow">or</span> <span class="n">HTTPClient</span><span class="p">(</span><span class="o">**</span><span class="n">client_opts</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">http</span><span class="p">:</span> <span class="n">HTTPClient</span> <span class="o">=</span> <span class="n">http_client</span> <span class="ow">or</span> <span class="n">HTTPClient</span><span class="p">(</span><span class="o">**</span><span class="n">client_opts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">base_url</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Client.options"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.options">[docs]</a>    <span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -337,7 +338,7 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"MultiStatusResponse"</span><span class="p">:</span>
         <span class="sd">"""Returns properties of the specific resource by propfind request."""</span>
         <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
-            <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">PROPFIND</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
+            <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">PROPFIND</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">parse_multistatus_response</span><span class="p">(</span><span class="n">http_resp</span><span class="p">)</span></div>
 
