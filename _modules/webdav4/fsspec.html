@@ -196,6 +196,7 @@
         <span class="n">base_url</span><span class="p">:</span> <span class="s2">"URLTypes"</span><span class="p">,</span>
         <span class="n">auth</span><span class="p">:</span> <span class="s2">"AuthTypes"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">client</span><span class="p">:</span> <span class="s2">"Client"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">client_opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Instantiate WebdavFileSystem with base_url and auth.</span>
 
@@ -205,9 +206,11 @@
 <span class="sd">                Refer to HTTPX's auth for more information.</span>
 <span class="sd">            client: Webdav client to use instead, useful for testing/mocking,</span>
 <span class="sd">                or extending WebdavFileSystem.</span>
+<span class="sd">            client_opts: Extra args that are passed to Webdav Client.</span>
+<span class="sd">                (refer to it's documenting for more information).</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span> <span class="ow">or</span> <span class="n">Client</span><span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span> <span class="ow">or</span> <span class="n">Client</span><span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="o">**</span><span class="n">client_opts</span><span class="p">)</span>
 
 <div class="viewcode-block" id="WebdavFileSystem.ls"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.ls">[docs]</a>    <span class="nd">@reraise</span><span class="p">(</span><span class="n">ResourceNotFound</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">ls</span><span class="p">(</span>
