@@ -76,22 +76,24 @@ def test_dav_properties_empty(args: Tuple[Element]):
 def test_dav_properties():
     """Test simple dav properties extraction."""
     content = """\
-    <d:propstat xmlns:d="DAV:">
-      <d:prop>
-        <d:getlastmodified>Fri, 10 Feb 2020 10:10:10 GMT</d:getlastmodified>
-        <d:creationdate>2020-1-02T03:04:05Z</d:creationdate>
-        <d:getcontentlength>136314880</d:getcontentlength>
-        <d:getcontentlanguage>en-US</d:getcontentlanguage>
-        <d:displayname>foo</d:displayname>
-        <d:resourcetype/>
-        <d:getetag>"8db748065bfed5c0731e9c7ee5f9bf4c"</d:getetag>
-        <d:getcontenttype>text/plain</d:getcontenttype>
-      </d:prop>
-    </d:propstat>"""
+    <d:response xmlns:d="DAV:">
+      <d:propstat>
+        <d:prop>
+          <d:getlastmodified>Fri, 10 Feb 2020 10:10:10 GMT</d:getlastmodified>
+          <d:creationdate>2020-1-02T03:04:05Z</d:creationdate>
+          <d:getcontentlength>136314880</d:getcontentlength>
+          <d:getcontentlanguage>en-US</d:getcontentlanguage>
+          <d:displayname>foo</d:displayname>
+          <d:resourcetype/>
+          <d:getetag>"8db748065bfed5c0731e9c7ee5f9bf4c"</d:getetag>
+          <d:getcontenttype>text/plain</d:getcontenttype>
+        </d:prop>
+      </d:propstat>
+    </d:response>"""
     elem = fromstring(content)
 
     props = DAVProperties(elem)
-    assert props.propstat_xml == elem
+    assert props.response_xml == elem
     assert (
         props.raw
         == {
@@ -194,7 +196,7 @@ def test_response(href: str, absolute: bool):
 
     assert isinstance(response.properties, DAVProperties)
     assert response.response_description is None
-    assert response.properties.propstat_xml is None
+    assert response.properties.response_xml is elem
     assert response.status_code == 423
     assert response.reason_phrase == "Locked"
     assert response.location is None

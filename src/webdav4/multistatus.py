@@ -41,19 +41,19 @@ class DAVProperties:
     Only supports a certain set of properties to extract. Others are ignored.
     """
 
-    def __init__(self, propstat_xml: Element = None):
+    def __init__(self, response_xml: Element = None):
         """Parses props to certain attributes.
 
         Args:
-             propstat_xml: <d:propstat> element
+             response_xml: <d:propstat> element
         """
-        self.propstat_xml: Optional[Element] = propstat_xml
+        self.response_xml: Optional[Element] = response_xml
         self.raw: Dict[str, Any] = {}
 
         def extract_text(prop_name: str) -> Optional[str]:
             text = (
-                prop(propstat_xml, MAPPING_PROPS[prop_name], relative=True)
-                if propstat_xml
+                prop(response_xml, MAPPING_PROPS[prop_name], relative=True)
+                if response_xml
                 else None
             )
             self.raw[prop_name] = text
@@ -76,8 +76,8 @@ class DAVProperties:
         resource_type: Optional[str] = None
         resource_xml: Optional[Element] = None
 
-        if propstat_xml is not None:
-            resource_xml = propstat_xml.find(".//{DAV:}resourcetype")
+        if response_xml is not None:
+            resource_xml = response_xml.find(".//{DAV:}resourcetype")
 
         if resource_xml is not None:
             collection = resource_xml.find(".//{DAV:}collection") is not None
@@ -157,9 +157,8 @@ class Response:
         self.error = prop(response_xml, "error")
         self.location = prop(response_xml, "location")
 
-        propstat_xml = response_xml.find("{DAV:}propstat")
-        self.has_propstat = propstat_xml is not None
-        self.properties = DAVProperties(propstat_xml)
+        self.has_propstat = response_xml.find("{DAV:}propstat") is not None
+        self.properties = DAVProperties(response_xml)
 
     def __str__(self) -> str:
         """User representation for the response."""
