@@ -1,6 +1,7 @@
 """fsspec compliant webdav file system."""
 import io
 import os
+from functools import wraps
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -13,12 +14,15 @@ from typing import (
     TextIO,
     Tuple,
     Type,
+    TypeVar,
     Union,
+    cast,
+    no_type_check,
 )
 
 from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
 
-from .client import Client
+from .client import Client, ResourceNotFound
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -27,12 +31,36 @@ if TYPE_CHECKING:
 
     from .types import AuthTypes, URLTypes
 
+_F = TypeVar("_F", bound=Callable[..., Any])
+
+
+def reraise(
+    catch: Type[Exception], _raise: Union[Exception, Type[Exception]]
+) -> Callable[[_F], _F]:
+    """Catches an exception and raises it as a different one."""
+
+    def decorated(func: _F) -> _F:
+        @no_type_check
+        @wraps(func)
+        def wrapped_function(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except catch as exc:
+                raise _raise from exc
+
+        return cast(_F, wrapped_function)
+
+    return decorated
+
 
 class WebdavFileSystem(AbstractFileSystem):
     """Provides access to webdav through fsspec-compliant APIs."""
 
     def __init__(
-        self, base_url: "URLTypes", auth: "AuthTypes", client: "Client" = None
+        self,
+        base_url: "URLTypes",
+        auth: "AuthTypes" = None,
+        client: "Client" = None,
     ) -> None:
         """Instantiate WebdavFileSystem with base_url and auth.
 
@@ -46,6 +74,7 @@ class WebdavFileSystem(AbstractFileSystem):
         super().__init__()
         self.client = client or Client(base_url, auth=auth)
 
+    @reraise(ResourceNotFound, FileNotFoundError)
     def ls(
         self, path: str, detail: bool = True, **kwargs: Any
     ) -> List[Union[str, Dict[str, Any]]]:
@@ -82,10 +111,12 @@ class WebdavFileSystem(AbstractFileSystem):
         """Creates directory to the given path."""
         return self.client.makedirs(path, exist_ok=exist_ok)
 
+    @reraise(ResourceNotFound, FileNotFoundError)
     def created(self, path: str) -> Optional["datetime"]:
         """Returns creation time/date."""
         return self.client.created(path)
 
+    @reraise(ResourceNotFound, FileNotFoundError)
     def modified(self, path: str) -> Optional["datetime"]:
         """Returns last modified time/data."""
         return self.client.modified(path)
@@ -130,10 +161,12 @@ class WebdavFileSystem(AbstractFileSystem):
             **kwargs,
         )
 
+    @reraise(ResourceNotFound, FileNotFoundError)
     def checksum(self, path: str) -> Optional[str]:
         """Returns checksum/etag of the path."""
         return self.client.etag(path)
 
+    @reraise(ResourceNotFound, FileNotFoundError)
     def size(self, path: str) -> Optional[int]:
         """Returns size of the path."""
         return self.client.content_length(path)

@@ -67,6 +67,7 @@ if __name__ == "__main__":
     from contextlib import suppress
 
     from webdav4.client import Client
+    from webdav4.fsspec import WebdavFileSystem
 
     from .utils import TmpDir
 
@@ -74,6 +75,7 @@ if __name__ == "__main__":
     with run_server("localhost", 0, str(storage_dir), AUTH) as server:
         server_address = get_server_address(server)
         client = Client(server_address, auth=AUTH)
+        fs = WebdavFileSystem(server_address, client=client)
 
         try:
             from IPython import embed

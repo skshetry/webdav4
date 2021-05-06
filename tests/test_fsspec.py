@@ -1,7 +1,8 @@
 """Testing fsspec based WebdavFileSystem."""
 
 from datetime import datetime, timezone
-from typing import Tuple
+
+import pytest
 
 from webdav4.fsspec import WebdavFileSystem
 from webdav4.urls import URL, join_url
@@ -9,14 +10,11 @@ from webdav4.urls import URL, join_url
 from .utils import TmpDir
 
 
-def test_fs_ls(
-    storage_dir: TmpDir, server_address: "URL", auth: Tuple[str, str]
-):
+def test_fs_ls(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     """Tests fsspec for webdav."""
-    fs = WebdavFileSystem(server_address, auth)
-
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
     stat = (storage_dir / "data").stat()
+
     assert fs.ls("/") == [
         {
             "size": None,
@@ -109,12 +107,13 @@ def test_fs_ls(
     fs.mkdir("data/subdir2/subdir3/subdir4")
     assert fs.isdir("data/subdir2/subdir3/subdir4")
 
+    with pytest.raises(FileNotFoundError):
+        fs.ls("data/not-existing-file")
 
-def test_open(storage_dir: TmpDir, server_address: URL, auth: Tuple[str, str]):
+
+def test_open(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     """Test opening a remote file from webdav."""
     storage_dir.gen({"data": {"foo": "foo"}})
-
-    fs = WebdavFileSystem(server_address, auth)
 
     with fs.open("/data/foo") as f:
         assert f.read() == b"foo"

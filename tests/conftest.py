@@ -6,6 +6,7 @@ import pytest
 from cheroot import wsgi
 
 from webdav4.client import Client
+from webdav4.fsspec import WebdavFileSystem
 from webdav4.urls import URL
 
 from .server import AUTH, get_server_address, run_server
@@ -45,3 +46,9 @@ def server_address(server: wsgi.Server) -> URL:
 def client(auth: Tuple[str, str], server_address: URL) -> Client:
     """Webdav client to interact with the server."""
     return Client(server_address, auth=auth)
+
+
+@pytest.fixture
+def fs(client: Client, server_address: URL) -> WebdavFileSystem:
+    """Fixture of WebdavFileSystem to interact with the server."""
+    return WebdavFileSystem(server_address, client=client)
