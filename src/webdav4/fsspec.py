@@ -61,6 +61,7 @@ class WebdavFileSystem(AbstractFileSystem):
         base_url: "URLTypes",
         auth: "AuthTypes" = None,
         client: "Client" = None,
+        **client_opts: Any,
     ) -> None:
         """Instantiate WebdavFileSystem with base_url and auth.
 
@@ -70,9 +71,11 @@ class WebdavFileSystem(AbstractFileSystem):
                 Refer to HTTPX's auth for more information.
             client: Webdav client to use instead, useful for testing/mocking,
                 or extending WebdavFileSystem.
+            client_opts: Extra args that are passed to Webdav Client.
+                (refer to it's documenting for more information).
         """
         super().__init__()
-        self.client = client or Client(base_url, auth=auth)
+        self.client = client or Client(base_url, auth=auth, **client_opts)
 
     @reraise(ResourceNotFound, FileNotFoundError)
     def ls(
