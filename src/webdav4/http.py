@@ -46,3 +46,8 @@ class Client(httpx.Client):
     move = request(Method.MOVE)
     lock = request(Method.LOCK)
     unlock = request(Method.UNLOCK)
+
+
+# Non-standard header used in Apache Web Server/cPanel
+# often used by shared hosting providers to limit the bandwidth of customers
+BANDWIDTH_LIMIT_EXCEEDED = 509, "Bandwidth Limit Exceeded"

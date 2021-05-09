@@ -1,7 +1,6 @@
 """fsspec compliant webdav file system."""
 import io
 import os
-from functools import wraps
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -14,15 +13,13 @@ from typing import (
     TextIO,
     Tuple,
     Type,
-    TypeVar,
     Union,
-    cast,
-    no_type_check,
 )
 
 from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
 
 from .client import Client, ResourceNotFound
+from .func_utils import reraise
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -30,27 +27,6 @@ if TYPE_CHECKING:
     from typing import AnyStr
 
     from .types import AuthTypes, URLTypes
-
-_F = TypeVar("_F", bound=Callable[..., Any])
-
-
-def reraise(
-    catch: Type[Exception], _raise: Union[Exception, Type[Exception]]
-) -> Callable[[_F], _F]:
-    """Catches an exception and raises it as a different one."""
-
-    def decorated(func: _F) -> _F:
-        @no_type_check
-        @wraps(func)
-        def wrapped_function(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except catch as exc:
-                raise _raise from exc
-
-        return cast(_F, wrapped_function)
-
-    return decorated
 
 
 class WebdavFileSystem(AbstractFileSystem):

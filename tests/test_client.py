@@ -1,5 +1,6 @@
 """Tests for webdav client."""
 from datetime import datetime, timezone
+from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Callable, Dict
@@ -798,3 +799,21 @@ def test_auth_errors(server_address: URL):
     with pytest.raises(HTTPError) as exc_info:
         client.copy(path, "resource2")
     assert str(exc_info.value) == expected
+
+
+def test_client_retries(client: Client, server_address: URL):
+    """Test that the client retries."""
+    from httpx import Request, Response
+
+    url = server_address.join("container1")
+    request = Request(HTTPMethod.PROPFIND, url)
+    failed_response = Response(status_code=502, request=request)
+    success_response = Response(
+        status_code=HTTPStatus.OK.value, request=request
+    )
+
+    client.http.request = func = MagicMock(  # type: ignore[assignment]
+        side_effect=[failed_response, failed_response, success_response]
+    )
+    client.copy("/container1", "/container2")
+    assert func.call_count == 3

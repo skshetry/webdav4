@@ -3,6 +3,7 @@
 import locale
 import shutil
 from contextlib import contextmanager, suppress
+from http import HTTPStatus
 from io import TextIOWrapper, UnsupportedOperation
 from typing import (
     TYPE_CHECKING,
@@ -15,12 +16,14 @@ from typing import (
     Optional,
     Set,
     TextIO,
+    TypeVar,
     Union,
     cast,
 )
 
 from .callback import wrap_file_like
 from .fs_utils import peek_filelike_length
+from .func_utils import wrap_fn
 from .http import Client as HTTPClient
 from .http import HTTPStatusError
 from .http import Method as HTTPMethod
@@ -30,6 +33,7 @@ from .multistatus import (
     parse_multistatus_response,
     prepare_propfind_request_data,
 )
+from .retry import retry as _retry
 from .stream import IterStream
 from .urls import URL, join_url
 
@@ -40,6 +44,8 @@ if TYPE_CHECKING:
 
     from .multistatus import DAVProperties, MultiStatusResponse
     from .types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
+
+_T = TypeVar("_T")
 
 
 class ClientError(Exception):
@@ -131,6 +137,7 @@ class Client:
         base_url: "URLTypes",
         auth: "AuthTypes" = None,
         http_client: "HTTPClient" = None,
+        retry: Union[Callable[[Callable[[], _T]], _T], bool] = True,
         **client_opts: Any,
     ) -> None:
         """Instantiate client for webdav.
@@ -155,6 +162,9 @@ class Client:
             http_client: http client to use instead, useful in mocking
                 (when extending, it is expected to have implemented additional
                 verbs from webdav)
+            retry: disable or enable retry on client. Can also pass a callable
+                to handle it there. Some well-known errors are handled and
+                retried a few times with the backoff.
 
         All of the following keyword arguments are passed along to the
         `httpx <https://www.python-httpx.org/api/#client>`_, the http library
@@ -187,6 +197,7 @@ class Client:
         client_opts.update({"base_url": base_url, "auth": auth})
         self.http: HTTPClient = http_client or HTTPClient(**client_opts)
         self.base_url = URL(base_url)
+        self.with_retry = retry if callable(retry) else _retry(retry)
 
     def options(self, path: str = "") -> Set[str]:
         """Returns features detected in the webdav server."""
@@ -202,9 +213,14 @@ class Client:
         self, path: str, data: str = None, headers: "HeaderTypes" = None
     ) -> "MultiStatusResponse":
         """Returns properties of the specific resource by propfind request."""
-        http_resp = self._request(
-            HTTPMethod.PROPFIND, path, content=data, headers=headers
+        call = wrap_fn(
+            self._request,
+            HTTPMethod.PROPFIND,
+            path,
+            content=data,
+            headers=headers,
         )
+        http_resp = self.with_retry(call)
         return parse_multistatus_response(http_resp)
 
     def get_props(
@@ -246,11 +262,11 @@ class Client:
         url = self.join_url(path)
         http_resp = self.http.request(method, url, **kwargs)
 
-        if http_resp.status_code == 404:
+        if http_resp.status_code == HTTPStatus.NOT_FOUND:
             raise ResourceNotFound(path)
-        if http_resp.status_code == 507:
+        if http_resp.status_code == HTTPStatus.INSUFFICIENT_STORAGE:
             raise InsufficientStorage(path)
-        if http_resp.status_code == 502:
+        if http_resp.status_code == HTTPStatus.BAD_GATEWAY:
             raise BadGatewayError
 
         try:
@@ -266,7 +282,7 @@ class Client:
         Also checks for Multistatus response and other http errors.
         """
         http_resp = self._request(method, path, **kwargs)
-        if http_resp.status_code == 207:
+        if http_resp.status_code == HTTPStatus.MULTI_STATUS:
             # if it's 207, it's most likely an error
             # or, a partial success (however you see it).
             # except for the propfind, for which we use `_request` directly)
@@ -305,21 +321,22 @@ class Client:
             "Depth": str(depth),
         }
 
+        call = wrap_fn(self.request, operation, from_path, headers=headers)
         try:
-            self.request(operation, from_path, headers=headers)
+            self.with_retry(call)
         except HTTPError as exc:
-            if exc.status_code == 403:
+            if exc.status_code == HTTPStatus.FORBIDDEN:
                 msg = "the source and the destination could be the same"
                 raise ForbiddenOperation(msg) from exc
-            if exc.status_code == 409:
+            if exc.status_code == HTTPStatus.CONFLICT:
                 msg = (
                     "there was a conflict when trying to "
                     f"{operation.lower()} the resource"
                 )
                 raise ResourceConflict(msg) from exc
-            if exc.status_code == 412:
+            if exc.status_code == HTTPStatus.PRECONDITION_FAILED:
                 raise ResourceAlreadyExists(to_path) from exc
-            if exc.status_code == 423:
+            if exc.status_code == HTTPStatus.LOCKED:
                 msg = "the source or the destination resource is locked"
                 raise ResourceLocked(msg) from exc
 
@@ -343,26 +360,27 @@ class Client:
 
     def mkdir(self, path: str, exist_ok: bool = False) -> None:
         """Create a collection."""
+        call = wrap_fn(self.request, HTTPMethod.MKCOL, path)
         try:
-            http_resp = self.request(HTTPMethod.MKCOL, path)
+            http_resp = self.with_retry(call)
         except HTTPError as exc:
-            if exc.status_code == 405:
+            if exc.status_code == HTTPStatus.METHOD_NOT_ALLOWED:
                 if exist_ok:
                     return
                 raise ResourceAlreadyExists(path) from exc
-            if exc.status_code == 403:
+            if exc.status_code == HTTPStatus.FORBIDDEN:
                 msg = (
                     "the server does not allow creation in the namespace"
                     "or cannot accept members"
                 )
                 raise ForbiddenOperation(msg) from exc
-            if exc.status_code == 409:
+            if exc.status_code == HTTPStatus.CONFLICT:
                 msg = "parent of the collection does not exist"
                 raise ResourceConflict(msg) from exc
 
             raise
 
-        assert http_resp.status_code in (200, 201)
+        assert http_resp.status_code in (HTTPStatus.OK, HTTPStatus.CREATED)
 
     def makedirs(self, path: str, exist_ok: bool = False) -> None:
         """Creates a directory and its intermediate paths.
@@ -379,10 +397,11 @@ class Client:
 
     def remove(self, path: str) -> None:
         """Remove a resource."""
+        call = wrap_fn(self.request, HTTPMethod.DELETE, path)
         try:
-            self.request(HTTPMethod.DELETE, path)
+            self.with_retry(call)
         except HTTPError as exc:
-            if exc.status_code == 423:
+            if exc.status_code == HTTPStatus.LOCKED:
                 raise ResourceLocked("the resource is locked") from exc
             raise
 
