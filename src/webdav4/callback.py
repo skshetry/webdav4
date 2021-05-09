@@ -28,26 +28,34 @@ class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
             raise ValueError("Can only wrap read/write methods")
 
         cb_func = callback or do_nothing
-        sread = stream.read
+        assert hasattr(stream, method)
 
-        @wraps(sread)
-        def fread(*args: Any, **kwargs: Any) -> AnyStr:
-            result = sread(*args, **kwargs)
-            cb_func(len(result))
-            return result
+        if method == "read":
+            sread = stream.read
 
-        swrite = stream.write
+            @wraps(sread)
+            def fread(*args: Any, **kw: Any) -> AnyStr:
+                result = sread(*args, **kw)
+                cb_func(len(result))
+                return result
 
-        @wraps(swrite)
-        def fwrite(chunk: AnyStr, *args: Any, **kwargs: Any) -> int:
-            result = swrite(chunk, *args, **kwargs)  # type: ignore[call-arg]
-            cb_func(len(chunk))
-            return result
+            self.__dict__[method] = fread
+
+        else:
+            swrite = stream.write
+
+            @wraps(swrite)
+            def fwrite(chunk: AnyStr, *args: Any, **kw: Any) -> int:
+                result = swrite(chunk, *args, **kw)  # type: ignore[call-arg]
+                cb_func(len(chunk))
+                return result
+
+            self.__dict__[method] = fwrite
 
         self.__dict__.update(
             {
                 "__wrapped_stream__": stream,
-                method: fread if method == "read" else fwrite,
+                "__wrapped_method__": method,
                 "__call_back__": cb_func,
             }
         )
@@ -57,12 +65,22 @@ class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
 
         Note: We need this because, HTTPX uses `in iter` when uploading files.
         """
+        stream = self.__wrapped_stream__
+        method = self.__wrapped_method__
+        try:
+            chunks = iter(stream)
+        except TypeError:
+            if method != "read":
+                raise
 
-        def func(chunk: AnyStr) -> AnyStr:
+            # pylint: disable=import-outside-toplevel
+            from .stream import read_until
+
+            chunks = read_until(stream, "\n")
+
+        for chunk in chunks:
             self.__call_back__(len(chunk))
-            return chunk
-
-        return map(func, self.__wrapped_stream__)
+            yield chunk
 
     def __setattr__(self, attr: str, value: Any) -> Any:
         """Setting attr on the stream."""

@@ -1,10 +1,22 @@
 """Handle streaming response for file."""
-
-import typing
+from functools import partial
 from io import DEFAULT_BUFFER_SIZE, RawIOBase
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from itertools import takewhile
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    AnyStr,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 from .callback import CallbackFn, do_nothing
+from .func_utils import repeat_func
 from .http import Method as HTTPMethod
 
 if TYPE_CHECKING:
@@ -59,7 +71,7 @@ class IterStream(RawIOBase):
         response.raise_for_status()
         return self
 
-    def __exit__(self, *args: typing.Any) -> None:
+    def __exit__(self, *args: Any) -> None:
         """Close the response."""
         self.close()
 
@@ -124,9 +136,7 @@ class IterStream(RawIOBase):
 
     def readinto(
         self,
-        sequence: Union[
-            bytearray, memoryview, "ArrayType[typing.Any]", "mmap"
-        ],
+        sequence: Union[bytearray, memoryview, "ArrayType[Any]", "mmap"],
     ) -> int:
         """Read into the buffer."""
         out = memoryview(sequence).cast("B")
@@ -138,3 +148,54 @@ class IterStream(RawIOBase):
 
     readinto1 = readinto
     read1 = read
+
+
+def read_chunks(obj: IO[AnyStr], chunk_size: int = None) -> Iterator[AnyStr]:
+    """Read file object in chunks."""
+    func = partial(obj.read, chunk_size or 1024 * 1024)
+    return takewhile(bool, repeat_func(func))
+
+
+def split_chunk(part: AnyStr, char: AnyStr) -> Tuple[AnyStr, Optional[AnyStr]]:
+    """Split chunk into two parts, based on given delimiter character.
+
+    It will return tuple of those two chunks. If no such delim exists,
+    the first element of tuple will have the complete chunk whereas the other
+    will be None.
+    """
+    found = part.find(char)
+    if found > -1:
+        return part[: found + len(char)], part[found + len(char) :]
+
+    return part, None
+
+
+def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:  # noqa: C901
+    """Read chunks until the char is reached."""
+    is_bytes = isinstance(obj.read(0), bytes)
+    # `c` and the `joiner` should be the same type as the file `obj` is of.
+    assert char
+    _char: AnyStr = cast(AnyStr, char.encode() if is_bytes else char)
+    joiner: AnyStr = cast(AnyStr, b"" if is_bytes else "")
+
+    reader = read_chunks(obj)
+    leftover = None
+    while True:
+        out: List[AnyStr] = []
+        while True:
+            try:
+                part = leftover or next(reader)
+            except StopIteration:
+                part = joiner
+
+            if not part:
+                if out:
+                    yield joiner.join(out)
+                return
+
+            output, leftover = split_chunk(part, _char)
+            out.append(output)
+            if leftover is not None:
+                break
+
+        yield joiner.join(out)

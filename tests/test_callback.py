@@ -95,9 +95,24 @@ def test_callback_write():
     assert write_buffer.add_something_here
 
 
+class ReadWrapper:
+    """Wraps any given buffer."""
+
+    def __init__(self, buff):
+        """Wrap buff."""
+        self.buff = buff
+
+    def read(self, *args):
+        """Wrap read method of the buff."""
+        return self.buff.read(*args)
+
+
 @pytest.mark.parametrize("mode", ["r", "rb"])
+@pytest.mark.parametrize("no_iter_implemented", [True, False])
 @no_type_check
-def test_callback_read_iter(tmp_path: Path, mode: str):
+def test_callback_read_iter(
+    tmp_path: Path, mode: str, no_iter_implemented: bool
+):
     """Test __iter__ callbacks."""
     path = tmp_path / "file.txt"
 
@@ -111,12 +126,36 @@ def test_callback_read_iter(tmp_path: Path, mode: str):
         return ch.decode("utf-8") if isinstance(ch, bytes) else ch
 
     with path.open(mode=mode) as f:
-        wrapper = CallbackIOWrapper(f, callback)
+        wrapper = CallbackIOWrapper(
+            ReadWrapper(f) if no_iter_implemented else f, callback
+        )
 
         chunks = list(wrapper)
         assert ["foo\n" for _ in chunks] == list(map(decode, chunks))
 
     callback.assert_has_calls([call(4) for _ in chunks])
+
+
+def test_callback_iter_non_read_method():
+    """Error if __iter__() not implemented and we are in non-read mode."""
+
+    class ReadWriteWrapper(ReadWrapper):
+        """Wraps both read and write method of the buff."""
+
+        def write(self, *args):
+            """Wrap write method of the buff."""
+            return self.buff.write(*args)  # pragma: no cover
+
+    callback = MagicMock()
+
+    f = ReadWriteWrapper(StringIO())  # type: ignore
+    with pytest.raises(TypeError) as exc_info:
+        wrapper = CallbackIOWrapper(
+            f, callback, method="write"  # type: ignore
+        )
+        for _ in wrapper:
+            pass
+    assert str(exc_info.value) == "'ReadWriteWrapper' object is not iterable"
 
 
 def test_callback_illegal_method():
