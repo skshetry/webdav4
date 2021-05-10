@@ -34,7 +34,7 @@ from .multistatus import (
     prepare_propfind_request_data,
 )
 from .retry import retry as _retry
-from .stream import IterStream
+from .stream import IterStream, read_chunks
 from .urls import URL, join_url
 
 if TYPE_CHECKING:
@@ -563,7 +563,9 @@ class Client:
             raise ResourceAlreadyExists(to_path)
 
         wrapped = wrap_file_like(file_obj, callback)
+        content = read_chunks(wrapped, 50 * 1024 * 1024)
+
         http_resp = self.request(
-            HTTPMethod.PUT, to_path, content=wrapped, headers=headers
+            HTTPMethod.PUT, to_path, content=content, headers=headers
         )
         http_resp.raise_for_status()
