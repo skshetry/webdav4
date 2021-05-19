@@ -13,6 +13,14 @@ from .server import AUTH, get_server_address, run_server
 from .utils import TmpDir
 
 
+@pytest.fixture(autouse=True)
+def reduce_backoff_factor():
+    """Reduce backoff factor in tests."""
+    from webdav4 import retry
+
+    retry.BACKOFF = 0.001
+
+
 @pytest.fixture
 def auth() -> Tuple[str, str]:
     """Auth for the server."""

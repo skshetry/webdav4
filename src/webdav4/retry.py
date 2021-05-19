@@ -7,6 +7,8 @@ from .http import BANDWIDTH_LIMIT_EXCEEDED
 
 _T = TypeVar("_T")
 
+BACKOFF: float = 1
+
 
 def filter_errors(exc: Exception) -> bool:
     """Filter these errors and retry if they fall in these categories."""
@@ -27,7 +29,7 @@ def filter_errors(exc: Exception) -> bool:
 def _exp_backoff(attempt: int) -> float:
     """Backoff exponentially."""
     # for some reason, mypy is unable to figure out types
-    return cast(float, 2 ** attempt)
+    return cast(float, BACKOFF * 2 ** attempt)
 
 
 def retry(
