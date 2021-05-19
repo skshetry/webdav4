@@ -153,3 +153,52 @@ def test_open(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
 
     fs.touch("dir/somewhere2/foo")
     assert fs.cat("dir/somewhere2/foo") == b""
+
+
+def test_exists(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that exists complies with fsspec."""
+    storage_dir.gen(
+        {"data": {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}}
+    )
+
+    assert fs.exists("data")
+    assert fs.exists("data/foo")
+    assert fs.exists("data/bar")
+    assert fs.exists("data/baz")
+    assert fs.exists("data/baz/foobaz")
+    assert not fs.exists("data2")
+    assert not fs.exists("data/bazz")
+
+
+def test_isdir(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that isdir complies with fsspec."""
+    storage_dir.gen(
+        {"data": {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}}
+    )
+
+    assert fs.isdir("data")
+    assert not fs.isdir("data/foo")
+    assert not fs.isdir("data/bar")
+    assert fs.isdir("data/baz")
+    assert not fs.isdir("data/baz/foobaz")
+
+    # not existing ones should return False, instead of just failing
+    assert not fs.isdir("data2")
+    assert not fs.isdir("data/bazz")
+
+
+def test_isfile(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that isfile complies with fsspec."""
+    storage_dir.gen(
+        {"data": {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}}
+    )
+
+    assert not fs.isfile("data")
+    assert fs.isfile("data/foo")
+    assert fs.isfile("data/bar")
+    assert not fs.isfile("data/baz")
+    assert fs.isfile("data/baz/foobaz")
+
+    # not existing ones should return False, instead of just failing
+    assert not fs.isfile("data2")
+    assert not fs.isfile("data/bazz")
