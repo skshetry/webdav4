@@ -65,7 +65,7 @@ class DAVProperties:
         modified = extract_text("modified")
         self.modified = from_rfc1123(modified) if modified else None
 
-        self.etag = extract_text("etag")
+        self.etag = extract_text("etag") or None
         self.content_type = extract_text("content_type")
 
         content_length = extract_text("content_length")

@@ -706,8 +706,7 @@ def test_attributes_dir(storage_dir: TmpDir, client: Client):
     assert client.content_length("/data/") is None
     assert client.content_type("/data/") == ""
     assert client.content_language("/data/") == ""
-    etag = client.etag("/data/")
-    assert etag == ""
+    assert client.etag("/data/") is None
     assert client.modified("/data/") == datetime.fromtimestamp(
         int(stat.st_mtime), tz=timezone.utc
     )

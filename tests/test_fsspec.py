@@ -202,3 +202,69 @@ def test_isfile(storage_dir: TmpDir, fs: WebdavFileSystem):
     # not existing ones should return False, instead of just failing
     assert not fs.isfile("data2")
     assert not fs.isfile("data/bazz")
+
+
+def test_created(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that created complies with fsspec."""
+    with pytest.raises(FileNotFoundError):
+        fs.created("not-existing-file")
+
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    data_stat = (storage_dir / "data" / "foo").stat()
+    assert fs.created("data") == datetime.fromtimestamp(
+        int(data_stat.st_ctime), tz=timezone.utc
+    )
+
+    foo_stat = (storage_dir / "data" / "foo").stat()
+    assert fs.created("data/foo") == datetime.fromtimestamp(
+        int(foo_stat.st_ctime), tz=timezone.utc
+    )
+
+
+def test_modified(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that modified complies with fsspec."""
+    with pytest.raises(FileNotFoundError):
+        fs.created("not-existing-file")
+
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    data_stat = (storage_dir / "data" / "foo").stat()
+    assert fs.modified("data") == datetime.fromtimestamp(
+        int(data_stat.st_mtime), tz=timezone.utc
+    )
+
+    foo_stat = (storage_dir / "data" / "foo").stat()
+    assert fs.modified("data/foo") == datetime.fromtimestamp(
+        int(foo_stat.st_mtime), tz=timezone.utc
+    )
+
+
+def test_checksum(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that checksum complies with fsspec."""
+    with pytest.raises(FileNotFoundError):
+        fs.created("not-existing-file")
+
+    storage_dir.gen({"data": {"foo": "foo"}})
+    assert fs.checksum("data") is None  # is a directory
+    assert fs.checksum("data/foo")
+
+
+def test_size(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that size complies with fsspec."""
+    with pytest.raises(FileNotFoundError):
+        fs.created("not-existing-file")
+
+    storage_dir.gen({"data": {"foo": "foo"}})
+    assert fs.size("data") is None  # is a directory
+    assert fs.size("data/foo") == 3
+
+
+def test_disk_usage(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that du complies with fsspec."""
+    with pytest.raises(FileNotFoundError):
+        fs.created("not-existing-file")
+
+    storage_dir.gen({"data": {"foo": "foo"}})
+    assert fs.du("data") == 3
+    assert fs.du("data/foo") == 3
