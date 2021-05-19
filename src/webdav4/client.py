@@ -48,6 +48,20 @@ if TYPE_CHECKING:
 _T = TypeVar("_T")
 
 
+def _prepare_result_info(
+    response: Response, base_url: URL, detail: bool = True
+) -> Union[str, Dict[str, Any]]:
+    """Transform response to a dictionary/str for info/ls."""
+    rel = response.path_relative_to(base_url)
+    if not detail:
+        return rel
+    return {
+        "name": rel,
+        "href": response.href,
+        **response.properties.as_dict(),
+    }
+
+
 class ClientError(Exception):
     """Custom exception thrown by the Client."""
 
@@ -415,25 +429,30 @@ class Client:
             detail: If detail=True, additional information is returned
                 in a dictionary
         """
-
-        def prepare_result(response: Response) -> Union[str, Dict[str, Any]]:
-            rel = response.path_relative_to(self.base_url)
-            if not detail:
-                return rel
-            return {
-                "name": rel,
-                "href": response.href,
-                **response.properties.as_dict(),
-            }
-
         result = self.propfind(path, headers={"Depth": "1"})
         responses = result.responses
 
-        if len(responses) > 1:
-            url = self.join_url(path)
-            responses.pop(url.path, None)
+        url = self.join_url(path)
+        response = responses.get(url.path)
+        if response and response.properties.resource_type == "directory":
+            responses.pop(url.path)
 
-        return list(map(prepare_result, responses.values()))
+        return [
+            _prepare_result_info(resp, self.base_url, detail)
+            for resp in responses.values()
+        ]
+
+    def info(self, path: str) -> Dict[str, Any]:
+        """Returns information about the path itself."""
+        result = self.propfind(path, headers={"Depth": "1"})
+        responses = result.responses
+
+        url = self.join_url(path)
+        details = _prepare_result_info(
+            responses[url.path], self.base_url, detail=True
+        )
+        assert not isinstance(details, str)
+        return details
 
     def exists(self, path: str) -> bool:
         """Checks whether the resource with the given path exists or not."""

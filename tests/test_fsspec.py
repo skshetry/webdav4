@@ -1,6 +1,7 @@
 """Testing fsspec based WebdavFileSystem."""
 
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Set, Union
 
 import pytest
 
@@ -268,3 +269,189 @@ def test_disk_usage(storage_dir: TmpDir, fs: WebdavFileSystem):
     storage_dir.gen({"data": {"foo": "foo"}})
     assert fs.du("data") == 3
     assert fs.du("data/foo") == 3
+
+
+@pytest.mark.parametrize("detail", [False, True])
+def test_ls(storage_dir: TmpDir, fs: WebdavFileSystem, detail: bool):
+    """Test that ls is compliance with fsspec."""
+    assert fs.ls("", detail=detail) == []
+
+    with pytest.raises(FileNotFoundError):
+        fs.ls("not-existing")
+
+    storage_dir.gen({"empty_dir": {}})
+    assert fs.ls("empty_dir", detail=detail) == []
+
+    # try ls file
+    storage_dir.gen({"foo": "foo"})
+    with pytest.raises(NotADirectoryError):
+        fs.ls("foo", detail=detail)
+
+    def get_files(lst: List[Union[str, Dict[str, Any]]]) -> Set[str]:
+        return {
+            item["name"] if isinstance(item, dict) else item for item in lst
+        }
+
+    # try ls root
+    assert get_files(fs.ls("", detail=detail)) == {"empty_dir", "foo"}
+
+    # try ls dir with files
+    storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
+    assert get_files(fs.ls("data", detail=detail)) == {"data/foo", "data/bar"}
+
+    # try ls with files and subdirs
+    storage_dir.gen(
+        {"data2": {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}}
+    )
+    assert get_files(fs.ls("data2", detail=detail)) == {
+        "data2/foo",
+        "data2/bar",
+        "data2/baz",
+    }
+
+    # ls with files having same name as parent
+    storage_dir.gen({"lorem": {"lorem": "lorem"}})
+    assert get_files(fs.ls("lorem", detail=detail)) == {"lorem/lorem"}
+
+    # ls with subdirs having same name as parent
+    storage_dir.gen({"ipsum": {"ipsum": {"ipsum": "ipsum"}}})
+    assert get_files(fs.ls("ipsum", detail=detail)) == {"ipsum/ipsum"}
+
+
+def test_find(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that find is compliance with fsspec."""
+    storage_dir.gen(
+        {
+            "data": {
+                "foo": "foo",
+                "bar": "bar",
+                "empty": {},
+                "baz": {"foobaz": "foobaz"},
+            }
+        }
+    )
+    assert set(fs.find("")) == {"data/foo", "data/bar", "data/baz/foobaz"}
+    assert set(fs.find("", withdirs=True)) == {
+        "data",
+        "data/foo",
+        "data/bar",
+        "data/empty",
+        "data/baz",
+        "data/baz/foobaz",
+    }
+
+    assert set(fs.find("", maxdepth=1)) == set()
+    assert set(fs.find("", maxdepth=1, withdirs=True)) == {"data"}
+
+    assert set(fs.find("", maxdepth=2)) == {"data/foo", "data/bar"}
+    assert set(fs.find("", maxdepth=2, withdirs=True)) == {
+        "data/foo",
+        "data/bar",
+        "data",
+        "data/baz",
+        "data/empty",
+    }
+
+    assert set(fs.find("not-existing")) == set()
+    assert set(fs.find("data/foo")) == {"data/foo"}
+
+
+def test_info(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
+    """Test that info is compliance with fsspec."""
+    storage_dir.gen({"data": {"foo": "foo", "bar": "bar", "empty": {}}})
+    data_stat = (storage_dir / "data").stat()
+    foo_stat = (storage_dir / "data" / "foo").stat()
+    bar_stat = (storage_dir / "data" / "bar").stat()
+    empty_stat = (storage_dir / "data" / "bar").stat()
+
+    d = fs.info("data")
+    assert d.pop("etag") is None
+    assert d == {
+        "size": None,
+        "created": datetime.fromtimestamp(
+            int(data_stat.st_ctime), tz=timezone.utc
+        ),
+        "modified": datetime.fromtimestamp(
+            int(data_stat.st_mtime), tz=timezone.utc
+        ),
+        "content_language": None,
+        "content_type": None,
+        "type": "directory",
+        "name": "data",
+        "display_name": "data",
+        "href": join_url(server_address, "data").path + "/",
+    }
+
+    with pytest.raises(FileNotFoundError):
+        fs.info("not-existing")
+
+    d = fs.info("data/foo")
+    assert d.pop("etag")
+    assert d == {
+        "name": "data/foo",
+        "href": join_url(server_address, "data/foo").path,
+        "size": 3,
+        "created": datetime.fromtimestamp(
+            int(foo_stat.st_ctime), tz=timezone.utc
+        ),
+        "modified": datetime.fromtimestamp(
+            int(foo_stat.st_ctime), tz=timezone.utc
+        ),
+        "display_name": "foo",
+        "content_language": None,
+        "content_type": "application/octet-stream",
+        "type": "file",
+    }
+
+    d = fs.info("data/bar")
+    assert d.pop("etag")
+    assert d == {
+        "name": "data/bar",
+        "href": join_url(server_address, "data/bar").path,
+        "size": 3,
+        "created": datetime.fromtimestamp(
+            int(bar_stat.st_ctime), tz=timezone.utc
+        ),
+        "modified": datetime.fromtimestamp(
+            int(bar_stat.st_ctime), tz=timezone.utc
+        ),
+        "content_language": None,
+        "content_type": "application/octet-stream",
+        "type": "file",
+        "display_name": "bar",
+    }
+
+    d = fs.info("data/empty")
+    assert d.pop("etag") is None
+    assert d == {
+        "size": None,
+        "created": datetime.fromtimestamp(
+            int(empty_stat.st_ctime), tz=timezone.utc
+        ),
+        "modified": datetime.fromtimestamp(
+            int(empty_stat.st_mtime), tz=timezone.utc
+        ),
+        "content_language": None,
+        "content_type": None,
+        "type": "directory",
+        "name": "data/empty",
+        "display_name": "empty",
+        "href": join_url(server_address, "data/empty").path + "/",
+    }
+
+
+def test_walk(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that walk is compliance with fsspec."""
+    assert list(fs.walk("not-existing")) == []
+
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    assert list(fs.walk("data/foo")) == []
+    assert list(fs.walk("data")) == [
+        ("data", [], ["foo"]),
+    ]
+
+    assert list(fs.walk("")) == [
+        ("", ["data"], []),
+        ("data", [], ["foo"]),
+    ]

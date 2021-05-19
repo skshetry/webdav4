@@ -1,4 +1,5 @@
 """fsspec compliant webdav file system."""
+import errno
 import io
 import os
 from typing import (
@@ -27,6 +28,15 @@ if TYPE_CHECKING:
     from typing import AnyStr
 
     from .types import AuthTypes, URLTypes
+
+
+mapping = {"content_length": "size", "path": "name", "type": "type"}
+
+
+def translate_info(item: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
+    """Translate info from the client to as per fsspec requirements."""
+    assert not isinstance(item, str)
+    return {mapping.get(key, key): value for key, value in item.items()}
 
 
 class WebdavFileSystem(AbstractFileSystem):
@@ -58,19 +68,19 @@ class WebdavFileSystem(AbstractFileSystem):
         self, path: str, detail: bool = True, **kwargs: Any
     ) -> List[Union[str, Dict[str, Any]]]:
         """`ls` implementation for fsspec, see fsspec for more information."""
+        if not self.client.isdir(path):
+            raise NotADirectoryError(errno.ENOTDIR, "Not a directory", path)
+
         data = self.client.ls(path, detail=detail)
         if not detail:
             return data
 
-        mapping = {"content_length": "size", "path": "name", "type": "type"}
+        return [translate_info(item) for item in data]
 
-        def extract_info(item: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
-            assert not isinstance(item, str)
-            return {
-                mapping.get(key, key): value for key, value in item.items()
-            }
-
-        return [extract_info(item) for item in data]
+    @reraise(ResourceNotFound, FileNotFoundError)
+    def info(self, path: str, **kwargs: Any) -> Dict[str, Any]:
+        """Return information about the current path."""
+        return translate_info(self.client.info(path))
 
     def rm_file(self, path: str) -> None:
         """Remove a file."""
