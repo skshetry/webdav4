@@ -444,9 +444,9 @@ class Client:
 
         return True
 
-    def isdir(self, path: str) -> Optional[bool]:
+    def isdir(self, path: str) -> bool:
         """Checks whether the resource with the given path is a directory."""
-        return self.get_props(path).collection
+        return bool(self.get_props(path).collection)
 
     def isfile(self, path: str) -> bool:
         """Checks whether the resource with the given path is a file."""
