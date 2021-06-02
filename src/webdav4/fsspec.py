@@ -126,12 +126,7 @@ class WebdavFileSystem(AbstractFileSystem):
     ) -> None:
         """Copy files and directories."""
         if recursive and not kwargs.get("maxdepth") and self.isdir(path1):
-            try:
-                return self.cp_file(path1, path2)
-            except FileNotFoundError:
-                if on_error in (None, "ignore"):
-                    return None
-                raise
+            return self.cp_file(path1, path2)
 
         if not recursive and self.isdir(path1):
             return self.makedirs(path2)
