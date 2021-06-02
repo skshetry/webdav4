@@ -156,6 +156,113 @@ def test_open(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     assert fs.cat("dir/somewhere2/foo") == b""
 
 
+def test_open_write_bytes_simple(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test simple functions from fileobj in wb mode."""
+    file = fs.open("foo", "wb")
+    assert not file.closed
+
+    with pytest.raises(ValueError):
+        file.info()
+
+    assert file.fileno()
+    assert not file.isatty()
+    assert file.readable()
+    assert file.writable()
+    assert file.seekable()
+
+    file.close()
+    assert file.closed
+
+    assert storage_dir.cat() == {"foo": ""}
+
+
+def test_open_write_bytes_write(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test write functions from fileobj in wb mode."""
+    with fs.open("foo", "wb") as f:
+        assert f.write(b"foo\n") == 4
+        assert f.write(b"bar\n") == 4
+        assert f.write(b"foobar\n") == 7
+        f.writelines([b"lorem\n", b"ipsum\n"])
+
+        assert f.tell() == 27
+        f.flush()
+
+    assert storage_dir.cat() == {"foo": "foo\nbar\nfoobar\nlorem\nipsum\n"}
+
+    with fs.open("foo", "wb") as f:
+        assert f.write(b"foo\n") == 4
+        f.truncate(3)
+    assert storage_dir.cat() == {"foo": "foo"}
+
+
+def test_open_write_bytes_read(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test read functions from fileobj in wb mode."""
+    with fs.open("foo", "wb") as f:
+        assert f.write(b"foo\n") == 4
+        assert f.write(b"bar\n") == 4
+        assert f.write(b"foobar\n") == 7
+        f.seek(0)
+        assert f.read() == b"foo\nbar\nfoobar\n"
+        f.seek(10)
+        assert f.read() == b"obar\n"
+        f.seek(0)
+        assert f.readlines() == [b"foo\n", b"bar\n", b"foobar\n"]
+        f.seek(0)
+        assert f.readline() == b"foo\n"
+        assert f.readuntil(b"o") == b"bar\nfo"
+        b = bytearray(5)
+        f.readinto(b)
+        assert bytes(b) == b"obar\n"
+        assert f.tell() == 15
+
+    assert storage_dir.cat() == {"foo": "foo\nbar\nfoobar\n"}
+
+
+def test_open_write_bytes_commit_discard(
+    storage_dir: TmpDir, fs: WebdavFileSystem
+):
+    """Test commit and discard functions from fileobj in wb mode."""
+    with fs.open("foo", "wb") as f:
+        f.write(b"hello")
+        f.discard()
+
+    assert storage_dir.cat() == {}
+
+    with fs.open("foo", "wb") as f:
+        f.write(b"foo")
+        f.commit()
+
+    f.discard()
+    f.close()
+    assert storage_dir.cat() == {"foo": "foo"}
+
+
+def test_open_write_bytes_x_mode(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test opening file in x mode."""
+    with fs.open("foo", "x") as f:
+        f.write("foo")
+
+    assert storage_dir.cat() == {"foo": "foo"}
+
+    with pytest.raises(FileExistsError):
+        fs.open("foo", "x")
+
+
+def test_open_write_in_text_mode(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test few methods from fileobj opened in text mode."""
+    with fs.open("foo", "w") as f:
+        f.write("foobar")
+        f.writelines(["lorem"])
+
+        pos = f.tell()
+        f.seek(0)
+        assert f.read() == "foobarlorem"
+        f.seek(pos)
+        f.flush()
+
+    assert storage_dir.cat() == {"foo": "foobarlorem"}
+
+
 def test_exists(storage_dir: TmpDir, fs: WebdavFileSystem):
     """Test that exists complies with fsspec."""
     storage_dir.gen(

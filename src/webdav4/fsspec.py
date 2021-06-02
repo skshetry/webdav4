@@ -2,6 +2,7 @@
 import errno
 import io
 import os
+import tempfile
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -10,11 +11,13 @@ from typing import (
     Dict,
     List,
     NamedTuple,
+    NoReturn,
     Optional,
     TextIO,
     Tuple,
     Type,
     Union,
+    cast,
 )
 
 from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
@@ -28,7 +31,9 @@ from .client import (
 from .func_utils import reraise
 
 if TYPE_CHECKING:
+    from array import ArrayType
     from datetime import datetime
+    from mmap import mmap
     from os import PathLike
     from typing import AnyStr
 
@@ -221,9 +226,17 @@ class WebdavFileSystem(AbstractFileSystem):
         autocommit: bool = True,
         cache_options: Dict[str, str] = None,
         **kwargs: Any,
-    ) -> "WebdavFile":
+    ) -> Union["WebdavFile", "UploadFile"]:
         """Return a file-like object from the filesystem."""
         size = kwargs.pop("size", None)
+        assert "a" not in mode
+
+        if "x" in mode and self.exists(path):
+            raise FileExistsError(errno.EEXIST, "File exists", path)
+        if set(mode) & {"w", "x"}:
+            return UploadFile(
+                self, path=path, mode=mode, block_size=block_size
+            )
         if mode == "rb" and not size:
             size = self.size(path)
 
@@ -271,19 +284,6 @@ class WebdavFileSystem(AbstractFileSystem):
             kwargs.setdefault("overwrite", True)
             self.client.upload_file(lpath, rpath, **kwargs)
 
-    def touch(self, path: str, truncate: bool = True, **kwargs: Any) -> None:
-        """Create empty file, or update timestamp (not supported yet)."""
-        if truncate or not self.exists(path):
-            kwargs.setdefault("overwrite", True)
-            return self.client.upload_fileobj(io.BytesIO(), path, **kwargs)
-
-        # might be a bad idea to add support for
-        # ownCloud/nextCloud do seem to support this
-        # if there is a need for this, we would need
-        # to add support for `PROPSET` to update `lastmodified`
-        # in the `Client`.
-        raise NotImplementedError
-
 
 class WebdavFile(AbstractBufferedFile):
     """WebdavFile that provides file-like access to remote file."""
@@ -303,9 +303,6 @@ class WebdavFile(AbstractBufferedFile):
 
         See fsspec for more information.
         """
-        if mode not in {"rt", "rb", "r"}:
-            raise NotImplementedError("File mode not supported")
-
         size = kwargs.get("size")
         self.details = {"name": path, "size": size, "type": "file"}
         super().__init__(
@@ -385,3 +382,101 @@ def reopen(args: ReopenArgs) -> WebdavFile:
         mode=args.mode,
         size=args.size,
     )
+
+
+# TODO: if we need this to be serializable, we might want to use tempfile
+#  directly.
+
+
+class UploadFile(tempfile.SpooledTemporaryFile[bytes]):
+    """UploadFile for Webdav, that uses SpooledTemporaryFile.
+
+    In Webdav, you cannot upload in chunks. Similar to http, we need some kind
+    of protocol on top to be able to do that. Sabredav provides a way to upload
+    chunks, but it's not implemented in Owncloud and Nextcloud. They have a
+    different chunking mechanism. On top of it, there are TUS implementations
+    in newer version of Owncloud.
+
+    However, as they are only for chunking, it needs to be seen if it is
+    possible to implement full-breadth of FileObj API through that (I doubt it)
+
+    Note that, fsspec's put_file/pipe_file don't use this technique and are
+    thus faster as they don't need buffering. It is recommended to use that
+    if you don't need to upload content dynamically.
+    """
+
+    def __init__(  # pylint: disable=invalid-name
+        self,
+        fs: "WebdavFileSystem",
+        path: str,
+        mode: str = "wb",
+        block_size: int = None,
+    ):
+        """Extended interface with path and fs."""
+        assert fs
+        assert path
+
+        self.blocksize = block_size or io.DEFAULT_BUFFER_SIZE
+        self.fs: WebdavFileSystem = fs  # pylint: disable=invalid-name
+        assert mode
+        self.path: str = path
+
+        # whatever the mode be, we should try to open the file
+        # in both rw mode.
+        super().__init__(max_size=self.blocksize, mode="wb+")
+
+    def __exit__(self, *exc: Any) -> None:
+        """Upload file by seeking to first byte on exit."""
+        self.close()
+
+    def readable(self) -> bool:  # pylint: disable=no-self-use
+        """It is readable."""
+        return True
+
+    def writable(self) -> bool:  # pylint: disable=no-self-use
+        """It is writable."""
+        return True
+
+    def seekable(self) -> bool:  # pylint: disable=no-self-use
+        """It is seekable."""
+        return True
+
+    def commit(self) -> None:
+        """Commits the file to the given path.
+
+        As we cannot upload in chunk, this is where we really upload file.
+        """
+        self.seek(0)
+        fileobj = cast(BinaryIO, self)
+        self.fs.client.upload_fileobj(fileobj, self.path, overwrite=True)
+
+    def close(self) -> None:
+        """Close the file."""
+        if not self.closed:
+            self.commit()
+            super().close()
+
+    def discard(self) -> None:
+        """Discard the file."""
+        if not self.closed:
+            super().close()
+
+    def info(self) -> NoReturn:  # pylint: disable=no-self-use
+        """Info about the file upload that is in progress."""
+        raise ValueError("cannot provide info in write-mode")
+
+    def readinto(
+        self, sequence: Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
+    ) -> int:
+        """Read bytes into the given buffer."""
+        out = memoryview(sequence).cast("B")
+        data = self.read(out.nbytes)
+
+        # https://github.com/python/typeshed/issues/4991
+        out[: len(data)] = data  # type: ignore[assignment]
+        return len(data)
+
+    def readuntil(self, char: bytes = b"\n", blocks: int = None) -> bytes:
+        """Read until the given character is found."""
+        ret = AbstractBufferedFile.readuntil(self, char=char, blocks=blocks)
+        return cast(bytes, ret)
