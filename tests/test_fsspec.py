@@ -691,3 +691,23 @@ def test_try_moving_not_existing_file(
         fs.mv("not-existing-file", "bar")
 
     assert storage_dir.cat() == {}
+
+
+def test_touch_truncates(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test touch with truncate=True."""
+    fs.touch("foo")
+    assert storage_dir.cat() == {"foo": ""}
+
+    storage_dir.gen({"foo": "foo"})
+    fs.touch("foo")
+    assert storage_dir.cat() == {"foo": ""}
+
+
+def test_touch_not_truncate(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test touch not truncate."""
+    fs.touch("foo", truncate=False)
+    assert storage_dir.cat() == {"foo": ""}
+
+    with pytest.raises(NotImplementedError):
+        # this should update the timestamp, but it's not implemented yet.
+        fs.touch("foo", truncate=False)
