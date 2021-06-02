@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from .http import Client as HTTPClient
     from .types import HTTPResponse, URLTypes
 
+Buffer = Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
+
 
 class IterStream(RawIOBase):
     """Create a streaming file-like object."""
@@ -134,17 +136,9 @@ class IterStream(RawIOBase):
         output, self.buffer = chunk[:n], chunk[n:]
         return output
 
-    def readinto(
-        self,
-        sequence: Union[bytearray, memoryview, "ArrayType[Any]", "mmap"],
-    ) -> int:
+    def readinto(self, sequence: Buffer) -> int:
         """Read into the buffer."""
-        out = memoryview(sequence).cast("B")
-        data = self.read(out.nbytes)
-
-        # https://github.com/python/typeshed/issues/4991
-        out[: len(data)] = data  # type: ignore[assignment]
-        return len(data)
+        return read_into(self, sequence)  # type: ignore
 
     readinto1 = readinto
     read1 = read
@@ -199,3 +193,13 @@ def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:  # noqa: C901
                 break
 
         yield joiner.join(out)
+
+
+def read_into(obj: IO[AnyStr], sequence: Buffer) -> int:
+    """Read into the buffer."""
+    out = memoryview(sequence).cast("B")
+    data = obj.read(out.nbytes)
+
+    # https://github.com/python/typeshed/issues/4991
+    out[: len(data)] = data  # type: ignore[assignment]
+    return len(data)

@@ -29,6 +29,7 @@ from .client import (
     ResourceNotFound,
 )
 from .func_utils import reraise
+from .stream import read_into
 
 if TYPE_CHECKING:
     from array import ArrayType
@@ -469,12 +470,7 @@ class UploadFile(tempfile.SpooledTemporaryFile[bytes]):
         self, sequence: Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
     ) -> int:
         """Read bytes into the given buffer."""
-        out = memoryview(sequence).cast("B")
-        data = self.read(out.nbytes)
-
-        # https://github.com/python/typeshed/issues/4991
-        out[: len(data)] = data  # type: ignore[assignment]
-        return len(data)
+        return read_into(self, sequence)
 
     def readuntil(self, char: bytes = b"\n", blocks: int = None) -> bytes:
         """Read until the given character is found."""
