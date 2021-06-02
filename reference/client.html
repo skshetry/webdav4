@@ -266,8 +266,13 @@ for configuration</p></li>
 <p>Can also selectively request the properties by passing name or data.</p>
 </dd></dl>
 <dl class="py method">
+<dt id="webdav4.client.Client.info">
+<code class="sig-name descname"><span class="pre">info</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/webdav4/client.html#Client.info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client.info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns information about the path itself.</p>
+</dd></dl>
+<dl class="py method">
 <dt id="webdav4.client.Client.isdir">
-<code class="sig-name descname"><span class="pre">isdir</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> → <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/webdav4/client.html#Client.isdir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client.isdir" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">isdir</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> → <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a><a class="reference internal" href="../_modules/webdav4/client.html#Client.isdir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client.isdir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks whether the resource with the given path is a directory.</p>
 </dd></dl>
 <dl class="py method">
@@ -295,21 +300,8 @@ in a dictionary</p></li>
 </dl>
 </dd></dl>
 <dl class="py method">
-<dt id="webdav4.client.Client.makedirs">
-<code class="sig-name descname"><span class="pre">makedirs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">exist_ok</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> → <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a><a class="reference internal" href="../_modules/webdav4/client.html#Client.makedirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client.makedirs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a directory and its intermediate paths.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path</strong> – path till the directory to create</p></li>
-<li><p><strong>exist_ok</strong> – if it exists already, it will be silently ignored</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-<dl class="py method">
 <dt id="webdav4.client.Client.mkdir">
-<code class="sig-name descname"><span class="pre">mkdir</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">exist_ok</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> → <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a><a class="reference internal" href="../_modules/webdav4/client.html#Client.mkdir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client.mkdir" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">mkdir</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><span class="pre">str</span></a></span></em><span class="sig-paren">)</span> → <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><span class="pre">None</span></a><a class="reference internal" href="../_modules/webdav4/client.html#Client.mkdir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#webdav4.client.Client.mkdir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a collection.</p>
 </dd></dl>
 <dl class="py method">

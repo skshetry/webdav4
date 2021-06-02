@@ -183,6 +183,20 @@
 <span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_T"</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">_prepare_result_info</span><span class="p">(</span>
+    <span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">base_url</span><span class="p">:</span> <span class="n">URL</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+    <span class="sd">"""Transform response to a dictionary/str for info/ls."""</span>
+    <span class="n">rel</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">path_relative_to</span><span class="p">(</span><span class="n">base_url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">detail</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">rel</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"name"</span><span class="p">:</span> <span class="n">rel</span><span class="p">,</span>
+        <span class="s2">"href"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">href</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">response</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span>
+    <span class="p">}</span>
+
+
 <div class="viewcode-block" id="ClientError"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ClientError">[docs]</a><span class="k">class</span> <span class="nc">ClientError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">"""Custom exception thrown by the Client."""</span>
 
@@ -493,15 +507,13 @@
             <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Client.mkdir"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.mkdir">[docs]</a>    <span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exist_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="Client.mkdir"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.mkdir">[docs]</a>    <span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Create a collection."""</span>
         <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MKCOL</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">HTTPStatus</span><span class="o">.</span><span class="n">METHOD_NOT_ALLOWED</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">exist_ok</span><span class="p">:</span>
-                    <span class="k">return</span>
                 <span class="k">raise</span> <span class="n">ResourceAlreadyExists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
             <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">HTTPStatus</span><span class="o">.</span><span class="n">FORBIDDEN</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
@@ -516,19 +528,6 @@
             <span class="k">raise</span>
 
         <span class="k">assert</span> <span class="n">http_resp</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">in</span> <span class="p">(</span><span class="n">HTTPStatus</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span> <span class="n">HTTPStatus</span><span class="o">.</span><span class="n">CREATED</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Client.makedirs"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.makedirs">[docs]</a>    <span class="k">def</span> <span class="nf">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exist_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Creates a directory and its intermediate paths.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            path: path till the directory to create</span>
-<span class="sd">            exist_ok: if it exists already, it will be silently ignored</span>
-<span class="sd">        """</span>
-        <span class="n">parts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)))</span>
-        <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"/"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">[:</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">))]</span>
-
-        <span class="k">for</span> <span class="n">parent</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="n">exist_ok</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Client.remove"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.remove">[docs]</a>    <span class="k">def</span> <span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Remove a resource."""</span>
@@ -550,25 +549,30 @@
 <span class="sd">            detail: If detail=True, additional information is returned</span>
 <span class="sd">                in a dictionary</span>
 <span class="sd">        """</span>
-
-        <span class="k">def</span> <span class="nf">prepare_result</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-            <span class="n">rel</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">path_relative_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">detail</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">rel</span>
-            <span class="k">return</span> <span class="p">{</span>
-                <span class="s2">"name"</span><span class="p">:</span> <span class="n">rel</span><span class="p">,</span>
-                <span class="s2">"href"</span><span class="p">:</span> <span class="n">response</span><span class="o">.</span><span class="n">href</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">response</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">as_dict</span><span class="p">(),</span>
-            <span class="p">}</span>
-
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">propfind</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Depth"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">})</span>
         <span class="n">responses</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">responses</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">responses</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="n">responses</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">responses</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span> <span class="ow">and</span> <span class="n">response</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">resource_type</span> <span class="o">==</span> <span class="s2">"directory"</span><span class="p">:</span>
+            <span class="n">responses</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">prepare_result</span><span class="p">,</span> <span class="n">responses</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span></div>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">_prepare_result_info</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">detail</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">resp</span> <span class="ow">in</span> <span class="n">responses</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="Client.info"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">"""Returns information about the path itself."""</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">propfind</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Depth"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">})</span>
+        <span class="n">responses</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">responses</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="n">_prepare_result_info</span><span class="p">(</span>
+            <span class="n">responses</span><span class="p">[</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">details</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">details</span></div>
 
 <div class="viewcode-block" id="Client.exists"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.exists">[docs]</a>    <span class="k">def</span> <span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">"""Checks whether the resource with the given path exists or not."""</span>
@@ -579,9 +583,9 @@
 
         <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Client.isdir"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.isdir">[docs]</a>    <span class="k">def</span> <span class="nf">isdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
+<div class="viewcode-block" id="Client.isdir"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.isdir">[docs]</a>    <span class="k">def</span> <span class="nf">isdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">"""Checks whether the resource with the given path is a directory."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">collection</span></div>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_props</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">collection</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Client.isfile"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.isfile">[docs]</a>    <span class="k">def</span> <span class="nf">isfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">"""Checks whether the resource with the given path is a file."""</span>
