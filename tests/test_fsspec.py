@@ -553,7 +553,12 @@ def test_copy(storage_dir: TmpDir, fs: WebdavFileSystem, recursive: bool):
 
     fs.copy("data/foo", "data/foobar", recursive=recursive)
     assert storage_dir.cat() == {
-        "data": {"foobar": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}},
+        "data": {
+            "foo": "foo",
+            "foobar": "foo",
+            "bar": "bar",
+            "baz": {"foobaz": "foobaz"},
+        },
         "data2": files if recursive else {},
     }
 
