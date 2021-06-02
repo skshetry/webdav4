@@ -19,7 +19,12 @@ from typing import (
 
 from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
 
-from .client import Client, ResourceNotFound
+from .client import (
+    Client,
+    ResourceAlreadyExists,
+    ResourceConflict,
+    ResourceNotFound,
+)
 from .func_utils import reraise
 
 if TYPE_CHECKING:
@@ -82,33 +87,57 @@ class WebdavFileSystem(AbstractFileSystem):
         """Return information about the current path."""
         return translate_info(self.client.info(path))
 
+    @reraise(ResourceNotFound, FileNotFoundError)
     def rm_file(self, path: str) -> None:
         """Remove a file."""
+        # not checking if it's a directory as `rm` also passes a directory
         return self.client.remove(path)
 
     _rm = rm_file
 
-    def mkdir(
-        self, path: str, create_parents: bool = True, **kwargs: Any
+    @reraise(ResourceNotFound, FileNotFoundError)
+    def cp_file(self, path1: str, path2: str, **kwargs: Any) -> None:
+        """Copy a file from one path to the other."""
+        # not checking if it's a directory as `cp` also passes a directory
+        return self.client.copy(path1, path2)
+
+    def rmdir(self, path: str) -> None:
+        """Remove a directory, if empty."""
+        if self.ls(path):
+            raise OSError(errno.ENOTEMPTY, "Directory not empty", path)
+        return self.client.remove(path)
+
+    def rm(
+        self, path: str, recursive: bool = False, maxdepth: int = None
     ) -> None:
-        """Create directory."""
-        if create_parents:
-            return self.makedirs(path, exist_ok=True)
-        return self.client.mkdir(path)
+        """Delete files and directories."""
+        if recursive and not maxdepth and self.isdir(path):
+            return self.rm_file(path)
+        super().rm(path, recursive=recursive, maxdepth=maxdepth)
+        return None
 
-    def makedirs(self, path: str, exist_ok: bool = False) -> None:
-        """Creates directory to the given path."""
-        return self.client.makedirs(path, exist_ok=exist_ok)
+    def copy(
+        self,
+        path1: str,
+        path2: str,
+        recursive: bool = False,
+        on_error: str = None,
+        **kwargs: Any,
+    ) -> None:
+        """Copy files and directories."""
+        if recursive and not kwargs.get("maxdepth") and self.isdir(path1):
+            try:
+                return self.cp_file(path1, path2)
+            except FileNotFoundError:
+                if on_error in (None, "ignore"):
+                    return None
+                raise
 
-    @reraise(ResourceNotFound, FileNotFoundError)
-    def created(self, path: str) -> Optional["datetime"]:
-        """Returns creation time/date."""
-        return self.client.created(path)
+        if not recursive and self.isdir(path1):
+            return self.makedirs(path2)
 
-    @reraise(ResourceNotFound, FileNotFoundError)
-    def modified(self, path: str) -> Optional["datetime"]:
-        """Returns last modified time/data."""
-        return self.client.modified(path)
+        super().copy(path1, path2, recursive=recursive, **kwargs)
+        return None
 
     def mv(
         self,
@@ -119,11 +148,75 @@ class WebdavFileSystem(AbstractFileSystem):
         **kwargs: Any,
     ) -> None:
         """Move a file/directory from one path to the other."""
-        return self.client.move(path1, path2)
+        if recursive and not maxdepth and self.isdir(path1):
+            return self.client.move(path1, path2)
 
-    def cp_file(self, path1: str, path2: str, **kwargs: Any) -> None:
-        """Copy a file/directory from one path to the other."""
-        return self.client.copy(path1, path2)
+        if not recursive and self.isdir(path1):
+            return self.makedirs(path2)
+
+        super().mv(
+            path1, path2, recursive=recursive, maxdepth=maxdepth, **kwargs
+        )
+        return None
+
+    def _mkdir(self, path: str, exist_ok: bool = False) -> None:
+        """Creates directory and translates to an appropriate exceptions.
+
+        Internally, Client tries to do as much less API call as possible.
+        And, usually, the ResourceAlreadyExists and ResourceConflict are
+        enough for a standard server. But, in fsspec, for better exceptions,
+        we have to distinguish between different conditions:
+
+        1. parent not being a directory (NotADirectoryError),
+        2. parent does not exists (FileExistsError),
+        3. path already exists (FileNotFoundError), etc.
+
+        We also spend some API calls to be sure on error.
+        """
+        try:
+            return self.client.mkdir(path)
+        except ResourceAlreadyExists as exc:
+            details = self.info(path)
+            if details and details["type"] == "directory" and exist_ok:
+                return None
+
+            raise FileExistsError(errno.EEXIST, "File exists", path) from exc
+        except ResourceConflict as exc:
+            parent = self._parent(path)
+            details = self.info(parent)
+            if details["type"] == "directory":
+                raise  # pragma: no cover
+            raise NotADirectoryError(
+                errno.ENOTDIR, "Not a directory", parent
+            ) from exc
+
+    def mkdir(
+        self, path: str, create_parents: bool = True, **kwargs: Any
+    ) -> None:
+        """Create directory."""
+        if create_parents:
+            return self.makedirs(path, exist_ok=True)
+        return self._mkdir(path)
+
+    def makedirs(self, path: str, exist_ok: bool = False) -> None:
+        """Creates directory to the given path."""
+        parent = self._parent(path)
+        if not ({"", self.root_marker} & {path, parent}) and not self.exists(
+            parent
+        ):
+            self.makedirs(parent, exist_ok=exist_ok)
+
+        return self._mkdir(path, exist_ok=exist_ok)
+
+    @reraise(ResourceNotFound, FileNotFoundError)
+    def created(self, path: str) -> Optional["datetime"]:
+        """Returns creation time/date."""
+        return self.client.created(path)
+
+    @reraise(ResourceNotFound, FileNotFoundError)
+    def modified(self, path: str) -> Optional["datetime"]:
+        """Returns last modified time/data."""
+        return self.client.modified(path)
 
     def _open(
         self,

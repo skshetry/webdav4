@@ -399,20 +399,6 @@ def test_mkdir_forbidden_operations(client: Client, server_address: URL):
     )
 
 
-def test_makedirs(storage_dir: TmpDir, client: Client):
-    """Test makedirs."""
-    client.makedirs("/data/foo/bar")
-    assert storage_dir.cat() == {"data": {"foo": {"bar": {}}}}
-
-    with pytest.raises(ResourceAlreadyExists) as exc_info:
-        client.makedirs("/data/foo/bar")
-
-    assert str(exc_info.value) == "The resource data already exists"
-    assert exc_info.value.path == "data"
-
-    client.makedirs("/data/foo/bar", exist_ok=True)
-
-
 def test_remove_collection(storage_dir: TmpDir, client: Client):
     """Test trying to remove a collection resource."""
     storage_dir.gen({"data": {"foo": "foo"}})

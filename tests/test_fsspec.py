@@ -1,5 +1,5 @@
 """Testing fsspec based WebdavFileSystem."""
-
+import errno
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Set, Union
 
@@ -455,3 +455,234 @@ def test_walk(storage_dir: TmpDir, fs: WebdavFileSystem):
         ("", ["data"], []),
         ("data", [], ["foo"]),
     ]
+
+
+def test_mkdir_with_no_create_parents(
+    storage_dir: TmpDir, fs: WebdavFileSystem
+):
+    """Test that mkdir is compliant with fsspec."""
+    fs.mkdir("data", create_parents=False)
+    assert storage_dir.cat() == {"data": {}}
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    with pytest.raises(FileExistsError):
+        fs.mkdir("data", create_parents=False)
+
+    with pytest.raises(NotADirectoryError):
+        fs.mkdir("data/foo/bar", create_parents=False)
+
+    with pytest.raises(FileNotFoundError):
+        fs.mkdir("data/bar/bar", create_parents=False)
+
+    assert storage_dir.cat() == {"data": {"foo": "foo"}}
+
+
+def test_makedirs_exist_ok(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that makedirs with exist_ok=True is compliant with fsspec."""
+    fs.makedirs("dir1/dir2/dir3/dir4", exist_ok=True)
+    assert storage_dir.cat() == {"dir1": {"dir2": {"dir3": {"dir4": {}}}}}
+    # should not raise any issues again
+    fs.makedirs("dir1/dir2/dir3/dir4", exist_ok=True)
+
+    fs.makedirs("dir1/dir2/dir5/dir6", exist_ok=True)
+    assert storage_dir.cat() == {
+        "dir1": {"dir2": {"dir3": {"dir4": {}}, "dir5": {"dir6": {}}}}
+    }
+    # should not raise any issues again
+    fs.makedirs("dir1/dir2/dir5/dir6", exist_ok=True)
+
+    storage_dir.gen({"data": {"foo": "foo"}})
+    fs.makedirs("data", exist_ok=True)
+
+    with pytest.raises(NotADirectoryError):
+        fs.makedirs("data/foo/bar", exist_ok=True)
+
+    with pytest.raises(FileExistsError):
+        fs.makedirs("data/foo", exist_ok=True)
+
+    assert storage_dir.cat() == {
+        "data": {"foo": "foo"},
+        "dir1": {"dir2": {"dir3": {"dir4": {}}, "dir5": {"dir6": {}}}},
+    }
+
+
+def test_makedirs_not_exist_ok(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test that makedirs with exist_ok=False is compliant with fsspec."""
+    fs.makedirs("dir1/dir2/dir3/dir4", exist_ok=False)
+    assert storage_dir.cat() == {"dir1": {"dir2": {"dir3": {"dir4": {}}}}}
+
+    with pytest.raises(FileExistsError):
+        fs.makedirs("dir1/dir2/dir3/dir4", exist_ok=False)
+
+    fs.makedirs("dir1/dir2/dir5/dir6", exist_ok=False)
+    assert storage_dir.cat() == {
+        "dir1": {"dir2": {"dir3": {"dir4": {}}, "dir5": {"dir6": {}}}}
+    }
+
+    with pytest.raises(FileExistsError):
+        fs.makedirs("dir1/dir2/dir5/dir6", exist_ok=False)
+
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    with pytest.raises(FileExistsError):
+        fs.makedirs("data", exist_ok=False)
+
+    with pytest.raises(NotADirectoryError):
+        fs.makedirs("data/foo/bar", exist_ok=False)
+
+    with pytest.raises(FileExistsError):
+        fs.makedirs("data/foo", exist_ok=False)
+
+    assert storage_dir.cat() == {
+        "data": {"foo": "foo"},
+        "dir1": {"dir2": {"dir3": {"dir4": {}}, "dir5": {"dir6": {}}}},
+    }
+
+
+@pytest.mark.parametrize("recursive", [True, False])
+def test_copy(storage_dir: TmpDir, fs: WebdavFileSystem, recursive: bool):
+    """Test copy."""
+    files = {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}
+    storage_dir.gen({"data": files})
+
+    fs.copy("data", "data2", recursive=recursive)
+    assert storage_dir.cat() == {
+        "data": files,
+        "data2": files if recursive else {},
+    }
+
+    fs.copy("data/foo", "data/foobar", recursive=recursive)
+    assert storage_dir.cat() == {
+        "data": {"foobar": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}},
+        "data2": files if recursive else {},
+    }
+
+
+def test_try_copying_not_existing_file(
+    storage_dir: TmpDir, fs: WebdavFileSystem
+):
+    """Test trying to copy a not existing file raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError):
+        fs.copy("not-existing-file", "bar")
+
+    with pytest.raises(FileNotFoundError):
+        fs.cp_file("not-existing-file", "bar")
+
+    assert storage_dir.cat() == {}
+
+
+@pytest.mark.parametrize("recursive", [True, False])
+def test_remove_dir(
+    storage_dir: TmpDir, fs: WebdavFileSystem, recursive: bool
+):
+    """Test rm directory."""
+    # this is where we deviate a bit from LocalFS
+    # it seems we need to override a lot of things to achieve this,
+    # as `fs.rm` uses expand_paths that also returns dirs, and is passed
+    # to `fs.rm_file` which is not supposed to remove a directory.
+    files = {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}
+    storage_dir.gen({"data": files})
+
+    fs.rm("data/baz", recursive=recursive)
+    assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
+
+
+@pytest.mark.parametrize("recursive", [True, False])
+def test_remove_file(
+    storage_dir: TmpDir, fs: WebdavFileSystem, recursive: bool
+):
+    """Test rm file."""
+    files = {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}
+    storage_dir.gen({"data": files})
+
+    fs.rm("data/foo", recursive=recursive)
+
+    expected = {k: v for k, v in files.items() if k != "foo"}
+    assert storage_dir.cat() == {"data": expected}
+
+
+def test_try_removing_not_existing_file(
+    storage_dir: TmpDir, fs: WebdavFileSystem
+):
+    """Test rm and rm_file on non-existing file raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError):
+        fs.rm("not-existing-file")
+
+    with pytest.raises(FileNotFoundError):
+        fs.rm_file("not-existing-file")
+
+    assert storage_dir.cat() == {}
+
+
+def test_rmdir(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test rmdir."""
+    storage_dir.gen({"data": {"foo": "foo"}})
+
+    with pytest.raises(OSError) as exc_info:
+        fs.rmdir("data")
+
+    assert exc_info.value.errno == errno.ENOTEMPTY
+    assert exc_info.value.filename == "data"
+
+    with pytest.raises(NotADirectoryError) as exc_info:
+        fs.rmdir("data/foo")
+
+    assert exc_info.value.errno == errno.ENOTDIR
+    assert exc_info.value.filename == "data/foo"
+
+
+def test_rmdir_empty(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test rmdir success on empty dir."""
+    storage_dir.gen({"data": {}})
+
+    fs.rmdir("data")
+    assert storage_dir.cat() == {}
+
+
+def test_rmdir_not_existing(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test rmdir on non-existing file raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError):
+        fs.rmdir("not-existing-dir/file")
+    assert storage_dir.cat() == {}
+
+
+def test_move_no_recursive(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test move without recursive."""
+    files = {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}
+    storage_dir.gen({"data": files})
+
+    fs.mv("data", "data2", recursive=False)
+    assert storage_dir.cat() == {
+        "data2": {},
+        "data": files,
+    }
+
+    fs.mv("data/foo", "data2/foobar", recursive=False)
+    assert storage_dir.cat() == {
+        "data2": {"foobar": "foo"},
+        "data": {"bar": "bar", "baz": {"foobaz": "foobaz"}},
+    }
+
+
+def test_move_recursive(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test move recursive."""
+    files = {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}
+    storage_dir.gen({"data": files})
+
+    fs.mv("data", "data2", recursive=True)
+    assert storage_dir.cat() == {"data2": files}
+
+    fs.mv("data2/foo", "data2/foobar", recursive=True)
+    assert storage_dir.cat() == {
+        "data2": {"foobar": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}
+    }
+
+
+def test_try_moving_not_existing_file(
+    storage_dir: TmpDir, fs: WebdavFileSystem
+):
+    """Test trying to move a non-existing file raises FileNotFoundError."""
+    with pytest.raises(FileNotFoundError):
+        fs.mv("not-existing-file", "bar")
+
+    assert storage_dir.cat() == {}

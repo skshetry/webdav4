@@ -372,15 +372,13 @@ class Client:
             overwrite=overwrite,
         )
 
-    def mkdir(self, path: str, exist_ok: bool = False) -> None:
+    def mkdir(self, path: str) -> None:
         """Create a collection."""
         call = wrap_fn(self.request, HTTPMethod.MKCOL, path)
         try:
             http_resp = self.with_retry(call)
         except HTTPError as exc:
             if exc.status_code == HTTPStatus.METHOD_NOT_ALLOWED:
-                if exist_ok:
-                    return
                 raise ResourceAlreadyExists(path) from exc
             if exc.status_code == HTTPStatus.FORBIDDEN:
                 msg = (
@@ -395,19 +393,6 @@ class Client:
             raise
 
         assert http_resp.status_code in (HTTPStatus.OK, HTTPStatus.CREATED)
-
-    def makedirs(self, path: str, exist_ok: bool = False) -> None:
-        """Creates a directory and its intermediate paths.
-
-        Args:
-            path: path till the directory to create
-            exist_ok: if it exists already, it will be silently ignored
-        """
-        parts = list(filter(bool, path.split("/")))
-        paths = ["/".join(parts[: n + 1]) for n in range(len(parts))]
-
-        for parent in paths:
-            self.mkdir(parent, exist_ok=exist_ok)
 
     def remove(self, path: str) -> None:
         """Remove a resource."""
