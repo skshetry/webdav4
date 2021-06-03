@@ -14,7 +14,7 @@ def do_nothing(_: int) -> Any:
     """A function that does nothing."""
 
 
-class CallbackIOWrapper(Iterable):  # type: ignore[type-arg]
+class CallbackIOWrapper(Iterable):
     """Wrap a file-like's read/write method to report length to callback."""
 
     def __init__(

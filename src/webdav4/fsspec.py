@@ -389,7 +389,7 @@ def reopen(args: ReopenArgs) -> WebdavFile:
 #  directly.
 
 
-class UploadFile(tempfile.SpooledTemporaryFile[bytes]):
+class UploadFile(tempfile.SpooledTemporaryFile):
     """UploadFile for Webdav, that uses SpooledTemporaryFile.
 
     In Webdav, you cannot upload in chunks. Similar to http, we need some kind
