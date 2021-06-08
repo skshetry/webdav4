@@ -10,7 +10,6 @@ import posixpath
 import re
 import sys
 from argparse import Namespace
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from posixpath import sep
 from typing import (
@@ -19,6 +18,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
@@ -46,8 +46,7 @@ logger.addHandler(logging.StreamHandler())
 URL_SCHEME_RE = re.compile(r"^[a-z][a-z0-9.+-]*://", re.IGNORECASE)
 
 
-@dataclass
-class File:
+class File(NamedTuple):
     """DS that helps us to not compute ext and basename again and again."""
 
     path: str
@@ -743,7 +742,7 @@ class CommandSync(Command):
         else:
             dest_fs.copy(src, dest, recursive=recursive)
 
-    @classmethod
+    @classmethod  # noqa: C901
     def changed(  # noqa: C901
         cls, src_details: Dict[str, Any], dest_details: Dict[str, Any]
     ) -> bool:
