@@ -204,7 +204,8 @@ def test_open_write_bytes_read(storage_dir: TmpDir, fs: WebdavFileSystem):
         f.seek(0)
         assert f.read() == b"foo\nbar\nfoobar\n"
         f.seek(10)
-        assert f.read() == b"obar\n"
+        assert f.read(2) == b"ob"
+        assert f.read() == b"ar\n"
         f.seek(0)
         assert f.readlines() == [b"foo\n", b"bar\n", b"foobar\n"]
         f.seek(0)

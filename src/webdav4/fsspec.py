@@ -53,6 +53,8 @@ def translate_info(item: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
 class WebdavFileSystem(AbstractFileSystem):
     """Provides access to webdav through fsspec-compliant APIs."""
 
+    protocol = ("webdav", "dav")
+
     def __init__(
         self,
         base_url: "URLTypes",
@@ -74,11 +76,18 @@ class WebdavFileSystem(AbstractFileSystem):
         super().__init__()
         self.client = client or Client(base_url, auth=auth, **client_opts)
 
+    @classmethod
+    def _strip_protocol(cls, path: str) -> str:
+        """Strips protocol from the given path, overriding for type-casting."""
+        stripped = super()._strip_protocol(path)
+        return cast(str, stripped)
+
     @reraise(ResourceNotFound, FileNotFoundError)
     def ls(
         self, path: str, detail: bool = True, **kwargs: Any
     ) -> List[Union[str, Dict[str, Any]]]:
         """`ls` implementation for fsspec, see fsspec for more information."""
+        path = self._strip_protocol(path)
         if not self.client.isdir(path):
             raise NotADirectoryError(errno.ENOTDIR, "Not a directory", path)
 
@@ -91,11 +100,13 @@ class WebdavFileSystem(AbstractFileSystem):
     @reraise(ResourceNotFound, FileNotFoundError)
     def info(self, path: str, **kwargs: Any) -> Dict[str, Any]:
         """Return information about the current path."""
+        path = self._strip_protocol(path)
         return translate_info(self.client.info(path))
 
     @reraise(ResourceNotFound, FileNotFoundError)
     def rm_file(self, path: str) -> None:
         """Remove a file."""
+        path = self._strip_protocol(path)
         # not checking if it's a directory as `rm` also passes a directory
         return self.client.remove(path)
 
@@ -104,11 +115,14 @@ class WebdavFileSystem(AbstractFileSystem):
     @reraise(ResourceNotFound, FileNotFoundError)
     def cp_file(self, path1: str, path2: str, **kwargs: Any) -> None:
         """Copy a file from one path to the other."""
+        path1 = self._strip_protocol(path1)
+        path2 = self._strip_protocol(path2)
         # not checking if it's a directory as `cp` also passes a directory
         return self.client.copy(path1, path2)
 
     def rmdir(self, path: str) -> None:
         """Remove a directory, if empty."""
+        path = self._strip_protocol(path)
         if self.ls(path):
             raise OSError(errno.ENOTEMPTY, "Directory not empty", path)
         return self.client.remove(path)
@@ -117,6 +131,7 @@ class WebdavFileSystem(AbstractFileSystem):
         self, path: str, recursive: bool = False, maxdepth: int = None
     ) -> None:
         """Delete files and directories."""
+        path = self._strip_protocol(path)
         if recursive and not maxdepth and self.isdir(path):
             return self.rm_file(path)
         super().rm(path, recursive=recursive, maxdepth=maxdepth)
@@ -131,13 +146,18 @@ class WebdavFileSystem(AbstractFileSystem):
         **kwargs: Any,
     ) -> None:
         """Copy files and directories."""
+        path1 = self._strip_protocol(path1)
+        path2 = self._strip_protocol(path2)
+
         if recursive and not kwargs.get("maxdepth") and self.isdir(path1):
             return self.cp_file(path1, path2)
 
         if not recursive and self.isdir(path1):
             return self.makedirs(path2)
 
-        super().copy(path1, path2, recursive=recursive, **kwargs)
+        super().copy(
+            path1, path2, recursive=recursive, on_error=on_error, **kwargs
+        )
         return None
 
     def mv(
@@ -149,6 +169,9 @@ class WebdavFileSystem(AbstractFileSystem):
         **kwargs: Any,
     ) -> None:
         """Move a file/directory from one path to the other."""
+        path1 = self._strip_protocol(path1)
+        path2 = self._strip_protocol(path2)
+
         if recursive and not maxdepth and self.isdir(path1):
             return self.client.move(path1, path2)
 
@@ -195,12 +218,14 @@ class WebdavFileSystem(AbstractFileSystem):
         self, path: str, create_parents: bool = True, **kwargs: Any
     ) -> None:
         """Create directory."""
+        path = self._strip_protocol(path)
         if create_parents:
             return self.makedirs(path, exist_ok=True)
         return self._mkdir(path)
 
     def makedirs(self, path: str, exist_ok: bool = False) -> None:
         """Creates directory to the given path."""
+        path = self._strip_protocol(path)
         parent = self._parent(path)
         if not ({"", self.root_marker} & {path, parent}) and not self.exists(
             parent
@@ -212,11 +237,13 @@ class WebdavFileSystem(AbstractFileSystem):
     @reraise(ResourceNotFound, FileNotFoundError)
     def created(self, path: str) -> Optional["datetime"]:
         """Returns creation time/date."""
+        path = self._strip_protocol(path)
         return self.client.created(path)
 
     @reraise(ResourceNotFound, FileNotFoundError)
     def modified(self, path: str) -> Optional["datetime"]:
         """Returns last modified time/data."""
+        path = self._strip_protocol(path)
         return self.client.modified(path)
 
     def _open(
@@ -255,11 +282,13 @@ class WebdavFileSystem(AbstractFileSystem):
     @reraise(ResourceNotFound, FileNotFoundError)
     def checksum(self, path: str) -> Optional[str]:
         """Returns checksum/etag of the path."""
+        path = self._strip_protocol(path)
         return self.client.etag(path)
 
     @reraise(ResourceNotFound, FileNotFoundError)
     def size(self, path: str) -> Optional[int]:
         """Returns size of the path."""
+        path = self._strip_protocol(path)
         return self.client.content_length(path)
 
     def sign(self, path: str, expiration: int = 100, **kwargs: Any) -> None:
@@ -268,6 +297,7 @@ class WebdavFileSystem(AbstractFileSystem):
 
     def pipe_file(self, path: str, value: bytes, **kwargs: Any) -> None:
         """Upload the contents to given file in the remote webdav server."""
+        path = self._strip_protocol(path)
         buff = io.BytesIO(value)
         kwargs.setdefault("overwrite", True)
         # maybe it's not a bad idea to make a `self.open` for `mode="rb"`
@@ -278,6 +308,7 @@ class WebdavFileSystem(AbstractFileSystem):
         self, lpath: "PathLike[AnyStr]", rpath: str, **kwargs: Any
     ) -> None:
         """Copy file to remote webdav server."""
+        rpath = self._strip_protocol(rpath)
         if os.path.isdir(lpath):
             self.makedirs(rpath, exist_ok=True)
         else:

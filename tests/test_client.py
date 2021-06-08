@@ -536,11 +536,13 @@ def test_open_file(storage_dir: TmpDir, client: Client):
         assert f.read() == "foo"
         assert f.read() == ""
         assert f.read() == ""
+        assert f.read(0) == ""
 
     with client.open("foo", mode="rb") as f:
         assert f.read() == b"foo"
         assert f.read() == b""
         assert f.read() == b""
+        assert f.read(0) == b""
 
     with client.open("foo", mode="rb") as f:
         assert f.readall() == b"foo"  # type: ignore
