@@ -120,20 +120,35 @@ class IterStream(RawIOBase):
 
     def readall(self) -> bytes:
         """Read all of the bytes."""
-        return self.read()
+        return b"".join(iter(partial(self.read1, -1), b""))
 
-    def read(self, n: int = -1) -> bytes:
+    def read(self, length: int = -1) -> bytes:
         """Read n bytes at max."""
+        if length < 0:
+            return self.readall()
+
+        chunk = b""
+        while length > 0:
+            # Do stuff with byte.
+            piece = self.read1(length)
+            if not piece:
+                break
+            length -= len(piece)
+            chunk += piece
+        return chunk
+
+    def read1(self, length: int = -1) -> bytes:
+        """Read at maximum once."""
         try:
             chunk = self.buffer or next(self.iterator)
         except StopIteration:
             return b""
 
-        if n <= 0:
+        if length <= 0:
             self.buffer = b""
             return chunk
 
-        output, self.buffer = chunk[:n], chunk[n:]
+        output, self.buffer = chunk[:length], chunk[length:]
         return output
 
     def readinto(self, sequence: Buffer) -> int:
@@ -141,7 +156,6 @@ class IterStream(RawIOBase):
         return read_into(self, sequence)  # type: ignore
 
     readinto1 = readinto
-    read1 = read
 
 
 def read_chunks(obj: IO[AnyStr], chunk_size: int = None) -> Iterator[AnyStr]:
