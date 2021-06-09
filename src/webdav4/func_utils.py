@@ -57,25 +57,6 @@ def retry(  # noqa: C901
     return wrapped_function
 
 
-def reraise(
-    catch: Type[Exception], _raise: Union[Exception, Type[Exception]]
-) -> Callable[[_F], _F]:
-    """Catches an exception and raises it as a different one."""
-
-    def decorated(func: _F) -> _F:
-        @no_type_check
-        @wraps(func)
-        def wrapped_function(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except catch as exc:
-                raise _raise from exc
-
-        return cast(_F, wrapped_function)
-
-    return decorated
-
-
 def wrap_fn(
     func: Callable[..., _T], *args: Any, **kwargs: Any
 ) -> Callable[[], _T]:
