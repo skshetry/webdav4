@@ -20,7 +20,6 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Sequence,
     Set,
     Tuple,
     cast,
@@ -444,27 +443,21 @@ def format_datetime(mtime: Any) -> str:
     return mtime.strftime(fmt)
 
 
-def columnify(iterable: List[Sequence[str]]) -> Iterator[List[str]]:
+def ls_columnify(iterable: List["Row"]) -> Iterator["Row"]:
     """Justifies contents and makes it look like a columnar table."""
     # First convert everything to its repr
-    max_sizes: List[int] = []
     if not (iterable and iterable[0]):
         return
 
-    # expecting same no. of cells in each row
-    col_len = len(iterable[0])
-
-    max_sizes = []
-    for col_index in range(col_len):
-        col = (row[col_index] for row in iterable)
-        max_sizes.append(max(len(cell) for cell in col))
+    max_dt = max(len(row.date) for row in iterable)
+    max_size = max(len(row.size) for row in iterable)
 
     for row in iterable:
-        yield [
-            # no need to justify cells in the last column
-            cell if index >= col_len - 1 else cell.ljust(max_sizes[index])
-            for index, cell in enumerate(row)
-        ]
+        yield Row(
+            date=row.date.ljust(max_dt),
+            size=row.size.rjust(max_size),
+            file=row.file,
+        )
 
 
 def process_url(url: str) -> str:
@@ -543,10 +536,18 @@ class Command:
         raise NotImplementedError
 
 
+class Row(NamedTuple):
+    """Row data structure representing each row for the ls output."""
+
+    date: str
+    size: str
+    file: str
+
+
 class CommandLS(Command):
     """Command for ls."""
 
-    def ls(self) -> Iterator[Sequence[str]]:
+    def ls(self) -> Iterator[Row]:
         """Returns a list of rows that are styled."""
         # if user set a `-L`, we would still like to show
         # directory in L level.
@@ -587,14 +588,14 @@ class CommandLS(Command):
             date = theme.style_datetime(info.get("modified") or "-")
             size = theme.style_size(info.get("size") or 0)
             file = theme.style_path(file_name, isdir=is_dir)
-            yield date, size, file
+            yield Row(date=date, size=size, file=file)
 
     @staticmethod
-    def render(details: List[Sequence[str]]) -> None:
+    def render(details: List[Row]) -> None:
         """Display provided information in a columnar format."""
         if not details:
             return None
-        for row in columnify(details):
+        for row in ls_columnify(details):
             print(*row)
         return None
 

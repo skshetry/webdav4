@@ -25,6 +25,7 @@ from webdav4.cli import (
     CommandSync,
     File,
     LSTheme,
+    Row,
     color_file,
     format_datetime,
     get_parser,
@@ -460,13 +461,10 @@ def test_ls_cli(capsys: CaptureFixture):
     CommandLS.render([])
     assert ("", "") == capsys.readouterr()
 
-    CommandLS.render([[]])
-    assert ("", "") == capsys.readouterr()
-
     CommandLS.render(
         [
-            ["Apr 05 09:40", "148.0k", "README.md"],
-            ["Jun 03 03:33", "6.2M", "my-docs.docx"],
+            Row("Apr 05 09:40", "148.0k", "README.md"),
+            Row("Jun 03 03:33", "6.2M", "my-docs.docx"),
         ]
     )
 
@@ -475,7 +473,7 @@ def test_ls_cli(capsys: CaptureFixture):
         textwrap.dedent(
             """\
         Apr 05 09:40 148.0k README.md
-        Jun 03 03:33 6.2M   my-docs.docx"""
+        Jun 03 03:33   6.2M my-docs.docx"""
         )
         in out
     )
