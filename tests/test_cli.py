@@ -26,6 +26,7 @@ from webdav4.cli import (
     File,
     LSTheme,
     Row,
+    Size,
     color_file,
     format_datetime,
     get_parser,
@@ -208,25 +209,32 @@ def test_style_size_datetime():
     theme.colored = False
 
     dt = datetime.today()
-    assert theme.style_datetime(dt) == dt.strftime("%b %d %H:%M")
-    assert theme.style_size(2027) == "2.0k"
+    assert theme.style_datetime(format_datetime(dt)) == dt.strftime(
+        "%b %d %H:%M"
+    )
+    assert theme.style_size(*human_size(2027)) == "2.0k"
 
     theme.colored = True
-    assert theme.style_datetime(dt) == "\x1b[34m{0}\x1b[0m".format(
-        dt.strftime("%b %d %H:%M")
-    )
-    assert theme.style_size(2027) == "\x1b[32m{0}\x1b[0m".format("2.0k")
+    assert theme.style_datetime(
+        format_datetime(dt)
+    ) == "\x1b[34m{0}\x1b[0m".format(dt.strftime("%b %d %H:%M"))
+    assert theme.style_size(
+        *human_size(2027)
+    ) == "\x1b[1m\x1b[32m{0}\x1b[0m\x1b[32m{1}\x1b[0m".format("2.0", "k")
+
+    assert theme.style_size(*human_size(None)) == "\x1b[2m\x1b[97m-\x1b[0m"
 
 
 @pytest.mark.parametrize(
     "nbytes, expected",
     [
-        (0, "0"),
-        (2027, "2.0k"),
-        (389, "389"),
-        (6498656, "6.2M"),
-        (1073741824, "1.0G"),
-        (107374182400, "100.0G"),
+        (0, ("0", "")),
+        (2027, ("2.0", "k")),
+        (389, ("389", "")),
+        (6498656, ("6.2", "M")),
+        (1073741824, ("1.0", "G")),
+        (107374182400, ("100", "G")),
+        (None, ("", "-")),
     ],
 )
 def test_human_size(nbytes: int, expected: str):
@@ -418,19 +426,19 @@ def test_ls_cli(capsys: CaptureFixture):
 
     ns = Namespace(path="data", recursive=False, level=None, full_path=False)
     assert set(CommandLS(ns, mfs).ls()) == {
-        ("-", "3", "foo"),
-        ("-", "3", "bar"),
+        Row("-", Size("3"), "foo"),
+        Row("-", Size("3"), "bar"),
     }
 
     ns = Namespace(
         path="data/foo", recursive=False, level=None, full_path=False
     )
-    assert set(CommandLS(ns, mfs).ls()) == {("-", "3", "foo")}
+    assert set(CommandLS(ns, mfs).ls()) == {Row("-", Size("3"), "foo")}
 
     ns = Namespace(
         path="data/bar", recursive=False, level=None, full_path=False
     )
-    assert set(CommandLS(ns, mfs).ls()) == {("-", "3", "bar")}
+    assert set(CommandLS(ns, mfs).ls()) == {Row("-", Size("3"), "bar")}
 
     with pytest.raises(FileNotFoundError):
         ns = Namespace(
@@ -440,22 +448,22 @@ def test_ls_cli(capsys: CaptureFixture):
 
     ns = Namespace(path="data", recursive=False, level=None, full_path=True)
     assert set(CommandLS(ns, mfs).ls()) == {
-        ("-", "3", "data/foo"),
-        ("-", "3", "data/bar"),
+        Row("-", Size("3"), "data/foo"),
+        Row("-", Size("3"), "data/bar"),
     }
 
     ns = Namespace(path="", recursive=True, level=2, full_path=True)
     assert set(CommandLS(ns, mfs).ls()) == {
-        ("-", "3", "data/foo"),
-        ("-", "3", "data/bar"),
-        ("-", "0", "dir/nested"),
+        Row("-", Size("3"), "data/foo"),
+        Row("-", Size("3"), "data/bar"),
+        Row("-", Size("0"), "dir/nested", isdir=True),
     }
 
     ns = Namespace(path="", recursive=True, level=None, full_path=False)
     assert set(CommandLS(ns, mfs).ls()) == {
-        ("-", "3", "data/foo"),
-        ("-", "3", "data/bar"),
-        ("-", "5.9k", "dir/nested/foo"),
+        Row("-", Size("3"), "data/foo"),
+        Row("-", Size("3"), "data/bar"),
+        Row("-", Size("5.9", "k"), "dir/nested/foo"),
     }
 
     CommandLS.render([])
@@ -463,8 +471,8 @@ def test_ls_cli(capsys: CaptureFixture):
 
     CommandLS.render(
         [
-            Row("Apr 05 09:40", "148.0k", "README.md"),
-            Row("Jun 03 03:33", "6.2M", "my-docs.docx"),
+            Row("Apr 05 09:40", Size("148.0", "k"), "README.md"),
+            Row("Jun 03 03:33", Size("6.2", "M"), "my-docs.docx"),
         ]
     )
 
@@ -482,7 +490,7 @@ def test_ls_cli(capsys: CaptureFixture):
         path="data/foo", recursive=True, level=None, full_path=False
     )
     CommandLS(ns, mfs).run()
-    assert capsys.readouterr() == ("- 3 foo\n", "")
+    assert capsys.readouterr() == ("-  3 foo\n", "")
 
     with pytest.raises(FileNotFoundError):
         ns = Namespace(
