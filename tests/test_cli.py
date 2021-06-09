@@ -291,8 +291,8 @@ def test_cp_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     CommandCopy(ns, memfs).run()
 
     assert memfs.cat("data1", recursive=True, on_error="ignore") == {
-        "data1/bar": b"bar",
-        "data1/foo": b"foo",
+        "/data1/bar": b"bar",
+        "/data1/foo": b"foo",
     }
     assert memfs.isdir("data2")
 
@@ -301,12 +301,12 @@ def test_cp_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     )
     CommandCopy(ns, memfs).run()
     assert memfs.cat("data1", recursive=True, on_error="ignore") == {
-        "data1/bar": b"bar",
-        "data1/foo": b"foo",
+        "/data1/bar": b"bar",
+        "/data1/foo": b"foo",
     }
     assert memfs.cat("data2", recursive=True, on_error="ignore") == {
-        "data2/bar": b"bar",
-        "data2/foo": b"foo",
+        "/data2/bar": b"bar",
+        "/data2/foo": b"foo",
     }
     assert memfs.isdir("data2")
 
@@ -325,8 +325,8 @@ def test_cp_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     ns = Namespace(path1="dir", path2="memory://dir", recursive=True)
     CommandCopy(ns, memfs).run()
     assert memfs.cat("dir", True, "ignore") == {
-        "dir/ipsum": b"ipsum",
-        "dir/lorem": b"lorem",
+        "/dir/ipsum": b"ipsum",
+        "/dir/lorem": b"lorem",
     }
 
     ns = Namespace(path1="memory://dir", path2="dir2", recursive=True)
@@ -371,8 +371,8 @@ def test_mv_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     CommandMove(ns, memfs).run()
     assert not memfs.isdir("data1")
     assert memfs.cat("data2", recursive=True, on_error="ignore") == {
-        "data2/bar": b"bar",
-        "data2/foo": b"foo",
+        "/data2/bar": b"bar",
+        "/data2/foo": b"foo",
     }
     assert memfs.isdir("data2")
 
@@ -392,8 +392,8 @@ def test_mv_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     ns = Namespace(path1="dir", path2="memory://dir", recursive=True)
     CommandMove(ns, memfs).run()
     assert memfs.cat("dir", True, "ignore") == {
-        "dir/ipsum": b"ipsum",
-        "dir/lorem": b"lorem",
+        "/dir/ipsum": b"ipsum",
+        "/dir/lorem": b"lorem",
     }
 
     ns = Namespace(path1="memory://dir", path2="dir2", recursive=True)
@@ -505,40 +505,40 @@ def test_sync_cli_local_to_remote(
 
     cmd = CommandSync(ns, memfs)
     cmd.run()
-    assert memfs.cat("data", True, "ignore") == {"data/foo": b"foo"}
+    assert memfs.cat("data", True, "ignore") == {"/data/foo": b"foo"}
 
     (storage_dir / "data" / "bar").write_text("bar")
     cmd.run()
     assert memfs.cat("data", True, "ignore") == {
-        "data/foo": b"foo",
-        "data/bar": b"bar",
+        "/data/foo": b"foo",
+        "/data/bar": b"bar",
     }
 
     (storage_dir / "data" / "bar").write_text("new updates")
     cmd.run()
     assert memfs.cat("data", True, "ignore") == {
-        "data/foo": b"foo",
-        "data/bar": b"new updates",
+        "/data/foo": b"foo",
+        "/data/bar": b"new updates",
     }
 
     (storage_dir / "data" / "bar").unlink()
     ns = Namespace(path1="data", path2="memory://data", delete=True)
     cmd = CommandSync(ns, memfs)
     cmd.run()
-    assert memfs.cat("data", True, "ignore") == {"data/foo": b"foo"}
+    assert memfs.cat("data", True, "ignore") == {"/data/foo": b"foo"}
 
     (storage_dir / "data" / "dir").gen({"lorem": "lorem"})
     cmd.run()
     assert memfs.cat("data", True, "ignore") == {
-        "data/foo": b"foo",
-        "data/dir/lorem": b"lorem",
+        "/data/foo": b"foo",
+        "/data/dir/lorem": b"lorem",
     }
 
     # nothing should change
     cmd.run()
     assert memfs.cat("data", True, "ignore") == {
-        "data/foo": b"foo",
-        "data/dir/lorem": b"lorem",
+        "/data/foo": b"foo",
+        "/data/dir/lorem": b"lorem",
     }
 
     # trying to make src to be a directory, we should abort in this case
@@ -604,41 +604,41 @@ def test_sync_remote_to_remote():
 
     cmd = CommandSync(ns, memfs)
     cmd.run()
-    assert memfs.cat("data2", True, "ignore") == {"data2/foo": b"foo"}
+    assert memfs.cat("data2", True, "ignore") == {"/data2/foo": b"foo"}
 
     memfs.pipe({"data/bar": b"bar"})
     cmd.run()
     assert memfs.cat("data2", True, "ignore") == {
-        "data2/foo": b"foo",
-        "data2/bar": b"bar",
+        "/data2/foo": b"foo",
+        "/data2/bar": b"bar",
     }
 
     memfs.pipe({"data/bar": b"new updates"})
     cmd.run()
     assert memfs.cat("data2", True, "ignore") == {
-        "data2/foo": b"foo",
-        "data2/bar": b"new updates",
+        "/data2/foo": b"foo",
+        "/data2/bar": b"new updates",
     }
 
     memfs.rm("data/bar")
     ns = Namespace(path1="memory://data", path2="memory://data2", delete=True)
     cmd = CommandSync(ns, memfs)
     cmd.run()
-    assert memfs.cat("data2", True, "ignore") == {"data2/foo": b"foo"}
+    assert memfs.cat("data2", True, "ignore") == {"/data2/foo": b"foo"}
 
     memfs.mkdir("data/dir")
     memfs.pipe({"data/dir/lorem": b"lorem"})
     cmd.run()
     assert memfs.cat("data2", True, "ignore") == {
-        "data2/foo": b"foo",
-        "data2/dir/lorem": b"lorem",
+        "/data2/foo": b"foo",
+        "/data2/dir/lorem": b"lorem",
     }
 
     # nothing should change
     cmd.run()
     assert memfs.cat("data2", True, "ignore") == {
-        "data2/foo": b"foo",
-        "data2/dir/lorem": b"lorem",
+        "/data2/foo": b"foo",
+        "/data2/dir/lorem": b"lorem",
     }
 
 
