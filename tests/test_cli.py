@@ -19,6 +19,7 @@ from webdav4.cli import (
     CommandCopy,
     CommandDiskUsage,
     CommandLS,
+    CommandMkdir,
     CommandMove,
     CommandRemove,
     CommandRun,
@@ -53,6 +54,8 @@ class MemoryFileSystem(_MemoryFS):
     ) -> None:
         """Adds support for protocol."""
         path = self._strip_protocol(path)
+        if create_parents and self.isdir(path):
+            return
         super().mkdir(path, create_parents=create_parents, **kwargs)
 
     def copy(
@@ -367,6 +370,20 @@ def test_rm_cli():
     assert not memfs.exists("data1")
 
 
+def test_mkdir_cli():
+    """Test mkdir command."""
+    memfs = MemoryFileSystem()
+
+    cmd = CommandMkdir(Namespace(path="data1", parents=False), memfs)
+    cmd.run()
+    assert memfs.isdir("data1")
+
+    cmd = CommandMkdir(Namespace(path="data1/dir1/dir2", parents=True), memfs)
+    cmd.run()
+    assert memfs.isdir("data1/dir1")
+    assert memfs.isdir("data1/dir1/dir2")
+
+
 def test_mv_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     """Test mv command."""
     memfs = MemoryFileSystem()
@@ -664,6 +681,7 @@ def test_run_cli(monkeypatch: MonkeyPatch):
     buff.write("mv memory://data memory://data3 --recursive" + os.linesep)
     buff.write("ls memory://data3" + os.linesep)
     buff.write("du memory://data3" + os.linesep)
+    buff.write("mkdir memory://data3 -p" + os.linesep)
     buff.seek(0)
 
     monkeypatch.setattr("sys.stdin", buff)

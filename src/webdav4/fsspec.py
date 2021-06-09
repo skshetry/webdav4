@@ -3,12 +3,14 @@ import errno
 import io
 import os
 import tempfile
+from contextlib import contextmanager
 from typing import (
     TYPE_CHECKING,
     Any,
     BinaryIO,
     Callable,
     Dict,
+    Iterator,
     List,
     NamedTuple,
     NoReturn,
@@ -28,7 +30,6 @@ from .client import (
     ResourceConflict,
     ResourceNotFound,
 )
-from .func_utils import reraise
 from .stream import read_into
 
 if TYPE_CHECKING:
@@ -48,6 +49,17 @@ def translate_info(item: Union[str, Dict[str, Any]]) -> Dict[str, Any]:
     """Translate info from the client to as per fsspec requirements."""
     assert not isinstance(item, str)
     return {mapping.get(key, key): value for key, value in item.items()}
+
+
+@contextmanager
+def translate_exceptions() -> Iterator[None]:
+    """Translate exceptions from Client to the fsspec compatible one."""
+    try:
+        yield
+    except ResourceNotFound as exc:
+        raise FileNotFoundError(
+            errno.ENOENT, "No such file or directory", exc.path
+        ) from exc
 
 
 class WebdavFileSystem(AbstractFileSystem):
@@ -82,7 +94,7 @@ class WebdavFileSystem(AbstractFileSystem):
         stripped = super()._strip_protocol(path)
         return cast(str, stripped)
 
-    @reraise(ResourceNotFound, FileNotFoundError)
+    @translate_exceptions()
     def ls(
         self, path: str, detail: bool = True, **kwargs: Any
     ) -> List[Union[str, Dict[str, Any]]]:
@@ -97,13 +109,13 @@ class WebdavFileSystem(AbstractFileSystem):
 
         return [translate_info(item) for item in data]
 
-    @reraise(ResourceNotFound, FileNotFoundError)
+    @translate_exceptions()
     def info(self, path: str, **kwargs: Any) -> Dict[str, Any]:
         """Return information about the current path."""
         path = self._strip_protocol(path)
         return translate_info(self.client.info(path))
 
-    @reraise(ResourceNotFound, FileNotFoundError)
+    @translate_exceptions()
     def rm_file(self, path: str) -> None:
         """Remove a file."""
         path = self._strip_protocol(path)
@@ -112,7 +124,7 @@ class WebdavFileSystem(AbstractFileSystem):
 
     _rm = rm_file
 
-    @reraise(ResourceNotFound, FileNotFoundError)
+    @translate_exceptions()
     def cp_file(self, path1: str, path2: str, **kwargs: Any) -> None:
         """Copy a file from one path to the other."""
         path1 = self._strip_protocol(path1)
@@ -234,13 +246,13 @@ class WebdavFileSystem(AbstractFileSystem):
 
         return self._mkdir(path, exist_ok=exist_ok)
 
-    @reraise(ResourceNotFound, FileNotFoundError)
+    @translate_exceptions()
     def created(self, path: str) -> Optional["datetime"]:
         """Returns creation time/date."""
         path = self._strip_protocol(path)
         return self.client.created(path)
 
-    @reraise(ResourceNotFound, FileNotFoundError)
+    @translate_exceptions()
     def modified(self, path: str) -> Optional["datetime"]:
         """Returns last modified time/data."""
         path = self._strip_protocol(path)
@@ -279,13 +291,13 @@ class WebdavFileSystem(AbstractFileSystem):
             **kwargs,
         )
 
-    @reraise(ResourceNotFound, FileNotFoundError)
+    @translate_exceptions()
     def checksum(self, path: str) -> Optional[str]:
         """Returns checksum/etag of the path."""
         path = self._strip_protocol(path)
         return self.client.etag(path)
 
-    @reraise(ResourceNotFound, FileNotFoundError)
+    @translate_exceptions()
     def size(self, path: str) -> Optional[int]:
         """Returns size of the path."""
         path = self._strip_protocol(path)

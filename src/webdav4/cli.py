@@ -899,6 +899,14 @@ class CommandSync(Command):
         return self.sync(src, dest, src_fs, dest_fs)
 
 
+class CommandMkdir(Command):
+    """Command for mkdir."""
+
+    def run(self) -> None:
+        """Create directory."""
+        self.fs.mkdir(self.args.path, create_parents=self.args.parents)
+
+
 class CommandDiskUsage(Command):
     """Command for du."""
 
@@ -1032,6 +1040,19 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
     rm_parser.add_argument("path", help="Path to remove")
     rm_parser.set_defaults(func=CommandRemove)
 
+    mkdir_parser = subparsers.add_parser(
+        "mkdir", help="Creates a directory/collection in the remote server."
+    )
+    mkdir_parser.add_argument(
+        "--parents",
+        "-p",
+        default=False,
+        action="store_true",
+        help="no error if existing, " "make parent directories as needed",
+    )
+    mkdir_parser.add_argument("path", help="Path to remove")
+    mkdir_parser.set_defaults(func=CommandMkdir)
+
     run_parser = subparsers.add_parser("run", help="Run multiple commands")
     run_parser.add_argument(
         "path", metavar="FILE", help="files to read, if empty, stdin is used"
@@ -1080,6 +1101,7 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         "cat": cat_parser,
         "sync": sync_parser,
         "du": du_parser,
+        "mkdir": mkdir_parser,
     }
 
 
