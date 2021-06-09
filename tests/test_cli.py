@@ -156,6 +156,29 @@ def test_lstheme_should_color(monkeypatch: MonkeyPatch):
     with mock.patch.object(sys.stdout, "isatty", return_value=False):
         assert not theme._should_color()
 
+        monkeypatch.setenv("FORCE_COLOR", "false")
+        assert not theme._should_color()
+
+        monkeypatch.setenv("FORCE_COLOR", "")
+        assert not theme._should_color()
+
+        monkeypatch.setenv("FORCE_COLOR", "0")
+        assert not theme._should_color()
+
+        monkeypatch.setenv("FORCE_COLOR", "true")
+        assert theme._should_color()
+
+        monkeypatch.setenv("FORCE_COLOR", "1")
+        assert theme._should_color()
+
+        monkeypatch.setenv("FORCE_COLOR", "2")
+        assert theme._should_color()
+
+        monkeypatch.setenv("FORCE_COLOR", "3")
+        assert theme._should_color()
+
+    monkeypatch.delenv("FORCE_COLOR")
+
     with mock.patch.object(sys.stdout, "isatty", return_value=True):
         assert theme._should_color()
 

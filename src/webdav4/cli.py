@@ -98,12 +98,14 @@ class LSTheme:
 
         This honors FORCE_COLOR and NO_COLOR envvars as well. :).
         """
+        force_color = os.getenv("FORCE_COLOR")
+        if force_color and force_color in ("0", "false"):
+            return False
+        if force_color:
+            return True
         if not sys.stdout.isatty() or os.getenv("TERM") == "dumb":
             return False
-        force_color = os.getenv("FORCE_COLOR")
-        if force_color and force_color == "0":
-            return False
-        return bool(force_color) or "NO_COLOR" not in os.environ
+        return "NO_COLOR" not in os.environ
 
     # see:
     # https://github.com/iterative/dvc/blob/1335c7f/dvc/command/ls/ls_colors.py
