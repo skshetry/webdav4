@@ -82,6 +82,20 @@ class MemoryFileSystem(_MemoryFS):
         super().rm(path, recursive=recursive, maxdepth=maxdepth)
 
 
+@pytest.fixture(autouse=True)
+def unset_envvars(monkeypatch: MonkeyPatch):
+    """Unset some envvars that might affect auth or coloring."""
+    envvars = [
+        "WEBDAV_ENDPOINT_URL",
+        "LS_COLORS",
+        "FORCE_COLOR",
+        "NO_COLOR",
+        "TERM",
+    ]
+    for envvar in envvars:
+        monkeypatch.delenv(envvar, raising=False)
+
+
 @pytest.mark.parametrize(
     "file_name, expected_color",
     [
