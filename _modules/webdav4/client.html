@@ -137,6 +137,7 @@
 
 <span class="kn">import</span> <span class="nn">locale</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">suppress</span>
 <span class="kn">from</span> <span class="nn">http</span> <span class="kn">import</span> <span class="n">HTTPStatus</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">TextIOWrapper</span><span class="p">,</span> <span class="n">UnsupportedOperation</span>
@@ -278,6 +279,31 @@
     <span class="sd">"""Wrapping MultiStatusResponseError with ClientError."""</span></div>
 
 
+<div class="viewcode-block" id="FeatureDetection"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.FeatureDetection">[docs]</a><span class="k">class</span> <span class="nc">FeatureDetection</span><span class="p">:</span>
+    <span class="sd">"""Detect features in the webdav resources.</span>
+
+<span class="sd">    Mostly used for detecting support for Accept-Ranges as ownCloud/NextCloud</span>
+<span class="sd">    don't advertise support for it in GET requests.</span>
+<span class="sd">    """</span>
+
+    <span class="n">supports_ranges</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">dav_compliances</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options_response</span><span class="p">:</span> <span class="s2">"HTTPResponse"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">"""Initialize with the given response."""</span>
+        <span class="n">dav_compliances</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="n">supports_ranges</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">options_response</span><span class="p">:</span>
+            <span class="n">dav_header</span> <span class="o">=</span> <span class="n">options_response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dav"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+            <span class="n">dav_compliances</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dav_header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)}</span>
+            <span class="n">supports_ranges</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">options_response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"accept-ranges"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"bytes"</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dav_compliances</span> <span class="o">=</span> <span class="n">dav_compliances</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">supports_ranges</span> <span class="o">=</span> <span class="n">supports_ranges</span></div>
+
+
 <div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">:</span>
     <span class="sd">"""Provides higher level APIs for interacting with Webdav server."""</span>
 
@@ -347,12 +373,32 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">http</span><span class="p">:</span> <span class="n">HTTPClient</span> <span class="o">=</span> <span class="n">http_client</span> <span class="ow">or</span> <span class="n">HTTPClient</span><span class="p">(</span><span class="o">**</span><span class="n">client_opts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">base_url</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span> <span class="o">=</span> <span class="n">retry</span> <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span> <span class="k">else</span> <span class="n">_retry</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_detected_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FeatureDetection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_detect_feature_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">detected_features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FeatureDetection</span><span class="p">:</span>
+        <span class="sd">"""Feature detection for the server."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detected_features</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_feature_lock</span><span class="p">:</span>
+                <span class="c1"># a lot of threads might be stuck on thread lock</span>
+                <span class="c1"># and if one is done with it, it means we already</span>
+                <span class="c1"># have it set, so we should look for it rather than</span>
+                <span class="c1"># sending out a request.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detected_features</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detected_features</span>
+
+                <span class="n">resp</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+                    <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">http</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_detected_features</span> <span class="o">=</span> <span class="n">FeatureDetection</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detected_features</span>
 
 <div class="viewcode-block" id="Client.options"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.options">[docs]</a>    <span class="k">def</span> <span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">"""Returns features detected in the webdav server."""</span>
         <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">http</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="n">dav_header</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dav"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dav_header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)}</span></div>
+        <span class="n">detected_features</span> <span class="o">=</span> <span class="n">FeatureDetection</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">detected_features</span><span class="o">.</span><span class="n">dav_compliances</span></div>
 
 <div class="viewcode-block" id="Client.join_url"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.join_url">[docs]</a>    <span class="k">def</span> <span class="nf">join_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
         <span class="sd">"""Join resource path with base url of the webdav server."""</span>
@@ -622,19 +668,16 @@
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r"</span><span class="p">,</span>
         <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">]]:</span>
         <span class="sd">"""Returns file-like object to a resource."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot open a collection"</span><span class="p">)</span>
-
         <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"r"</span><span class="p">,</span> <span class="s2">"rt"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">}</span>
 
         <span class="k">with</span> <span class="n">IterStream</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">http</span><span class="p">,</span>
+            <span class="bp">self</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
             <span class="n">chunk_size</span><span class="o">=</span><span class="n">block_size</span><span class="p">,</span>
-            <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">buffer</span><span class="p">:</span>
             <span class="n">buff</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">buffer</span><span class="p">)</span>
 

@@ -507,13 +507,22 @@
         <span class="sd">"""Not essential. Creating stub to make pylint happy."""</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
+<div class="viewcode-block" id="WebdavFile.seek"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.seek">[docs]</a>    <span class="k">def</span> <span class="nf">seek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">whence</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">"""Set current file location."""</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">whence</span><span class="o">=</span><span class="n">whence</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">whence</span><span class="o">=</span><span class="n">whence</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WebdavFile.isatty"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.isatty">[docs]</a>    <span class="k">def</span> <span class="nf">isatty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">"""Check if it is an interactive fileobj."""</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
 <div class="viewcode-block" id="WebdavFile.close"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Close stream."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
             <span class="k">return</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span></div>
 
     <span class="k">def</span> <span class="nf">__reduce_ex__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="nb">int</span>
