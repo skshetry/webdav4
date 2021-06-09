@@ -21,7 +21,7 @@ class TmpDir(PathClass):  # type: ignore
         return cast(str, self.read_text())
 
     def gen(
-        self, struct: Union[str, Dict[str, Any]], text: str = ""
+        self, struct: Union[str, Dict[str, Any]], text: Union[str, bytes] = ""
     ) -> Iterable[str]:
         """Creates folder structure locally from the provided structure.
 

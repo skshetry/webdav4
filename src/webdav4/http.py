@@ -5,9 +5,13 @@ from typing import TYPE_CHECKING, Any
 import httpx
 
 if TYPE_CHECKING:
-    from .types import HTTPResponse, URLTypes
+    from .types import URLTypes
 
 HTTPStatusError = httpx.HTTPStatusError
+HTTPNetworkError = httpx.NetworkError
+HTTPTimeoutException = httpx.TimeoutException
+HTTPResponse = httpx.Response
+HTTPRequest = httpx.Request
 
 
 class Method:
