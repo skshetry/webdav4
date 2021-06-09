@@ -372,13 +372,22 @@ class WebdavFile(AbstractBufferedFile):
         """Not essential. Creating stub to make pylint happy."""
         raise NotImplementedError
 
+    def seek(self, loc: int, whence: int = 0) -> int:
+        """Set current file location."""
+        super().seek(loc, whence=whence)
+        return self.reader.seek(loc, whence=whence)
+
+    def isatty(self) -> bool:
+        """Check if it is an interactive fileobj."""
+        return False
+
     def close(self) -> None:
         """Close stream."""
         if self.closed:
             return
 
-        self.closed = True
         self.reader.close()
+        self.closed = True
 
     def __reduce_ex__(
         self, protocol: int

@@ -1,5 +1,7 @@
 """Handle streaming response for file."""
+from contextlib import contextmanager
 from functools import partial
+from http import HTTPStatus
 from io import DEFAULT_BUFFER_SIZE, RawIOBase
 from itertools import takewhile
 from typing import (
@@ -7,6 +9,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     AnyStr,
+    Generator,
     Iterator,
     List,
     Optional,
@@ -15,18 +18,81 @@ from typing import (
     cast,
 )
 
-from .callback import CallbackFn, do_nothing
 from .func_utils import repeat_func
+from .http import HTTPNetworkError, HTTPTimeoutException
 from .http import Method as HTTPMethod
 
 if TYPE_CHECKING:
     from array import ArrayType
     from mmap import mmap
 
+    from .client import Client
     from .http import Client as HTTPClient
     from .types import HTTPResponse, URLTypes
 
+
 Buffer = Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
+
+
+def request(
+    client: "HTTPClient", url: "URLTypes", pos: int = 0
+) -> "HTTPResponse":
+    """Streams a file from url from given position."""
+    headers = {}
+    if pos:
+        headers.update({"Range": f"bytes={pos}-"})
+
+    req = client.build_request(HTTPMethod.GET, url, headers=headers)
+    response = client.send(req, stream=True, allow_redirects=True)
+    return response
+
+
+@contextmanager
+def iter_url(  # noqa: C901
+    client: "Client",
+    url: "URLTypes",
+    pos: int = 0,
+) -> Iterator[Tuple["HTTPResponse", Iterator[bytes]]]:
+    """Iterate over chunks requested from url.
+
+    Reopens connection on network failure.
+    """
+
+    def gen(
+        response: "HTTPResponse",
+    ) -> Generator[bytes, None, None]:
+        nonlocal pos
+        try:
+            while True:
+                if (
+                    response.status_code
+                    == HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE
+                ):
+                    return  # range request outside file
+                response.raise_for_status()
+
+                try:
+                    for chunk in response.iter_bytes():
+                        pos += len(chunk)
+                        yield chunk
+                    break
+                except (HTTPTimeoutException, HTTPNetworkError):
+                    response.close()
+                    if not (
+                        client.detected_features.supports_ranges
+                        or response.headers.get("Accept-Ranges") == "bytes"
+                    ):
+                        raise
+                    response = request(client.http, url, pos=pos)
+        finally:
+            response.close()
+
+    response = request(client.http, url, pos=pos)
+    chunks = gen(response)
+    try:
+        yield response, chunks
+    finally:
+        chunks.close()  # Ensure connection is closed
 
 
 class IterStream(RawIOBase):
@@ -34,10 +100,9 @@ class IterStream(RawIOBase):
 
     def __init__(
         self,
-        client: "HTTPClient",
+        client: "Client",
         url: "URLTypes",
         chunk_size: int = None,
-        callback: CallbackFn = None,
     ) -> None:
         """Pass a iterator to stream through."""
         super().__init__()
@@ -46,13 +111,13 @@ class IterStream(RawIOBase):
         # setting chunk_size is not possible yet with httpx
         # though it is to be released in a new version.
         self.chunk_size = chunk_size or DEFAULT_BUFFER_SIZE
-        self.request = client.build_request(HTTPMethod.GET, url)
         self.client = client
         self.url = url
-        self.response: Optional["HTTPResponse"] = None
         self._loc: int = 0
-        self.callback = callback or do_nothing
+        self._cm = iter_url(client, self.url)
+        self.size: Optional[int] = None
         self._iterator: Optional[Iterator[bytes]] = None
+        self._response: Optional["HTTPResponse"] = None
 
     @property
     def loc(self) -> int:
@@ -63,14 +128,15 @@ class IterStream(RawIOBase):
     def loc(self, value: int) -> None:
         """Update location, and run callbacks."""
         self._loc = value
-        self.callback(value - self._loc)
 
     def __enter__(self) -> "IterStream":
         """Send a streaming response."""
-        self.response = response = self.client.send(
-            self.request, stream=True, allow_redirects=True
-        )
-        response.raise_for_status()
+        #  pylint: disable=no-member
+        response, self._iterator = self._cm.__enter__()
+        # we don't want to get this on Ranged requests or retried ones
+        content_length: str = response.headers.get("Content-Length", "")
+        self._response = response
+        self.size = int(content_length) if content_length.isdigit() else None
         return self
 
     def __exit__(self, *args: Any) -> None:
@@ -80,31 +146,51 @@ class IterStream(RawIOBase):
     @property
     def encoding(self) -> Optional[str]:
         """Encoding of the response."""
-        assert self.response
-        return self.response.encoding
-
-    @property
-    def iterator(self) -> Iterator[bytes]:
-        """Iterating through streaming response."""
-        if self._iterator is None:
-            assert self.response
-            self._iterator = self.response.iter_bytes()
-
-        for chunk in self._iterator:
-            self.loc += len(chunk)
-            yield chunk
+        assert self._response
+        return self._response.encoding
 
     def close(self) -> None:
         """Close response if not already."""
-        if self.response:
-            self.response.close()
-            self.response = None
-            self.buffer = b""
+        if self._iterator or self._response:
+            self._cm.__exit__(None, None, None)  # pylint: disable=no-member
+
+        self._iterator = None
+        self._response = None
+        self.buffer = b""
+
+    def seek(self, offset: int, whence: int = 0) -> int:
+        """Seek the file object."""
+        if whence == 0:
+            loc = offset
+        elif whence == 1:
+            if offset >= 0:
+                self.read(offset)
+                return self.loc
+            loc = self.loc + offset
+        elif whence == 2:
+            if not self.size:
+                raise ValueError("cannot seek to the end of file")
+            loc = self.size + offset
+        else:
+            raise ValueError(f"invalid whence ({whence}, should be 0, 1 or 2)")
+        if loc < 0:
+            raise ValueError("Seek before start of file")
+
+        self.close()
+        self._cm = iter_url(self.client, self.url, pos=loc)
+        #  pylint: disable=no-member
+        self._response, self._iterator = self._cm.__enter__()
+        self.loc = loc
+        return self.loc
+
+    def tell(self) -> int:
+        """Return current position of the fileobj."""
+        return self.loc
 
     @property
     def closed(self) -> bool:  # pylint: disable=invalid-overridden-method
         """Check whether the stream was closed or not."""
-        return self.response is None
+        return not any([self._response, self._iterator])
 
     def readable(self) -> bool:
         """Stream is readable."""
@@ -112,7 +198,7 @@ class IterStream(RawIOBase):
 
     def seekable(self) -> bool:
         """Stream is not seekable."""
-        return False
+        return True
 
     def writable(self) -> bool:
         """Stream not writable."""
@@ -122,40 +208,42 @@ class IterStream(RawIOBase):
         """Read all of the bytes."""
         return b"".join(iter(partial(self.read1, -1), b""))
 
-    def read(self, length: int = -1) -> bytes:
+    def read(self, num: int = -1) -> bytes:
         """Read n bytes at max."""
-        if length < 0:
+        if num < 0:
             return self.readall()
 
-        chunk = b""
-        while length > 0:
-            # Do stuff with byte.
-            piece = self.read1(length)
-            if not piece:
+        buff = b""
+        while len(buff) < num:
+            chunk = self.read1(num - len(buff))
+            if not chunk:
                 break
-            length -= len(piece)
-            chunk += piece
-        return chunk
+            buff += chunk
+        return buff
 
-    def read1(self, length: int = -1) -> bytes:
+    def read1(self, num: int = -1) -> bytes:
         """Read at maximum once."""
+        assert self._iterator
         try:
-            chunk = self.buffer or next(self.iterator)
+            chunk = self.buffer or next(self._iterator)
         except StopIteration:
             return b""
 
-        if length <= 0:
+        if num <= 0:
             self.buffer = b""
             return chunk
 
-        output, self.buffer = chunk[:length], chunk[length:]
+        output, self.buffer = chunk[:num], chunk[num:]
+        self.loc += len(output)
         return output
 
     def readinto(self, sequence: Buffer) -> int:
         """Read into the buffer."""
         return read_into(self, sequence)  # type: ignore
 
-    readinto1 = readinto
+    def readinto1(self, sequence: Buffer) -> int:
+        """Read into the buffer with 1 read at max."""
+        return read_into(self, sequence, read_once=True)  # type: ignore
 
 
 def read_chunks(obj: IO[AnyStr], chunk_size: int = None) -> Iterator[AnyStr]:
@@ -209,11 +297,13 @@ def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:  # noqa: C901
         yield joiner.join(out)
 
 
-def read_into(obj: IO[AnyStr], sequence: Buffer) -> int:
+def read_into(
+    obj: IO[AnyStr], sequence: Buffer, read_once: bool = False
+) -> int:
     """Read into the buffer."""
     out = memoryview(sequence).cast("B")
-    data = obj.read(out.nbytes)
+    func = obj.read1 if read_once else obj.read  # type: ignore
+    data = func(out.nbytes)
 
-    # https://github.com/python/typeshed/issues/4991
-    out[: len(data)] = data  # type: ignore[assignment]
+    out[: len(data)] = data
     return len(data)

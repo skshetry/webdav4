@@ -1,7 +1,7 @@
 """Tests for webdav client."""
 from datetime import datetime, timezone
 from http import HTTPStatus
-from io import BytesIO
+from io import DEFAULT_BUFFER_SIZE, BytesIO
 from pathlib import Path
 from typing import Any, Callable, Dict
 from unittest.mock import MagicMock
@@ -11,6 +11,7 @@ import pytest
 from webdav4.client import (
     BadGatewayError,
     Client,
+    FeatureDetection,
     ForbiddenOperation,
     HTTPError,
     InsufficientStorage,
@@ -480,13 +481,111 @@ def test_client_propfind(
 
 
 def test_open(storage_dir: TmpDir, client: Client):
-    """Test opening a remote file from webdav."""
-    storage_dir.gen({"data": {"foo": "foo"}})
-    with client.open("/data/foo") as f:
-        assert f.read() == "foo"
+    """Test opening a remote file from webdav opened in text mode."""
+    text1 = "0123456789" * (DEFAULT_BUFFER_SIZE // 10 + 1)
+    storage_dir.gen("sample.txt", text1 * 2)
 
-    with client.open("/data/foo", mode="rb") as f:
-        assert f.read() == b"foo"
+    with client.open("sample.txt", mode="r") as f:
+        assert not f.closed
+        assert not f.isatty()
+        assert f.readable()
+        assert not f.writable()
+        assert f.seekable()
+        assert f.tell() == 0
+        assert f.read(len(text1)) == text1
+        assert f.tell() == len(text1)
+        assert f.seek(10) == 10
+        assert f.read(len(text1) - 10) == text1[10:]
+        assert f.tell() == len(text1)
+        assert f.seek(len(text1) * 2) == len(text1) * 2
+        assert f.read() == ""
+        assert f.seek(0) == 0
+    assert f.closed
+    f.close()
+
+    text2 = "0123456789\n"
+    storage_dir.gen("sample2.txt", text2 * 10)
+
+    with client.open("sample2.txt", mode="r") as f:
+        assert f.readline() == text2
+        assert f.readlines() == [text2] * 9
+    assert f.closed
+    f.close()
+
+
+def test_open_binary(storage_dir: TmpDir, client: Client):
+    """Test file object opened in binary mode with client."""
+    text1 = b"0123456789" * (DEFAULT_BUFFER_SIZE // 10 + 1)
+    storage_dir.gen("sample.txt", text1 * 2)
+    with client.open("sample.txt", mode="rb") as f:
+        assert not f.closed
+        assert not f.isatty()
+        assert f.readable()
+        assert not f.writable()
+        assert f.seekable()
+        assert f.tell() == 0
+
+        assert f.read(len(text1)) == text1
+        assert f.tell() == len(text1)
+
+        assert f.seek(10) == 10
+        assert f.read(len(text1) - 10) == text1[10:]
+        assert f.tell() == len(text1)
+
+        assert f.seek(len(text1), 1) == len(text1) * 2
+        assert f.read() == b""
+        assert f.seek(-len(text1), 1) == len(text1)
+
+        assert f.readall() == text1  # type: ignore
+
+        assert f.seek(0) == 0
+        buff = bytearray(5)
+        assert f.readinto(buff) == 5  # type: ignore
+        assert bytes(buff) == text1[:5]
+        length = f.readinto1(buff)  # type: ignore
+        assert bytes(buff) == text1[5 : 5 + length]
+
+        assert f.read1(10)  # type: ignore
+        assert f.seek(-10, 2) == f.tell() == len(text1) * 2 - 10
+        assert f.read() == text1[-10:]
+    assert f.closed
+    f.close()
+
+    with client.open("sample.txt", mode="rb") as f:
+        with pytest.raises(ValueError):
+            f.seek(-10)
+        with pytest.raises(ValueError):
+            f.seek(10, 3)
+        f.size = None  # type: ignore
+        with pytest.raises(ValueError):
+            f.seek(-10, 2)
+
+    assert f.closed
+
+    text2 = b"0123456789\n"
+    storage_dir.gen("sample2.txt", text2 * 10)
+
+    with client.open("sample2.txt", mode="rb") as f:
+        assert f.readline() == text2
+        assert f.readlines() == [text2] * 9
+    assert f.closed
+    f.close()
+
+
+def test_feature_detection_util():
+    """Test parsing of response in FeatureDetection util."""
+    from httpx import Response
+
+    fd = FeatureDetection()
+    assert fd.supports_ranges is False
+    assert not fd.dav_compliances
+
+    response = Response(
+        HTTPStatus.OK, headers={"DAV": "1,2,3", "Accept-Range": "bytes"}
+    )
+    fd = FeatureDetection(response)
+    assert fd.supports_ranges is False
+    assert fd.dav_compliances
 
 
 def test_download_fobj(storage_dir: TmpDir, client: Client):
@@ -752,6 +851,19 @@ def test_options(client: Client):
     expectation here.
     """
     assert client.options() == {"1", "2"}
+
+
+def test_feature_detection(client: Client):
+    """Test feature detection in the Client."""
+    assert client.detected_features
+    assert client._detected_features  # pylint: disable=protected-access
+    assert client.detected_features.dav_compliances
+
+    client._detected_features = None  # pylint: disable=protected-access
+    # should not fail at all even if auth is invalid
+    client.http.auth = ("invalid", "invalid")  # type: ignore
+    assert client.detected_features.dav_compliances
+    assert client.detected_features
 
 
 def test_auth_errors(server_address: URL):

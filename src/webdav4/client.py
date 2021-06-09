@@ -2,6 +2,7 @@
 
 import locale
 import shutil
+import threading
 from contextlib import contextmanager, suppress
 from http import HTTPStatus
 from io import TextIOWrapper, UnsupportedOperation
@@ -143,6 +144,31 @@ class MultiStatusError(ClientError):
     """Wrapping MultiStatusResponseError with ClientError."""
 
 
+class FeatureDetection:
+    """Detect features in the webdav resources.
+
+    Mostly used for detecting support for Accept-Ranges as ownCloud/NextCloud
+    don't advertise support for it in GET requests.
+    """
+
+    supports_ranges: bool
+    dav_compliances: Set[str]
+
+    def __init__(self, options_response: "HTTPResponse" = None) -> None:
+        """Initialize with the given response."""
+        dav_compliances = set()
+        supports_ranges = False
+        if options_response:
+            dav_header = options_response.headers.get("dav", "")
+            dav_compliances = {f.strip() for f in dav_header.split(",")}
+            supports_ranges = (
+                options_response.headers.get("accept-ranges") == "bytes"
+            )
+
+        self.dav_compliances = dav_compliances
+        self.supports_ranges = supports_ranges
+
+
 class Client:
     """Provides higher level APIs for interacting with Webdav server."""
 
@@ -212,12 +238,32 @@ class Client:
         self.http: HTTPClient = http_client or HTTPClient(**client_opts)
         self.base_url = URL(base_url)
         self.with_retry = retry if callable(retry) else _retry(retry)
+        self._detected_features: Optional[FeatureDetection] = None
+        self._detect_feature_lock = threading.RLock()
+
+    @property
+    def detected_features(self) -> FeatureDetection:
+        """Feature detection for the server."""
+        if not self._detected_features:
+            with self._detect_feature_lock:
+                # a lot of threads might be stuck on thread lock
+                # and if one is done with it, it means we already
+                # have it set, so we should look for it rather than
+                # sending out a request.
+                if self._detected_features:  # pragma: no cover
+                    return self._detected_features
+
+                resp = None
+                with suppress(Exception):
+                    resp = self.http.options(self.base_url)
+                self._detected_features = FeatureDetection(resp)
+        return self._detected_features
 
     def options(self, path: str = "") -> Set[str]:
         """Returns features detected in the webdav server."""
         resp = self.http.options(path)
-        dav_header = resp.headers.get("dav", "")
-        return {f.strip() for f in dav_header.split(",")}
+        detected_features = FeatureDetection(resp)
+        return detected_features.dav_compliances
 
     def join_url(self, path: str) -> URL:
         """Join resource path with base url of the webdav server."""
@@ -487,19 +533,16 @@ class Client:
         mode: str = "r",
         encoding: str = None,
         block_size: int = None,
-        callback: Callable[[int], Any] = None,
     ) -> Iterator[Union[TextIO, BinaryIO]]:
         """Returns file-like object to a resource."""
         if self.isdir(path):
             raise ValueError("Cannot open a collection")
-
         assert mode in {"r", "rt", "rb"}
 
         with IterStream(
-            self.http,
+            self,
             self.join_url(path),
             chunk_size=block_size,
-            callback=callback,
         ) as buffer:
             buff = cast(BinaryIO, buffer)
 
