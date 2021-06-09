@@ -47,7 +47,7 @@ def request(
     return response
 
 
-@contextmanager
+@contextmanager  # noqa: C901
 def iter_url(  # noqa: C901
     client: "Client",
     url: "URLTypes",
