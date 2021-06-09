@@ -141,15 +141,17 @@ class LSTheme:
             return f"\033[{val}m{file.path}\033[{reset}m"
         return color_file(file, isdir=isdir)
 
-    def style_size(self, nbytes: int) -> str:
+    def style_size(self, size: str, suff: str = "") -> str:
         """Style size in the ls output, also humanizes it."""
-        size = human_size(nbytes)
-        return colored(size, "green") if self.colored else size
+        if suff == "-" and self.colored:
+            return size + colored(suff, "gray", "dim")
+        if self.colored:
+            return colored(size, "green", "bright") + colored(suff, "green")
+        return size + suff
 
-    def style_datetime(self, mtime: Any) -> str:
+    def style_datetime(self, mtime: str) -> str:
         """Humanize and style datetime in the ls output."""
-        formatted = format_datetime(mtime)
-        return colored(formatted, "blue") if self.colored else formatted
+        return colored(mtime, "blue") if self.colored else mtime
 
 
 theme = LSTheme()
@@ -402,7 +404,7 @@ def color_file(file: File, isdir: bool = False) -> str:
     return file.path
 
 
-def colored(name: str, color: str = "") -> str:
+def colored(name: str, color: str = "", style: str = "") -> str:
     """Colors a string with given color name."""
     try:
         import colorama  # pylint: disable=import-outside-toplevel
@@ -411,25 +413,44 @@ def colored(name: str, color: str = "") -> str:
             "green": colorama.Fore.GREEN,
             "red": colorama.Fore.RED,
             "blue": colorama.Fore.BLUE,
+            "gray": colorama.Fore.LIGHTWHITE_EX,
         }
+        styles = {"bright": colorama.Style.BRIGHT, "dim": colorama.Style.DIM}
         reset = colorama.Style.RESET_ALL
     except ModuleNotFoundError:  # pragma: no cover
         colors = {}
         reset = ""
+        styles = {}
 
     _color = colors.get(color, "")
-    return f"{_color}{name}{reset}"
+    _style = styles.get(style, "")
+    return f"{_style}{_color}{name}{reset}"
 
 
-def human_size(nbytes: float) -> str:
+def to_fixed_width(n: float, max_width: int) -> str:
+    """Converts a float to the fixed max_width."""
+    for i in range(max_width - 2, -1, -1):
+        float_str = f"{n:.{i}f}"
+        if len(float_str) <= max_width:
+            break
+    assert max_width >= 2  # pragma: no cover
+    return float_str
+
+
+def human_size(nbytes: Optional[float]) -> Tuple[str, str]:
     """Converts bytes to human-readable size."""
-    suffixes = ["", "k", "M", "G"]
+    if nbytes is None:
+        return "", "-"
+    if nbytes < 1024:
+        return str(nbytes), ""
+
+    suffixes = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"]
     for suff in suffixes:  # noqa: B007, pragma: no cover
         if nbytes < 1024:
             break
         nbytes /= 1024
 
-    return f"{round(nbytes, 1)}{suff}"
+    return to_fixed_width(nbytes, 3), suff
 
 
 def format_datetime(mtime: Any) -> str:
@@ -441,23 +462,6 @@ def format_datetime(mtime: Any) -> str:
     if mtime.replace(tzinfo=None) < datetime.today() - timedelta(days=180):
         fmt = "%b %d %Y"
     return mtime.strftime(fmt)
-
-
-def ls_columnify(iterable: List["Row"]) -> Iterator["Row"]:
-    """Justifies contents and makes it look like a columnar table."""
-    # First convert everything to its repr
-    if not (iterable and iterable[0]):
-        return
-
-    max_dt = max(len(row.date) for row in iterable)
-    max_size = max(len(row.size) for row in iterable)
-
-    for row in iterable:
-        yield Row(
-            date=row.date.ljust(max_dt),
-            size=row.size.rjust(max_size),
-            file=row.file,
-        )
 
 
 def process_url(url: str) -> str:
@@ -536,12 +540,20 @@ class Command:
         raise NotImplementedError
 
 
+class Size(NamedTuple):
+    """Size data structure carrying suffix and bytes."""
+
+    nbytes: str
+    suff: str = ""
+
+
 class Row(NamedTuple):
     """Row data structure representing each row for the ls output."""
 
     date: str
-    size: str
+    size: Size
     file: str
+    isdir: bool = False
 
 
 class CommandLS(Command):
@@ -572,31 +584,42 @@ class CommandLS(Command):
             details = {path: self.fs.info(path)}
 
         for file_path, info in details.items():
-            is_dir = info.get("type") == "directory"
+            isdir = info.get("type") == "directory"
             file_path = file_path.strip("/")
             within_depth = depth and (
                 0 <= file_path.count(sep) - path_level < depth - 1
             )
 
-            if withdirs and is_dir and within_depth:
+            if withdirs and isdir and within_depth:
                 continue
 
             file_name = file_path
             if not self.args.full_path:
                 file_name = lexical_relpath(file_path, path)
 
-            date = theme.style_datetime(info.get("modified") or "-")
-            size = theme.style_size(info.get("size") or 0)
-            file = theme.style_path(file_name, isdir=is_dir)
-            yield Row(date=date, size=size, file=file)
+            date = format_datetime(info.get("modified"))
+            size = Size(*human_size(info.get("size")))
+            yield Row(date=date, size=size, file=file_name, isdir=isdir)
 
     @staticmethod
     def render(details: List[Row]) -> None:
         """Display provided information in a columnar format."""
         if not details:
             return None
-        for row in ls_columnify(details):
-            print(*row)
+
+        date_maxsize = max(len(row.date) for row in details)
+        size_maxsize = max(len(row.size.nbytes) for row in details)
+
+        for row in details:
+            date = theme.style_datetime(row.date.ljust(date_maxsize))
+
+            size_just = size_maxsize if row.size.suff else size_maxsize + 1
+            size = theme.style_size(
+                row.size.nbytes.rjust(size_just), suff=row.size.suff
+            )
+            file = theme.style_path(row.file, isdir=row.isdir)
+            print(date, size, file)
+
         return None
 
     def run(self) -> None:
@@ -889,7 +912,8 @@ class CommandDiskUsage(Command):
             details = {path: self.fs.info(path)}
 
         size = sum(info.get("size", 0) for _, info in details.items())
-        size_styled = theme.style_size(size)
+        sized = Size(*human_size(size))
+        size_styled = theme.style_size(sized.nbytes, suff=sized.suff)
         path_styled = theme.style_path(path, isdir=isdir)
         files_str = "files" if len(details) > 1 else "file"
         print(
