@@ -558,7 +558,7 @@ class CommandLS(Command):
 
         path = self.fs._strip_protocol(  # pylint: disable=protected-access
             self.args.path
-        ).rstrip("/")
+        ).strip("/")
         path_level = path.count(sep) + 1 if path else 0
 
         if not details:
@@ -572,7 +572,7 @@ class CommandLS(Command):
 
         for file_path, info in details.items():
             is_dir = info.get("type") == "directory"
-            file_path = file_path.rstrip("/")
+            file_path = file_path.strip("/")
             within_depth = depth and (
                 0 <= file_path.count(sep) - path_level < depth - 1
             )
