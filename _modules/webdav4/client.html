@@ -134,7 +134,6 @@
         </label>
         <h1>Source code for webdav4.client</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""Client for the webdav."""</span>
-
 <span class="kn">import</span> <span class="nn">locale</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">threading</span>
@@ -182,6 +181,9 @@
     <span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">AuthTypes</span><span class="p">,</span> <span class="n">HeaderTypes</span><span class="p">,</span> <span class="n">HTTPResponse</span><span class="p">,</span> <span class="n">URLTypes</span>
 
 <span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">"_T"</span><span class="p">)</span>
+
+
+<span class="n">DEFAULT_CHUNK_SIZE</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">22</span>
 
 
 <span class="k">def</span> <span class="nf">_prepare_result_info</span><span class="p">(</span>
@@ -313,6 +315,7 @@
         <span class="n">auth</span><span class="p">:</span> <span class="s2">"AuthTypes"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">http_client</span><span class="p">:</span> <span class="s2">"HTTPClient"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">retry</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">_T</span><span class="p">]],</span> <span class="n">_T</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_CHUNK_SIZE</span><span class="p">,</span>
         <span class="o">**</span><span class="n">client_opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Instantiate client for webdav.</span>
@@ -375,6 +378,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span> <span class="o">=</span> <span class="n">retry</span> <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span> <span class="k">else</span> <span class="n">_retry</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_detected_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FeatureDetection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_detect_feature_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span> <span class="o">=</span> <span class="n">chunk_size</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">detected_features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FeatureDetection</span><span class="p">:</span>
@@ -667,7 +671,7 @@
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"r"</span><span class="p">,</span>
         <span class="n">encoding</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">]]:</span>
         <span class="sd">"""Returns file-like object to a resource."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
@@ -677,7 +681,7 @@
         <span class="k">with</span> <span class="n">IterStream</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
-            <span class="n">chunk_size</span><span class="o">=</span><span class="n">block_size</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">,</span>
         <span class="p">)</span> <span class="k">as</span> <span class="n">buffer</span><span class="p">:</span>
             <span class="n">buff</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">buffer</span><span class="p">)</span>
 
@@ -696,9 +700,12 @@
         <span class="n">from_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">file_obj</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Write stream from path to given file object."""</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">from_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">remote_obj</span><span class="p">:</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+            <span class="n">from_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"rb"</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span>
+        <span class="p">)</span> <span class="k">as</span> <span class="n">remote_obj</span><span class="p">:</span>
             <span class="c1"># TODO: fix typings for open to always return BinaryIO on mode=rb</span>
             <span class="n">remote_obj</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">remote_obj</span><span class="p">)</span>
             <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrap_file_like</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"write"</span><span class="p">)</span>
@@ -708,23 +715,31 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">from_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">to_path</span><span class="p">:</span> <span class="s2">"PathLike[AnyStr]"</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Download file from remote path to local path."""</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">to_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fobj</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">download_fileobj</span><span class="p">(</span><span class="n">from_path</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">download_fileobj</span><span class="p">(</span>
+                <span class="n">from_path</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span>
+            <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Client.upload_file"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.upload_file">[docs]</a>    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">from_path</span><span class="p">:</span> <span class="s2">"PathLike[AnyStr]"</span><span class="p">,</span>
         <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Upload file from local path to a given remote path."""</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">from_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fobj</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span>
-                <span class="n">fobj</span><span class="p">,</span> <span class="n">to_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span>
+                <span class="n">fobj</span><span class="p">,</span>
+                <span class="n">to_path</span><span class="p">,</span>
+                <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">,</span>
+                <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
             <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Client.upload_fileobj"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.upload_fileobj">[docs]</a>    <span class="k">def</span> <span class="nf">upload_fileobj</span><span class="p">(</span>
@@ -733,6 +748,7 @@
         <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Upload file from file object to given path."""</span>
         <span class="n">length</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
@@ -745,7 +761,9 @@
             <span class="k">raise</span> <span class="n">ResourceAlreadyExists</span><span class="p">(</span><span class="n">to_path</span><span class="p">)</span>
 
         <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrap_file_like</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
-        <span class="n">content</span> <span class="o">=</span> <span class="n">read_chunks</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="mi">50</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">read_chunks</span><span class="p">(</span>
+            <span class="n">wrapped</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span>
+        <span class="p">)</span>
 
         <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
             <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">PUT</span><span class="p">,</span> <span class="n">to_path</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>

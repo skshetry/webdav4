@@ -221,6 +221,7 @@
 <span class="sd">                (refer to it's documenting for more information).</span>
 <span class="sd">        """</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">client_opts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"chunk_size"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span> <span class="ow">or</span> <span class="n">Client</span><span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="o">**</span><span class="n">client_opts</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
@@ -412,8 +413,6 @@
             <span class="k">return</span> <span class="n">UploadFile</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="n">block_size</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">"rb"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">size</span><span class="p">:</span>
-            <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">WebdavFile</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -467,6 +466,8 @@
 <div class="viewcode-block" id="WebdavFile"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile">[docs]</a><span class="k">class</span> <span class="nc">WebdavFile</span><span class="p">(</span><span class="n">AbstractBufferedFile</span><span class="p">):</span>
     <span class="sd">"""WebdavFile that provides file-like access to remote file."""</span>
 
+    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">fs</span><span class="p">:</span> <span class="s2">"WebdavFileSystem"</span><span class="p">,</span>
@@ -499,9 +500,18 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span>
             <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">,</span>
-            <span class="n">block_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">,</span>
+            <span class="n">chunk_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">TextIO</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fobj</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
+
+        <span class="c1"># only get the file size if GET request didnot send Content-Length</span>
+        <span class="c1"># or was retrieved before.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="p">,</span> <span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">size</span>  <span class="c1"># type: ignore</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="WebdavFile.read"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
@@ -603,8 +613,11 @@
         <span class="sd">"""Extended interface with path and fs."""</span>
         <span class="k">assert</span> <span class="n">fs</span>
         <span class="k">assert</span> <span class="n">path</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span> <span class="o">=</span> <span class="n">block_size</span> <span class="ow">or</span> <span class="n">io</span><span class="o">.</span><span class="n">DEFAULT_BUFFER_SIZE</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">AbstractBufferedFile</span><span class="o">.</span><span class="n">DEFAULT_BLOCK_SIZE</span>
+            <span class="k">if</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"default"</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">else</span> <span class="n">block_size</span>
+        <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="p">:</span> <span class="n">WebdavFileSystem</span> <span class="o">=</span> <span class="n">fs</span>  <span class="c1"># pylint: disable=invalid-name</span>
         <span class="k">assert</span> <span class="n">mode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">path</span>
@@ -636,7 +649,9 @@
 <span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">fileobj</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span><span class="n">fileobj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span>
+            <span class="n">fileobj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="UploadFile.close"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Close the file."""</span>
