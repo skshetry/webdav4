@@ -86,6 +86,7 @@ class WebdavFileSystem(AbstractFileSystem):
                 (refer to it's documenting for more information).
         """
         super().__init__()
+        client_opts.setdefault("chunk_size", self.blocksize)
         self.client = client or Client(base_url, auth=auth, **client_opts)
 
     @classmethod
@@ -277,8 +278,6 @@ class WebdavFileSystem(AbstractFileSystem):
             return UploadFile(
                 self, path=path, mode=mode, block_size=block_size
             )
-        if mode == "rb" and not size:
-            size = self.size(path)
 
         return WebdavFile(
             self,
@@ -332,6 +331,8 @@ class WebdavFileSystem(AbstractFileSystem):
 class WebdavFile(AbstractBufferedFile):
     """WebdavFile that provides file-like access to remote file."""
 
+    size: int
+
     def __init__(
         self,
         fs: "WebdavFileSystem",
@@ -364,9 +365,18 @@ class WebdavFile(AbstractBufferedFile):
             self.path,
             mode=self.mode,
             encoding=encoding,
-            block_size=self.blocksize,
+            chunk_size=self.blocksize,
         )
         self.reader: Union[TextIO, BinaryIO] = self.fobj.__enter__()
+
+        # only get the file size if GET request didnot send Content-Length
+        # or was retrieved before.
+        if not self.size:
+            if getattr(self.reader, "size", None):
+                self.size = self.reader.size  # type: ignore
+            else:
+                self.size = self.fs.size(self.path)
+
         self.closed: bool = False
 
     def read(self, length: int = -1) -> Union[str, bytes, None]:
@@ -468,8 +478,11 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         """Extended interface with path and fs."""
         assert fs
         assert path
-
-        self.blocksize = block_size or io.DEFAULT_BUFFER_SIZE
+        self.blocksize = (
+            AbstractBufferedFile.DEFAULT_BLOCK_SIZE
+            if block_size in ["default", None]
+            else block_size
+        )
         self.fs: WebdavFileSystem = fs  # pylint: disable=invalid-name
         assert mode
         self.path: str = path
@@ -501,7 +514,9 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         """
         self.seek(0)
         fileobj = cast(BinaryIO, self)
-        self.fs.client.upload_fileobj(fileobj, self.path, overwrite=True)
+        self.fs.client.upload_fileobj(
+            fileobj, self.path, chunk_size=self.blocksize, overwrite=True
+        )
 
     def close(self) -> None:
         """Close the file."""
