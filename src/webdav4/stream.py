@@ -51,6 +51,7 @@ def request(
 def iter_url(  # noqa: C901
     client: "Client",
     url: "URLTypes",
+    chunk_size: int = None,
     pos: int = 0,
 ) -> Iterator[Tuple["HTTPResponse", Iterator[bytes]]]:
     """Iterate over chunks requested from url.
@@ -72,7 +73,7 @@ def iter_url(  # noqa: C901
                 response.raise_for_status()
 
                 try:
-                    for chunk in response.iter_bytes():
+                    for chunk in response.iter_bytes(chunk_size=chunk_size):
                         pos += len(chunk)
                         yield chunk
                     break
@@ -110,11 +111,11 @@ class IterStream(RawIOBase):
         self.buffer = b""
         # setting chunk_size is not possible yet with httpx
         # though it is to be released in a new version.
-        self.chunk_size = chunk_size or DEFAULT_BUFFER_SIZE
+        self.chunk_size = chunk_size or client.chunk_size
         self.client = client
         self.url = url
         self._loc: int = 0
-        self._cm = iter_url(client, self.url)
+        self._cm = iter_url(client, self.url, chunk_size=chunk_size)
         self.size: Optional[int] = None
         self._iterator: Optional[Iterator[bytes]] = None
         self._response: Optional["HTTPResponse"] = None
@@ -177,7 +178,9 @@ class IterStream(RawIOBase):
             raise ValueError("Seek before start of file")
 
         self.close()
-        self._cm = iter_url(self.client, self.url, pos=loc)
+        self._cm = iter_url(
+            self.client, self.url, pos=loc, chunk_size=self.chunk_size
+        )
         #  pylint: disable=no-member
         self._response, self._iterator = self._cm.__enter__()
         self.loc = loc
@@ -248,7 +251,7 @@ class IterStream(RawIOBase):
 
 def read_chunks(obj: IO[AnyStr], chunk_size: int = None) -> Iterator[AnyStr]:
     """Read file object in chunks."""
-    func = partial(obj.read, chunk_size or 1024 * 1024)
+    func = partial(obj.read, chunk_size or DEFAULT_BUFFER_SIZE)
     return takewhile(bool, repeat_func(func))
 
 

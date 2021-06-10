@@ -1,5 +1,4 @@
 """Client for the webdav."""
-
 import locale
 import shutil
 import threading
@@ -47,6 +46,9 @@ if TYPE_CHECKING:
     from .types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
 
 _T = TypeVar("_T")
+
+
+DEFAULT_CHUNK_SIZE = 2 ** 22
 
 
 def _prepare_result_info(
@@ -178,6 +180,7 @@ class Client:
         auth: "AuthTypes" = None,
         http_client: "HTTPClient" = None,
         retry: Union[Callable[[Callable[[], _T]], _T], bool] = True,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
         **client_opts: Any,
     ) -> None:
         """Instantiate client for webdav.
@@ -240,6 +243,7 @@ class Client:
         self.with_retry = retry if callable(retry) else _retry(retry)
         self._detected_features: Optional[FeatureDetection] = None
         self._detect_feature_lock = threading.RLock()
+        self.chunk_size = chunk_size
 
     @property
     def detected_features(self) -> FeatureDetection:
@@ -532,7 +536,7 @@ class Client:
         path: str,
         mode: str = "r",
         encoding: str = None,
-        block_size: int = None,
+        chunk_size: int = None,
     ) -> Iterator[Union[TextIO, BinaryIO]]:
         """Returns file-like object to a resource."""
         if self.isdir(path):
@@ -542,7 +546,7 @@ class Client:
         with IterStream(
             self,
             self.join_url(path),
-            chunk_size=block_size,
+            chunk_size=chunk_size or self.chunk_size,
         ) as buffer:
             buff = cast(BinaryIO, buffer)
 
@@ -561,9 +565,12 @@ class Client:
         from_path: str,
         file_obj: BinaryIO,
         callback: Callable[[int], Any] = None,
+        chunk_size: int = None,
     ) -> None:
         """Write stream from path to given file object."""
-        with self.open(from_path, mode="rb") as remote_obj:
+        with self.open(
+            from_path, mode="rb", chunk_size=chunk_size
+        ) as remote_obj:
             # TODO: fix typings for open to always return BinaryIO on mode=rb
             remote_obj = cast(BinaryIO, remote_obj)
             wrapped = wrap_file_like(file_obj, callback, method="write")
@@ -573,23 +580,31 @@ class Client:
         self,
         from_path: str,
         to_path: "PathLike[AnyStr]",
+        chunk_size: int = None,
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Download file from remote path to local path."""
         with open(to_path, mode="wb") as fobj:
-            self.download_fileobj(from_path, fobj, callback=callback)
+            self.download_fileobj(
+                from_path, fobj, callback=callback, chunk_size=chunk_size
+            )
 
     def upload_file(
         self,
         from_path: "PathLike[AnyStr]",
         to_path: str,
         overwrite: bool = False,
+        chunk_size: int = None,
         callback: Callable[[int], Any] = None,
     ) -> None:
         """Upload file from local path to a given remote path."""
         with open(from_path, mode="rb") as fobj:
             self.upload_fileobj(
-                fobj, to_path, overwrite=overwrite, callback=callback
+                fobj,
+                to_path,
+                overwrite=overwrite,
+                chunk_size=chunk_size,
+                callback=callback,
             )
 
     def upload_fileobj(
@@ -598,6 +613,7 @@ class Client:
         to_path: str,
         overwrite: bool = False,
         callback: Callable[[int], Any] = None,
+        chunk_size: int = None,
     ) -> None:
         """Upload file from file object to given path."""
         length = -1
@@ -610,7 +626,9 @@ class Client:
             raise ResourceAlreadyExists(to_path)
 
         wrapped = wrap_file_like(file_obj, callback)
-        content = read_chunks(wrapped, 50 * 1024 * 1024)
+        content = read_chunks(
+            wrapped, chunk_size=chunk_size or self.chunk_size
+        )
 
         http_resp = self.request(
             HTTPMethod.PUT, to_path, content=content, headers=headers

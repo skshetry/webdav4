@@ -1,5 +1,4 @@
 """Testing stream utilities."""
-
 from io import DEFAULT_BUFFER_SIZE, BytesIO, StringIO
 from typing import Any, Iterator
 
@@ -51,7 +50,6 @@ def test_retry_reconnect_on_failure(
     monkeypatch: MonkeyPatch,
 ):
     """Test retry/reconnect on network failures."""
-    from io import DEFAULT_BUFFER_SIZE
     from unittest import mock
 
     from webdav4.http import HTTPNetworkError, HTTPResponse
@@ -74,7 +72,7 @@ def test_retry_reconnect_on_failure(
     # Text should be longer than default chunk to test resume,
     # using twice of that plus something tests second resume,
     # this is important because second response is different
-    text1 = "0123456789" * (DEFAULT_BUFFER_SIZE // 10 + 1)
+    text1 = "0123456789" * (client.chunk_size // 10 + 1)
     storage_dir.gen("sample.txt", text1 * 2)
     propfind_resp = client.propfind("sample.txt")
 
