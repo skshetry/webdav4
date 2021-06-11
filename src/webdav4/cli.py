@@ -146,7 +146,7 @@ class LSTheme:
     def style_size(self, size: str, suff: str = "") -> str:
         """Style size in the ls output, also humanizes it."""
         if suff == "-" and self.colored:
-            return size + colored(suff, "gray", "dim")
+            return size + colored(suff, style="dim")
         if self.colored:
             return colored(size, "green", "bright") + colored(suff, "green")
         return size + suff
