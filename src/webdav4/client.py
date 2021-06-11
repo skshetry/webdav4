@@ -142,6 +142,30 @@ class HTTPError(ClientError):
         )
 
 
+class IsAResourceError(ClientError):
+    """Exception thrown when the path is a resource.
+
+    Could be thrown when the collection is expected.
+    """
+
+    def __init__(self, path: str, msg: str = "") -> None:
+        """Initialize with the path and the appropriate message."""
+        self.path: str = path
+        super().__init__(f"{path} is a collection. {msg}")
+
+
+class IsACollectionError(ClientError):
+    """Exception thrown when the path is a collection.
+
+    Could be thrown when the resource/non-collection is expected.
+    """
+
+    def __init__(self, path: str, msg: str = "") -> None:
+        """Initialize with the path and the appropriate message."""
+        self.path: str = path
+        super().__init__(f"{path} is a collection. {msg}")
+
+
 class MultiStatusError(ClientError):
     """Wrapping MultiStatusResponseError with ClientError."""
 
@@ -455,7 +479,10 @@ class Client:
             raise
 
     def ls(  # pylint: disable=invalid-name
-        self, path: str, detail: bool = True
+        self,
+        path: str,
+        detail: bool = True,
+        allow_listing_resource: bool = True,
     ) -> List[Union[str, Dict[str, Any]]]:
         """List items in a resource/collection.
 
@@ -463,14 +490,26 @@ class Client:
             path: Path to the resource
             detail: If detail=True, additional information is returned
                 in a dictionary
+            allow_listing_resource: If True and path is a resource
+                (non-collection), ls will return the file entry/details.
+                Otherwise, it will raise an error.
         """
         result = self.propfind(path, headers={"Depth": "1"})
         responses = result.responses
 
         url = self.join_url(path)
         response = responses.get(url.path)
-        if response and response.properties.resource_type == "directory":
-            responses.pop(url.path)
+
+        if response:
+            typ = response.properties.resource_type
+            if typ == "file" and not allow_listing_resource:
+                raise IsAResourceError(
+                    path, "cannot list from a resource itself"
+                )
+            if typ == "directory":
+                responses.pop(url.path)
+        else:  # pragma: no cover
+            assert not response  # response should always be there
 
         return [
             _prepare_result_info(resp, self.base_url, detail)
@@ -540,7 +579,7 @@ class Client:
     ) -> Iterator[Union[TextIO, BinaryIO]]:
         """Returns file-like object to a resource."""
         if self.isdir(path):
-            raise ValueError("Cannot open a collection")
+            raise IsACollectionError(path, "Cannot open a collection")
         assert mode in {"r", "rt", "rb"}
 
         with IterStream(
