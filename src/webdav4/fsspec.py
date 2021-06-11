@@ -416,8 +416,9 @@ class WebdavFile(AbstractBufferedFile):
         """Close stream."""
         if self.closed:
             return
-
-        self.reader.close()
+        if hasattr(self, "reader"):
+            # fs.client.open might have raised an error
+            self.reader.close()
         self.closed = True
 
     def __reduce_ex__(
