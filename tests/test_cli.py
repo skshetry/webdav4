@@ -248,7 +248,7 @@ def test_style_size_datetime():
         *human_size(2027)
     ) == "\x1b[1m\x1b[32m{0}\x1b[0m\x1b[32m{1}\x1b[0m".format("2.0", "k")
 
-    assert theme.style_size(*human_size(None)) == "\x1b[2m\x1b[97m-\x1b[0m"
+    assert theme.style_size(*human_size(None)) == "\x1b[2m-\x1b[0m"
 
 
 @pytest.mark.parametrize(
