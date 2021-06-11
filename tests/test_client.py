@@ -15,6 +15,7 @@ from webdav4.client import (
     ForbiddenOperation,
     HTTPError,
     InsufficientStorage,
+    IsACollectionError,
     MultiStatusError,
     ResourceAlreadyExists,
     ResourceConflict,
@@ -610,10 +611,13 @@ def test_try_download_directory(
     """Test downloading a remote resource to a local file."""
     storage_dir.gen({"data": {"foo": "foo"}})
 
-    with pytest.raises(ValueError) as exc_info:
+    with pytest.raises(IsACollectionError) as exc_info:
         client.download_file("/data", tmp_path / "foo")
 
-    assert str(exc_info.value) == "Cannot open a collection"
+    assert (
+        str(exc_info.value)
+        == "/data is a collection. Cannot open a collection"
+    )
 
 
 def test_try_downloading_not_existing_resource(tmp_path: Path, client: Client):

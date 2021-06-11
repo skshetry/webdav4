@@ -116,6 +116,12 @@ def test_open(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     """Test opening a remote file from webdav."""
     storage_dir.gen({"data": {"foo": "foo"}})
 
+    with pytest.raises(IsADirectoryError):
+        fs.open("data")
+
+    with pytest.raises(FileNotFoundError):
+        fs.open("data/bar")
+
     with fs.open("/data/foo") as f:
         assert f.read() == b"foo"
         assert f.read() == b""

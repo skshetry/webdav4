@@ -26,6 +26,8 @@ from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
 
 from .client import (
     Client,
+    IsACollectionError,
+    IsAResourceError,
     ResourceAlreadyExists,
     ResourceConflict,
     ResourceNotFound,
@@ -59,6 +61,14 @@ def translate_exceptions() -> Iterator[None]:
     except ResourceNotFound as exc:
         raise FileNotFoundError(
             errno.ENOENT, "No such file or directory", exc.path
+        ) from exc
+    except IsACollectionError as exc:
+        raise IsADirectoryError(
+            errno.EISDIR, "Is a directory", exc.path
+        ) from exc
+    except IsAResourceError as exc:
+        raise NotADirectoryError(
+            errno.ENOTDIR, "Not a directory", exc.path
         ) from exc
 
 
@@ -100,14 +110,12 @@ class WebdavFileSystem(AbstractFileSystem):
         self, path: str, detail: bool = True, **kwargs: Any
     ) -> List[Union[str, Dict[str, Any]]]:
         """`ls` implementation for fsspec, see fsspec for more information."""
-        path = self._strip_protocol(path)
-        if not self.client.isdir(path):
-            raise NotADirectoryError(errno.ENOTDIR, "Not a directory", path)
-
-        data = self.client.ls(path, detail=detail)
+        path = self._strip_protocol(path).strip()
+        data = self.client.ls(
+            path, detail=detail, allow_listing_resource=False
+        )
         if not detail:
             return data
-
         return [translate_info(item) for item in data]
 
     @translate_exceptions()
@@ -259,6 +267,7 @@ class WebdavFileSystem(AbstractFileSystem):
         path = self._strip_protocol(path)
         return self.client.modified(path)
 
+    @translate_exceptions()
     def _open(
         self,
         path: str,
@@ -407,8 +416,9 @@ class WebdavFile(AbstractBufferedFile):
         """Close stream."""
         if self.closed:
             return
-
-        self.reader.close()
+        if hasattr(self, "reader"):
+            # fs.client.open might have raised an error
+            self.reader.close()
         self.closed = True
 
     def __reduce_ex__(
