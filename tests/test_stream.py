@@ -110,10 +110,20 @@ def test_retry_reconnect_on_failure(
             with pytest.raises(HTTPNetworkError):
                 fd.read()
 
+            assert fd.supports_ranges is False  # type: ignore
+            with pytest.raises(ValueError) as exc_info:
+                fd.seek(10)
+            assert str(exc_info.value) == "server does not support ranges"
+
         with fs.open("sample.txt", mode="rb") as fd:
             fd.reader._response.headers.clear()  # type: ignore
             with pytest.raises(HTTPNetworkError):
                 fd.read()
+
+            assert fd.reader.supports_ranges is False  # type: ignore
+            with pytest.raises(ValueError) as exc_info:
+                fd.seek(10)
+            assert str(exc_info.value) == "server does not support ranges"
 
 
 def test_open(storage_dir: TmpDir, fs: WebdavFileSystem):

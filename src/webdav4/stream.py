@@ -80,8 +80,8 @@ def iter_url(  # noqa: C901
                 except (HTTPTimeoutException, HTTPNetworkError):
                     response.close()
                     if not (
-                        client.detected_features.supports_ranges
-                        or response.headers.get("Accept-Ranges") == "bytes"
+                        response.headers.get("Accept-Ranges") == "bytes"
+                        or client.detected_features.supports_ranges
                     ):
                         raise
                     response = request(client.http, url, pos=pos)
@@ -119,6 +119,21 @@ class IterStream(RawIOBase):
         self.size: Optional[int] = None
         self._iterator: Optional[Iterator[bytes]] = None
         self._response: Optional["HTTPResponse"] = None
+
+    @property
+    def supports_ranges(self) -> bool:
+        """Checks whether the server supports ranges for the resource.
+
+        Even if it does not advertise, we'll use base url's OPTIONS request
+        to see if the server supports Range header or not. And, we want to
+        avoid checking that as much as possible.
+        """
+        response = self._response
+        if response and response.headers.get("Accept-Ranges") == "bytes":
+            return True
+        # consider if checking Accept-Ranges from OPTIONS request on self.url
+        # would be a better solution than using base url.
+        return self.client.detected_features.supports_ranges
 
     @property
     def loc(self) -> int:
@@ -159,7 +174,7 @@ class IterStream(RawIOBase):
         self._response = None
         self.buffer = b""
 
-    def seek(self, offset: int, whence: int = 0) -> int:
+    def seek(self, offset: int, whence: int = 0) -> int:  # noqa: C901
         """Seek the file object."""
         if whence == 0:
             loc = offset
@@ -176,6 +191,8 @@ class IterStream(RawIOBase):
             raise ValueError(f"invalid whence ({whence}, should be 0, 1 or 2)")
         if loc < 0:
             raise ValueError("Seek before start of file")
+        if loc and not self.supports_ranges:
+            raise ValueError("server does not support ranges")
 
         self.close()
         self._cm = iter_url(
