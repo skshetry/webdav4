@@ -2,10 +2,11 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="dav CLI" href="reference/cli.html" />
 
-    <meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/><title>Python Module Index - webdav4</title>
-<link rel="stylesheet" href="_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
+    <meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
+        <title>Contributing Guide - webdav4</title>
+      <link rel="stylesheet" href="_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
     <link rel="stylesheet" href="_static/pygments.css">
     <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="_static/pygments_dark.css">
     
@@ -89,7 +90,7 @@
       <a href="index.html"><div class="brand">webdav4</div></a>
     </div>
     <div class="header-right">
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
     </div>
@@ -116,8 +117,8 @@
 <li class="toctree-l1"><a class="reference internal" href="reference/cli.html"><code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Development</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing Guide</a></li>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Contributing Guide</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/skshetry/webdav4/blob/main/LICENSE">License: MIT</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/skshetry/webdav4/issues">Bug Reports</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/skshetry/webdav4">Source Code</a></li>
@@ -132,48 +133,72 @@
   <main class="main">
     <div class="content">
       <article role="main">
-        <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        
-<section class="domainindex-section">
-  <h1>Python Module Index</h1>
-  <div class="domainindex-jumpbox"><a href="#cap-w"><strong>w</strong></a></div>
-</section>
-<table class="domainindex-table">
-  <tr class="pcap">
-    <td></td><td>&#160;</td><td></td>
-  </tr>
-  <tr class="cap" id="cap-w">
-    <td></td><td><strong>w</strong></td><td></td>
-  </tr>
-  <tr>
-    <td><img src="_static/minus.png" class="toggler"
-              id="toggle-1" style="display: none" alt="-" /></td>
-    <td>
-        <code class="xref">webdav4</code></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="reference/client.html#module-webdav4.client"><code class="xref">webdav4.client</code></a></td><td>
-    <em></em></td>
-  </tr>
-  <tr class="cg-1">
-    <td></td>
-    <td>&#160;&#160;&#160;
-        <a href="reference/fsspec.html#module-webdav4.fsspec"><code class="xref">webdav4.fsspec</code></a></td><td>
-    <em></em></td>
-  </tr>
-</table>
+        <div class="tex2jax_ignore mathjax_ignore section" id="contributing-guide">
+<h1>Contributing Guide<a class="headerlink" href="#contributing-guide" title="Permalink to this headline">¶</a></h1>
+<p>Thank you for taking an interest in the project.
+🙏</p>
+<p>Please see below on how to setup/test and work on this project.</p>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<p>Install all the requirements with:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -e <span class="s2">".[dev]"</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tests">
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">¶</a></h2>
+<p>You can run all the tests with <code class="docutils literal notranslate"><span class="pre">pytest</span></code> command.
+The code changes are expected to have tests.</p>
+<div class="section" id="test-servers">
+<h3>Test Servers<a class="headerlink" href="#test-servers" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">webdav4</span></code> also provides a test server, that it uses in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> itself.</p>
+<p>It can be run with the following commands:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python -m tests.server
+</pre></div>
+</div>
+<p>You can also run it in an interactive python session with <code class="docutils literal notranslate"><span class="pre">-i/--interactive</span></code> flag:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python -m tests.server -i
+</pre></div>
+</div>
+<p>This will open a <code class="docutils literal notranslate"><span class="pre">python</span></code> session and provides a few variables like <code class="docutils literal notranslate"><span class="pre">fs</span></code>,
+<code class="docutils literal notranslate"><span class="pre">client</span></code>, <code class="docutils literal notranslate"><span class="pre">server_address</span></code>, and <code class="docutils literal notranslate"><span class="pre">storage_dir</span></code> which are also available
+for use in <code class="docutils literal notranslate"><span class="pre">pytest</span></code> as fixtures.</p>
+<p>To use a real server, you can setup a <a class="reference external" href="https://github.com/nextcloud/docker#running-this-image-with-docker-compose">Nextcloud server using docker-compose</a>
+or an <a class="reference external" href="https://doc.owncloud.com/server/admin_manual/installation/docker/#docker-compose">ownCloud server using docker-compose</a>.</p>
+<blockquote>
+<div><p>Note that the webdav url to use will be something like:
+http://{url}/remote.php/dav/files/{username}.
+For example, for me, running in <code class="docutils literal notranslate"><span class="pre">localhost:8080</span></code> and as user <code class="docutils literal notranslate"><span class="pre">user1</span></code>, it is:
+<code class="docutils literal notranslate"><span class="pre">http://localhost:8080/remote.php/dav/files/user1</span></code>.</p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="formatting">
+<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline">¶</a></h2>
+<p>Please install <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> and add the hooks, so that it enforces proper
+code standard in your code changes.</p>
+</div>
+</div>
 
       </article>
       <footer>
         
         <div class="related-pages">
           
-          
+          <a class="prev-page" href="reference/cli.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"><code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI</div>
+                
+              </div>
+            </a>
         </div>
 
         <div class="related-information">
@@ -183,12 +208,41 @@
               and
               <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
               <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            |
+            <a class="muted-link" href="_sources/contributing.md.txt"
+               rel="nofollow">
+              Show Source
+            </a>
         </div>
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Contributing Guide</a><ul>
+<li><a class="reference internal" href="#setup">Setup</a></li>
+<li><a class="reference internal" href="#tests">Tests</a><ul>
+<li><a class="reference internal" href="#test-servers">Test Servers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formatting">Formatting</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

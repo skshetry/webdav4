@@ -1,0 +1,304 @@
+<!doctype html>
+<html class="no-js">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Contributing Guide" href="../contributing.html" /><link rel="prev" title="WebdavFileSystem" href="fsspec.html" />
+
+    <meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
+        <title>dav CLI - webdav4</title>
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
+    <link rel="stylesheet" href="../_static/pygments.css">
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    
+
+
+<style>
+  :root {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+  }
+
+  /* For allowing end-user-specific overrides */
+  .override-light {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  .override-dark {
+    --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+  }
+</style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=d391b54134226e4196576da3bdb6dddb7e05ba2b"></head>
+  <body dir="">
+    
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke-width="1.5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path stroke="none" d="M0 0h24v24H0z"/>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="10" y1="12" x2="20" y2="12" />
+      <line x1="6" y1="18" x2="20" y2="18" />
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+      class="feather feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">webdav4</div></a>
+    </div>
+    <div class="header-right">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  <span class="sidebar-brand-text">webdav4</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html">
+  <input class="sidebar-search" placeholder=Search name="q">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fsspec.html">WebdavFileSystem</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing Guide</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/skshetry/webdav4/blob/main/LICENSE">License: MIT</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/skshetry/webdav4/issues">Bug Reports</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/skshetry/webdav4">Source Code</a></li>
+</ul>
+
+</div>
+</div>
+      </div>
+      
+    </div>
+  </aside>
+  <main class="main">
+    <div class="content">
+      <article role="main">
+        <label class="toc-overlay-icon toc-content-icon" for="__toc">
+          <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+        </label>
+        <div class="tex2jax_ignore mathjax_ignore section" id="dav-cli">
+<h1><code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI<a class="headerlink" href="#dav-cli" title="Permalink to this headline">¶</a></h1>
+<p>If <code class="docutils literal notranslate"><span class="pre">webdav4</span></code> is installed with <code class="docutils literal notranslate"><span class="pre">fsspec</span></code> package, <code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI similar to <code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span></code> is
+also available to make it easier for the interaction.</p>
+<p>If not, you can install it as follows:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -U <span class="s2">"webdav4[fsspec]"</span>
+</pre></div>
+</div>
+<div class="section" id="common-arguments">
+<h2>Common arguments<a class="headerlink" href="#common-arguments" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">--endpoint-url</span></code>: Path to the server/hostname. Can also be specified through
+<code class="docutils literal notranslate"><span class="pre">WEBDAV_ENDPOINT_URL</span></code> environment variable (and the url can contain password and user information as well).</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">WEBDAV_ENDPOINT_URL</span><span class="o">=</span><span class="s2">"https://user:password@webdav.server.org/remote.php/dav/files/user"</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--user</span></code>: (Optional) Provide username of the account.
+Can also be specified in the url itself in <code class="docutils literal notranslate"><span class="pre">--endpoint-url</span></code> or through environment variable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--password</span></code>: (Optional) Provide password for the account.
+Can also be specified in the url itself in <code class="docutils literal notranslate"><span class="pre">--endpoint-url</span></code> or through environment variable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--verbose</span></code>: Provides more information and traceback on error.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--help</span></code>: Shows help message and exits.</p></li>
+</ul>
+<blockquote>
+<div><p>Note that all the arguments are expected to follow after <code class="docutils literal notranslate"><span class="pre">dav</span></code> command.
+Example: <code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">--user</span> <span class="pre">user</span> <span class="pre">ls</span></code>.</p>
+</div></blockquote>
+</div>
+<div class="section" id="examples">
+<h2>Examples:<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p><strong>Listing files</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">ls</span></code></p>
+<p><strong>Listing files recursively</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">ls</span> <span class="pre">-R</span></code></p>
+<p><strong>Listing files recursively to certain depth</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">ls</span> <span class="pre">-R</span> <span class="pre">-L2</span></code></p>
+<p><strong>Download a file or a directory from remote</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">cp</span> <span class="pre">dav://path/to/file</span> <span class="pre">file</span></code>
+<code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">cp</span> <span class="pre">-R</span> <span class="pre">dav://path/to/file</span> <span class="pre">file</span></code></p>
+<p><strong>Upload a file or a directory to remote</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">cp</span> <span class="pre">file</span> <span class="pre">dav://path/to/file</span></code>
+<code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">cp</span> <span class="pre">-R</span> <span class="pre">dir</span> <span class="pre">dav://path/to/dir</span></code></p>
+<p><strong>Copy a file or a directory within remote</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">cp</span> <span class="pre">dav://path/to/file</span> <span class="pre">dav://path/to/file2</span></code>
+<code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">cp</span> <span class="pre">-R</span> <span class="pre">dav://path/to/dir1</span> <span class="pre">dav://path/to/dir2</span></code></p>
+<blockquote>
+<div><p>Note: <code class="docutils literal notranslate"><span class="pre">mv</span></code> works similarly to <code class="docutils literal notranslate"><span class="pre">cp</span></code> in both upload
+and download cases, as it does not remove files,
+except when between remotes.</p>
+</div></blockquote>
+<p><strong>Move a file or a directory within remote</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">mv</span> <span class="pre">dav://path/to/file</span> <span class="pre">dav://path/to/file2</span></code>
+<code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">mv</span> <span class="pre">-R</span> <span class="pre">dav://path/to/dir1</span> <span class="pre">dav://path/to/dir2</span></code></p>
+<p><strong>Delete a file or a directory</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">rm</span> <span class="pre">dav://path/to/file</span></code>
+<code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">rm</span> <span class="pre">-R</span> <span class="pre">dav://path/to/dir</span></code>
+<code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">rm</span> <span class="pre">-R</span> <span class="pre">path/dir</span></code></p>
+<p><strong>Create a directory</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">mkdir</span> <span class="pre">path/dir</span></code>
+<code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">mkdir</span> <span class="pre">dav://path/dir</span></code></p>
+<p><strong>Count files and determine total size</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">du</span> <span class="pre">path/dir</span></code></p>
+<p><strong>Print contents of a file</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">cat</span> <span class="pre">dav://path/to/file</span></code></p>
+<p><strong>Periodically sync files</strong></p>
+<p>Similar to <code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span> <span class="pre">sync</span></code> and uses file sizes and modified times
+to sync intelligently between local-remote, remote-local and local-remote.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dav sync dir dav://path/to/dir  <span class="c1"># local to remote</span>
+dav sync dav://path/to/dir dir  <span class="c1"># remote to local</span>
+dav sync dav://path/dir1 dav://path/dir2  <span class="c1"># remote-remote</span>
+</pre></div>
+</div>
+<p><strong>Run multiple commands at once</strong></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dav run commands.txt  <span class="c1"># or,</span>
+cat commands.txt <span class="p">|</span> dav run -
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">commands.txt</span></code> can look something like follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cp</span> <span class="nb">dir</span><span class="o">/</span><span class="n">dir2</span> <span class="n">dav</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="nb">dir</span>
+<span class="n">mv</span> <span class="n">dav</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">dir2</span> <span class="n">dav</span><span class="p">:</span><span class="o">//</span><span class="n">path</span><span class="o">/</span><span class="n">dir3</span>
+<span class="c1"># list all files (comments are supported)</span>
+<span class="n">ls</span> <span class="o">-</span><span class="n">R</span>
+<span class="n">du</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+      </article>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="../contributing.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Contributing Guide</div>
+              </div>
+              <svg><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="fsspec.html">
+              <svg><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">WebdavFileSystem</div>
+                
+              </div>
+            </a>
+        </div>
+
+        <div class="related-information">
+              Copyright &#169; 2021, Saugat Pachhai
+            |
+            Built with <a href="https://www.sphinx-doc.org/">Sphinx</a>
+              and
+              <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+              <a href="https://github.com/pradyunsg/furo">Furo theme</a>.
+            |
+            <a class="muted-link" href="../_sources/reference/cli.md.txt"
+               rel="nofollow">
+              Show Source
+            </a>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            Contents
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#"><code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI</a><ul>
+<li><a class="reference internal" href="#common-arguments">Common arguments</a></li>
+<li><a class="reference internal" href="#examples">Examples:</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </main>
+</div>
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/main.js?digest=e931d09b2a40c1bb82b542effe772014573baf67"></script></body>
+</html>
