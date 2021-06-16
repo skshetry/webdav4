@@ -4,7 +4,7 @@
 ![ci](https://github.com/skshetry/webdav4/workflows/CI/badge.svg)
 [![codecov](https://codecov.io/gh/skshetry/webdav4/branch/main/graph/badge.svg)](https://codecov.io/gh/skshetry/webdav4)
 
-Webdav API with an (optional) [fsspec](#fsspec) implementation
+Webdav API with an (optional) [fsspec](#fsspec) implementation and a [CLI](#cli).
 
 ## Installation
 
@@ -55,3 +55,16 @@ fs.ls("Photos", detail=False)
 ```
 
 Check out [WebdavFileSystem API](docs/reference/fsspec.md) reference for more information.
+
+
+#### CLI
+
+webdav4 also provides a CLI similar to `aws s3` to make it easier to work with webdav servers.
+![cli-usage](docs/_static/usage.png)
+
+Please checkout [CLI Usage](docs/reference/cli.md) for more information.
+
+### Contributing
+
+Contributions are welcome. Please take a look at
+[Contributing Guide](docs/contributing.md) for more details.
