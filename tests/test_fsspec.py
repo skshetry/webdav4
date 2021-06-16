@@ -8,7 +8,7 @@ import pytest
 from webdav4.fsspec import WebdavFileSystem
 from webdav4.urls import URL, join_url
 
-from .utils import TmpDir
+from .utils import TmpDir, approx_datetime
 
 
 def test_fs_ls(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
@@ -19,11 +19,11 @@ def test_fs_ls(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     assert fs.ls("/") == [
         {
             "size": None,
-            "created": datetime.fromtimestamp(
-                int(stat.st_ctime), tz=timezone.utc
+            "created": approx_datetime(
+                datetime.fromtimestamp(int(stat.st_ctime), tz=timezone.utc)
             ),
-            "modified": datetime.fromtimestamp(
-                int(stat.st_mtime), tz=timezone.utc
+            "modified": approx_datetime(
+                datetime.fromtimestamp(int(stat.st_mtime), tz=timezone.utc)
             ),
             "content_language": None,
             "content_type": None,
@@ -50,11 +50,11 @@ def test_fs_ls(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
         "name": "data/bar",
         "href": join_url(server_address, "data/bar").path,
         "size": 3,
-        "created": datetime.fromtimestamp(
-            int(bar_stat.st_ctime), tz=timezone.utc
+        "created": approx_datetime(
+            datetime.fromtimestamp(int(bar_stat.st_ctime), tz=timezone.utc)
         ),
-        "modified": datetime.fromtimestamp(
-            int(bar_stat.st_ctime), tz=timezone.utc
+        "modified": approx_datetime(
+            datetime.fromtimestamp(int(bar_stat.st_ctime), tz=timezone.utc)
         ),
         "content_language": None,
         "content_type": "application/octet-stream",
@@ -65,11 +65,11 @@ def test_fs_ls(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
         "name": "data/foo",
         "href": join_url(server_address, "data/foo").path,
         "size": 3,
-        "created": datetime.fromtimestamp(
-            int(foo_stat.st_ctime), tz=timezone.utc
+        "created": approx_datetime(
+            datetime.fromtimestamp(int(foo_stat.st_ctime), tz=timezone.utc)
         ),
-        "modified": datetime.fromtimestamp(
-            int(foo_stat.st_ctime), tz=timezone.utc
+        "modified": approx_datetime(
+            datetime.fromtimestamp(int(foo_stat.st_ctime), tz=timezone.utc)
         ),
         "display_name": "foo",
         "content_language": None,
@@ -80,8 +80,8 @@ def test_fs_ls(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     fs.rm("/data/foo")
     assert fs.ls("/data/", detail=False) == ["data/bar"]
     assert fs.size("/data/bar") == 3
-    assert fs.modified("/data/bar") == datetime.fromtimestamp(
-        int(stat.st_mtime), tz=timezone.utc
+    assert fs.modified("/data/bar") == approx_datetime(
+        datetime.fromtimestamp(int(stat.st_mtime), tz=timezone.utc)
     )
     assert fs.cat("/data/bar") == b"bar"
 
@@ -92,8 +92,8 @@ def test_fs_ls(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     assert fs.ls("data", detail=False) == ["data/foobar"]
 
     foobar_stat = (storage_dir / "data" / "foobar").stat()
-    assert fs.created("data/foobar") == datetime.fromtimestamp(
-        int(foobar_stat.st_ctime), tz=timezone.utc
+    assert fs.created("data/foobar") == approx_datetime(
+        datetime.fromtimestamp(int(foobar_stat.st_ctime), tz=timezone.utc)
     )
 
     fs.cp("data/foobar", "data/bar")
@@ -327,13 +327,13 @@ def test_created(storage_dir: TmpDir, fs: WebdavFileSystem):
     storage_dir.gen({"data": {"foo": "foo"}})
 
     data_stat = (storage_dir / "data" / "foo").stat()
-    assert fs.created("data") == datetime.fromtimestamp(
-        int(data_stat.st_ctime), tz=timezone.utc
+    assert fs.created("data") == approx_datetime(
+        datetime.fromtimestamp(int(data_stat.st_ctime), tz=timezone.utc)
     )
 
     foo_stat = (storage_dir / "data" / "foo").stat()
-    assert fs.created("data/foo") == datetime.fromtimestamp(
-        int(foo_stat.st_ctime), tz=timezone.utc
+    assert fs.created("data/foo") == approx_datetime(
+        datetime.fromtimestamp(int(foo_stat.st_ctime), tz=timezone.utc)
     )
 
 
@@ -345,13 +345,13 @@ def test_modified(storage_dir: TmpDir, fs: WebdavFileSystem):
     storage_dir.gen({"data": {"foo": "foo"}})
 
     data_stat = (storage_dir / "data" / "foo").stat()
-    assert fs.modified("data") == datetime.fromtimestamp(
-        int(data_stat.st_mtime), tz=timezone.utc
+    assert fs.modified("data") == approx_datetime(
+        datetime.fromtimestamp(int(data_stat.st_mtime), tz=timezone.utc)
     )
 
     foo_stat = (storage_dir / "data" / "foo").stat()
-    assert fs.modified("data/foo") == datetime.fromtimestamp(
-        int(foo_stat.st_mtime), tz=timezone.utc
+    assert fs.modified("data/foo") == approx_datetime(
+        datetime.fromtimestamp(int(foo_stat.st_mtime), tz=timezone.utc)
     )
 
 
@@ -482,11 +482,11 @@ def test_info(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     assert d.pop("etag") is None
     assert d == {
         "size": None,
-        "created": datetime.fromtimestamp(
-            int(data_stat.st_ctime), tz=timezone.utc
+        "created": approx_datetime(
+            datetime.fromtimestamp(int(data_stat.st_ctime), tz=timezone.utc)
         ),
-        "modified": datetime.fromtimestamp(
-            int(data_stat.st_mtime), tz=timezone.utc
+        "modified": approx_datetime(
+            datetime.fromtimestamp(int(data_stat.st_mtime), tz=timezone.utc)
         ),
         "content_language": None,
         "content_type": None,
@@ -505,11 +505,11 @@ def test_info(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
         "name": "data/foo",
         "href": join_url(server_address, "data/foo").path,
         "size": 3,
-        "created": datetime.fromtimestamp(
-            int(foo_stat.st_ctime), tz=timezone.utc
+        "created": approx_datetime(
+            datetime.fromtimestamp(int(foo_stat.st_ctime), tz=timezone.utc)
         ),
-        "modified": datetime.fromtimestamp(
-            int(foo_stat.st_ctime), tz=timezone.utc
+        "modified": approx_datetime(
+            datetime.fromtimestamp(int(foo_stat.st_ctime), tz=timezone.utc)
         ),
         "display_name": "foo",
         "content_language": None,
@@ -523,11 +523,11 @@ def test_info(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
         "name": "data/bar",
         "href": join_url(server_address, "data/bar").path,
         "size": 3,
-        "created": datetime.fromtimestamp(
-            int(bar_stat.st_ctime), tz=timezone.utc
+        "created": approx_datetime(
+            datetime.fromtimestamp(int(bar_stat.st_ctime), tz=timezone.utc)
         ),
-        "modified": datetime.fromtimestamp(
-            int(bar_stat.st_ctime), tz=timezone.utc
+        "modified": approx_datetime(
+            datetime.fromtimestamp(int(bar_stat.st_ctime), tz=timezone.utc)
         ),
         "content_language": None,
         "content_type": "application/octet-stream",
@@ -539,11 +539,11 @@ def test_info(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
     assert d.pop("etag") is None
     assert d == {
         "size": None,
-        "created": datetime.fromtimestamp(
-            int(empty_stat.st_ctime), tz=timezone.utc
+        "created": approx_datetime(
+            datetime.fromtimestamp(int(empty_stat.st_ctime), tz=timezone.utc)
         ),
-        "modified": datetime.fromtimestamp(
-            int(empty_stat.st_mtime), tz=timezone.utc
+        "modified": approx_datetime(
+            datetime.fromtimestamp(int(empty_stat.st_mtime), tz=timezone.utc)
         ),
         "content_language": None,
         "content_type": None,
