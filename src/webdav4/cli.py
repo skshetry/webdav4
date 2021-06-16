@@ -950,7 +950,9 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
     )
     parser.add_argument(
         "--endpoint-url",
-        help="endpoint url to connect to. Will be considered as a root path.",
+        help="Endpoint url to connect to. Will be considered as a root path.\n"
+        "Can also be specified through WEBDAV_ENDPOINT_URL envvar.",
+        metavar="URL",
         default=None,
     )
     parser.add_argument(

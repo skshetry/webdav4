@@ -22,7 +22,9 @@ def get_url_from_addr(host, port) -> URL:
 
 
 @contextmanager
-def run_server_on_thread(srvr: wsgi.Server) -> Iterator[wsgi.Server]:
+def run_server_on_thread(
+    srvr: wsgi.Server,
+) -> Iterator[Tuple[wsgi.Server, threading.Thread]]:
     """Runs server on a separate thread."""
     srvr.prepare()
     thread = threading.Thread(target=srvr.serve)
@@ -30,7 +32,7 @@ def run_server_on_thread(srvr: wsgi.Server) -> Iterator[wsgi.Server]:
     thread.start()
 
     try:
-        yield srvr
+        yield srvr, thread
     finally:
         srvr.stop()
     thread.join()
@@ -41,7 +43,7 @@ def run_server(
     port: int,
     directory: str,
     authentication: Tuple[str, str],
-) -> ContextManager[wsgi.Server]:
+) -> ContextManager[Tuple[wsgi.Server, threading.Thread]]:
     """Runs a webdav server."""
     dirmap = {"/": directory}
 
@@ -62,6 +64,7 @@ def run_server(
 if __name__ == "__main__":
     # usage: python -m tests.server
 
+    import argparse
     import code
     import tempfile
     from contextlib import suppress
@@ -71,19 +74,43 @@ if __name__ == "__main__":
 
     from .utils import TmpDir
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--interactive",
+        "-i",
+        help="Run test server interactively",
+        action="store_true",
+        default=False,
+    )
+
+    args = parser.parse_args()
     storage_dir = TmpDir(tempfile.mkdtemp("repl"))
-    with run_server("localhost", 0, str(storage_dir), AUTH) as server:
+
+    with run_server("localhost", 0, str(storage_dir), AUTH) as (server, th):
         server_address = get_server_address(server)
         client = Client(server_address, auth=AUTH)
         fs = WebdavFileSystem(server_address, client=client)
 
+        print(f"Running server on {server_address} ...")
+        print("Authenticate with {0}:{1}".format(*AUTH))
+
         try:
-            from IPython import embed
+            if args.interactive:
+                print(
+                    "fs, client, server_address, storage_dir fixtures "
+                    "are available"
+                )
+                try:
+                    from IPython import embed
 
-            embed(colors="neutral")
-        except ImportError:
-            with suppress(ImportError):
-                import readline  # noqa: F401
+                    embed(colors="neutral")
+                except ImportError:
+                    with suppress(ImportError):
+                        import readline  # noqa: F401
 
-            shell = code.InteractiveConsole({**globals(), **locals()})
-            shell.interact()
+                    shell = code.InteractiveConsole({**globals(), **locals()})
+                    shell.interact()
+            else:
+                th.join()
+        except KeyboardInterrupt:
+            print("Exiting ...")
