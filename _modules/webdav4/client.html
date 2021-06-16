@@ -788,14 +788,19 @@
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Upload file from file object to given path."""</span>
-        <span class="n">length</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">UnsupportedOperation</span><span class="p">):</span>
-            <span class="n">length</span> <span class="o">=</span> <span class="n">peek_filelike_length</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
+        <span class="c1"># we try to avoid chunked transfer as much as possible</span>
+        <span class="c1"># so we try to use size as a hint if provided.</span>
+        <span class="c1"># else, we will try to find that out from the file object</span>
+        <span class="c1"># if we are not successfull in that, we gracefully fallback</span>
+        <span class="c1"># to the chunked encoding.</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">UnsupportedOperation</span><span class="p">):</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="n">peek_filelike_length</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
 
-        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Content-Length"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">length</span><span class="p">)}</span> <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
-
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"Content-Length"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">size</span><span class="p">)}</span> <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">overwrite</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">to_path</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">ResourceAlreadyExists</span><span class="p">(</span><span class="n">to_path</span><span class="p">)</span>
 
