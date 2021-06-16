@@ -71,3 +71,4 @@ follow_imports = "skip"
 module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+warn_unused_ignores = false

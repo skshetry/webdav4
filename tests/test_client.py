@@ -26,7 +26,7 @@ from webdav4.http import Client as HTTPClient
 from webdav4.http import Method as HTTPMethod
 from webdav4.urls import URL
 
-from .utils import TmpDir
+from .utils import TmpDir, approx_datetime
 
 
 def lock_resource(client: Client, path: str):
@@ -804,11 +804,11 @@ def test_attributes(storage_dir: TmpDir, client: Client):
     assert client.content_language("/data/foo") == ""
     etag = client.etag("/data/foo")
     assert etag and isinstance(etag, str)
-    assert client.modified("/data/foo") == datetime.fromtimestamp(
-        int(stat.st_mtime), tz=timezone.utc
+    assert client.modified("/data/foo") == approx_datetime(
+        datetime.fromtimestamp(int(stat.st_mtime), tz=timezone.utc)
     )
-    assert client.created("/data/foo") == datetime.fromtimestamp(
-        int(stat.st_ctime), tz=timezone.utc
+    assert client.created("/data/foo") == approx_datetime(
+        datetime.fromtimestamp(int(stat.st_ctime), tz=timezone.utc)
     )
 
 
@@ -821,11 +821,11 @@ def test_attributes_dir(storage_dir: TmpDir, client: Client):
     assert client.content_type("/data/") == ""
     assert client.content_language("/data/") == ""
     assert client.etag("/data/") is None
-    assert client.modified("/data/") == datetime.fromtimestamp(
-        int(stat.st_mtime), tz=timezone.utc
+    assert client.modified("/data/") == approx_datetime(
+        datetime.fromtimestamp(int(stat.st_mtime), tz=timezone.utc)
     )
-    assert client.created("/data/") == datetime.fromtimestamp(
-        int(stat.st_ctime), tz=timezone.utc
+    assert client.created("/data/") == approx_datetime(
+        datetime.fromtimestamp(int(stat.st_ctime), tz=timezone.utc)
     )
 
 
