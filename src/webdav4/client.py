@@ -653,14 +653,19 @@ class Client:
         overwrite: bool = False,
         callback: Callable[[int], Any] = None,
         chunk_size: int = None,
+        size: int = None,
     ) -> None:
         """Upload file from file object to given path."""
-        length = -1
-        with suppress(TypeError, AttributeError, UnsupportedOperation):
-            length = peek_filelike_length(file_obj)
+        # we try to avoid chunked transfer as much as possible
+        # so we try to use size as a hint if provided.
+        # else, we will try to find that out from the file object
+        # if we are not successfull in that, we gracefully fallback
+        # to the chunked encoding.
+        if size is None:
+            with suppress(TypeError, AttributeError, UnsupportedOperation):
+                size = peek_filelike_length(file_obj)
 
-        headers = {"Content-Length": str(length)} if length >= 0 else None
-
+        headers = {"Content-Length": str(size)} if size is not None else None
         if not overwrite and self.exists(to_path):
             raise ResourceAlreadyExists(to_path)
 

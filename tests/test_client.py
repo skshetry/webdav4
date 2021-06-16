@@ -4,7 +4,7 @@ from http import HTTPStatus
 from io import DEFAULT_BUFFER_SIZE, BytesIO
 from pathlib import Path
 from typing import Any, Callable, Dict
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -691,6 +691,29 @@ def test_upload_fobj(storage_dir: TmpDir, client: Client):
     assert client.isfile("/foo")
     assert not client.isdir("/foo")
     assert storage_dir.cat() == {"foo": "foo"}
+
+
+def test_upload_fobj_size_hints(client: Client):
+    """Test uploading file object with provided size as hints.
+
+    This is used to choose between chunked and non-chunked transfers.
+    """
+    from .test_callback import ReadWrapper
+
+    with patch.object(client, "request") as m:
+        client.upload_fileobj(BytesIO(b"foobar"), "foobar", size=3)
+        assert m.call_args[1]["headers"] == {"Content-Length": "3"}
+
+        client.upload_fileobj(BytesIO(b"foobar"), "foobar")
+        assert m.call_args[1]["headers"] == {"Content-Length": "6"}
+
+        wrapped = ReadWrapper(BytesIO(b"foobar"))  # type: ignore
+        client.upload_fileobj(wrapped, "foobar")  # type: ignore
+        assert m.call_args[1]["headers"] is None
+
+        wrapped = ReadWrapper(BytesIO(b"foobar"))  # type: ignore
+        client.upload_fileobj(wrapped, "foobar", size=6)  # type: ignore
+        assert m.call_args[1]["headers"] == {"Content-Length": "6"}
 
 
 def test_upload_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
