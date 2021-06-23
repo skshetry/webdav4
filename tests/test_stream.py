@@ -106,7 +106,7 @@ def test_retry_reconnect_on_failure(
         # when we cannot detect support for ranges, we should just raise error
         client.detected_features.supports_ranges = False
         with client.open("sample.txt", mode="rb") as fd:
-            fd._response.headers.clear()  # type: ignore
+            fd._initial_response.headers.clear()  # type: ignore
             with pytest.raises(HTTPNetworkError):
                 fd.read()
 
@@ -116,7 +116,7 @@ def test_retry_reconnect_on_failure(
             assert str(exc_info.value) == "server does not support ranges"
 
         with fs.open("sample.txt", mode="rb") as fd:
-            fd.reader._response.headers.clear()  # type: ignore
+            fd.reader._initial_response.headers.clear()  # type: ignore
             with pytest.raises(HTTPNetworkError):
                 fd.read()
 

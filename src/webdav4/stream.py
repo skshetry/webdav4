@@ -116,9 +116,8 @@ class IterStream(RawIOBase):
         self.url = url
         self._loc: int = 0
         self._cm = iter_url(client, self.url, chunk_size=chunk_size)
-        self.size: Optional[int] = None
         self._iterator: Optional[Iterator[bytes]] = None
-        self._response: Optional["HTTPResponse"] = None
+        self._initial_response: Optional["HTTPResponse"] = None
 
     @property
     def supports_ranges(self) -> bool:
@@ -128,12 +127,21 @@ class IterStream(RawIOBase):
         to see if the server supports Range header or not. And, we want to
         avoid checking that as much as possible.
         """
-        response = self._response
+        response = self._initial_response
         if response and response.headers.get("Accept-Ranges") == "bytes":
             return True
         # consider if checking Accept-Ranges from OPTIONS request on self.url
         # would be a better solution than using base url.
         return self.client.detected_features.supports_ranges
+
+    @property
+    def size(self) -> Optional[int]:
+        """Size of the file object."""
+        assert self._initial_response
+        content_length: str = self._initial_response.headers.get(
+            "Content-Length", ""
+        )
+        return int(content_length) if content_length.isdigit() else None
 
     @property
     def loc(self) -> int:
@@ -148,11 +156,7 @@ class IterStream(RawIOBase):
     def __enter__(self) -> "IterStream":
         """Send a streaming response."""
         #  pylint: disable=no-member
-        response, self._iterator = self._cm.__enter__()
-        # we don't want to get this on Ranged requests or retried ones
-        content_length: str = response.headers.get("Content-Length", "")
-        self._response = response
-        self.size = int(content_length) if content_length.isdigit() else None
+        self._initial_response, self._iterator = self._cm.__enter__()
         return self
 
     def __exit__(self, *args: Any) -> None:
@@ -162,16 +166,15 @@ class IterStream(RawIOBase):
     @property
     def encoding(self) -> Optional[str]:
         """Encoding of the response."""
-        assert self._response
-        return self._response.encoding
+        assert self._initial_response
+        return self._initial_response.encoding
 
     def close(self) -> None:
         """Close response if not already."""
-        if self._iterator or self._response:
+        if self._iterator:
             self._cm.__exit__(None, None, None)  # pylint: disable=no-member
 
         self._iterator = None
-        self._response = None
         self.buffer = b""
 
     def seek(self, offset: int, whence: int = 0) -> int:  # noqa: C901
@@ -199,9 +202,9 @@ class IterStream(RawIOBase):
             self.client, self.url, pos=loc, chunk_size=self.chunk_size
         )
         #  pylint: disable=no-member
-        self._response, self._iterator = self._cm.__enter__()
+        _, self._iterator = self._cm.__enter__()
         self.loc = loc
-        return self.loc
+        return loc
 
     def tell(self) -> int:
         """Return current position of the fileobj."""
@@ -210,7 +213,7 @@ class IterStream(RawIOBase):
     @property
     def closed(self) -> bool:  # pylint: disable=invalid-overridden-method
         """Check whether the stream was closed or not."""
-        return not any([self._response, self._iterator])
+        return self._iterator is None
 
     def readable(self) -> bool:
         """Stream is readable."""
@@ -250,10 +253,10 @@ class IterStream(RawIOBase):
             return b""
 
         if num <= 0:
-            self.buffer = b""
-            return chunk
+            output, self.buffer = chunk, b""
+        else:
+            output, self.buffer = chunk[:num], chunk[num:]
 
-        output, self.buffer = chunk[:num], chunk[num:]
         self.loc += len(output)
         return output
 

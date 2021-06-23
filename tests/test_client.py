@@ -4,6 +4,7 @@ from http import HTTPStatus
 from io import DEFAULT_BUFFER_SIZE, BytesIO
 from pathlib import Path
 from typing import Any, Callable, Dict
+from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -557,9 +558,12 @@ def test_open_binary(storage_dir: TmpDir, client: Client):
             f.seek(-10)
         with pytest.raises(ValueError):
             f.seek(10, 3)
-        f.size = None  # type: ignore
-        with pytest.raises(ValueError):
-            f.seek(-10, 2)
+        with mock.patch.object(
+            type(f), "size", new_callable=mock.PropertyMock
+        ) as m:
+            m.return_value = None
+            with pytest.raises(ValueError):
+                f.seek(-10, 2)
 
     assert f.closed
 
