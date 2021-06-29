@@ -2,13 +2,13 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Client" href="reference/client.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Client" href="reference/client.html" />
 
-    <meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
+    <meta name="generator" content="sphinx-4.0.2, furo 2021.06.18.beta36"/>
         <title>Home - webdav4</title>
-      <link rel="stylesheet" href="_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
+      <link rel="stylesheet" href="_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
     <link rel="stylesheet" href="_static/pygments.css">
-    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="_static/pygments_dark.css">
     
 
 
@@ -37,8 +37,11 @@
   --color-code-foreground: #d0d0d0;
   
   }
-</style><link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
-    <link rel="stylesheet" href="_static/styles/furo-extensions.css?digest=d391b54134226e4196576da3bdb6dddb7e05ba2b"></head>
+</style><link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="_static/pygments_dark.css">
+    <link rel="stylesheet" href="_static/styles/furo-extensions.css?digest=ee12cdd73c4bbac24afec78d92c4afd7c2d8ea7f"></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -136,20 +139,20 @@
         <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="tex2jax_ignore mathjax_ignore section" id="webdav4">
+        <section class="tex2jax_ignore mathjax_ignore" id="webdav4">
 <h1>webdav4<a class="headerlink" href="#webdav4" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://www.repostatus.org/#wip"><img alt="Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public." src="https://www.repostatus.org/badges/latest/wip.svg"/></a>
 <img alt="ci" src="https://github.com/skshetry/webdav4/workflows/CI/badge.svg"/>
 <a class="reference external" href="https://codecov.io/gh/skshetry/webdav4"><img alt="codecov" src="https://codecov.io/gh/skshetry/webdav4/branch/main/graph/badge.svg"/></a></p>
 <p>Webdav API with an (optional) <a class="reference external" href="#fsspec">fsspec</a> implementation and a <a class="reference external" href="#cli">CLI</a>.</p>
-<div class="section" id="installation">
+<section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install webdav4
 </pre></div>
 </div>
-<div class="section" id="usage">
+<section id="usage">
 <h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="webdav4-client">
+<section id="webdav4-client">
 <h4>webdav4 Client<a class="headerlink" href="#webdav4-client" title="Permalink to this headline">¶</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">webdav4.client</span> <span class="kn">import</span> <span class="n">Client</span>
 
@@ -161,8 +164,8 @@
 </pre></div>
 </div>
 <p>Check out <a class="reference internal" href="reference/client.html"><span class="doc std std-doc">Client API</span></a> reference for more information.</p>
-</div>
-<div class="section" id="fsspec">
+</section>
+<section id="fsspec">
 <h4>fsspec<a class="headerlink" href="#fsspec" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://filesystem-spec.readthedocs.io"><code class="docutils literal notranslate"><span class="pre">fsspec</span></code></a> tries to provide a
 consistent APIs to different storage backends, by defining standard
@@ -183,15 +186,15 @@ follows:</p>
 </pre></div>
 </div>
 <p>Check out <a class="reference internal" href="reference/fsspec.html"><span class="doc std std-doc">WebdavFileSystem API</span></a> reference for more information.</p>
-</div>
-<div class="section" id="cli">
+</section>
+<section id="cli">
 <h4>CLI<a class="headerlink" href="#cli" title="Permalink to this headline">¶</a></h4>
 <p>webdav4 also provides a CLI similar to <code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span></code> to make it easier to work with webdav servers.
 <img alt="cli-usage" src="_images/usage.png"/></p>
 <p>Please checkout <a class="reference internal" href="reference/cli.html"><span class="doc std std-doc">CLI Usage</span></a> for more information.</p>
-</div>
-</div>
-<div class="section" id="contributing">
+</section>
+</section>
+<section id="contributing">
 <h3>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h3>
 <p>Contributions are welcome. Please take a look at
 <a class="reference internal" href="contributing.html"><span class="doc std std-doc">Contributing Guide</span></a> for more details.</p>
@@ -201,9 +204,9 @@ follows:</p>
 </div>
 <div class="toctree-wrapper compound">
 </div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
       </article>
       <footer>
@@ -245,6 +248,7 @@ follows:</p>
   </main>
 </div>
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>

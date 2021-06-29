@@ -2,13 +2,13 @@
 <html class="no-js">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Contributing Guide" href="../contributing.html" /><link rel="prev" title="WebdavFileSystem" href="fsspec.html" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Contributing Guide" href="../contributing.html" /><link rel="prev" title="WebdavFileSystem" href="fsspec.html" />
 
-    <meta name="generator" content="sphinx-3.5.4, furo 2021.04.11.beta34"/>
+    <meta name="generator" content="sphinx-4.0.2, furo 2021.06.18.beta36"/>
         <title>dav CLI - webdav4</title>
-      <link rel="stylesheet" href="../_static/styles/furo.css?digest=59ab60ac09ea94ccfe6deddff6d715cce948a6fc">
+      <link rel="stylesheet" href="../_static/styles/furo.css?digest=9b17055c4366e8b2949c66d6a9d8b0efe4dbaa60">
     <link rel="stylesheet" href="../_static/pygments.css">
-    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
     
 
 
@@ -37,8 +37,11 @@
   --color-code-foreground: #d0d0d0;
   
   }
-</style><link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=d391b54134226e4196576da3bdb6dddb7e05ba2b"></head>
+</style><link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link media="(prefers-color-scheme: dark)" rel="stylesheet" href="../_static/pygments_dark.css">
+    <link rel="stylesheet" href="../_static/styles/furo-extensions.css?digest=ee12cdd73c4bbac24afec78d92c4afd7c2d8ea7f"></head>
   <body dir="">
     
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -136,7 +139,7 @@
         <label class="toc-overlay-icon toc-content-icon" for="__toc">
           <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
         </label>
-        <div class="tex2jax_ignore mathjax_ignore section" id="dav-cli">
+        <section class="tex2jax_ignore mathjax_ignore" id="dav-cli">
 <h1><code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI<a class="headerlink" href="#dav-cli" title="Permalink to this headline">¶</a></h1>
 <p>If <code class="docutils literal notranslate"><span class="pre">webdav4</span></code> is installed with <code class="docutils literal notranslate"><span class="pre">fsspec</span></code> package, <code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI similar to <code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span></code> is
 also available to make it easier for the interaction.</p>
@@ -144,7 +147,7 @@ also available to make it easier for the interaction.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -U <span class="s2">"webdav4[fsspec]"</span>
 </pre></div>
 </div>
-<div class="section" id="common-arguments">
+<section id="common-arguments">
 <h2>Common arguments<a class="headerlink" href="#common-arguments" title="Permalink to this headline">¶</a></h2>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">--endpoint-url</span></code>: Path to the server/hostname. Can also be specified through
@@ -164,8 +167,8 @@ Can also be specified in the url itself in <code class="docutils literal notrans
 <div><p>Note that all the arguments are expected to follow after <code class="docutils literal notranslate"><span class="pre">dav</span></code> command.
 Example: <code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">--user</span> <span class="pre">user</span> <span class="pre">ls</span></code>.</p>
 </div></blockquote>
-</div>
-<div class="section" id="examples">
+</section>
+<section id="examples">
 <h2>Examples:<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p><strong>Listing files</strong></p>
 <p><code class="docutils literal notranslate"><span class="pre">dav</span> <span class="pre">ls</span></code></p>
@@ -222,8 +225,8 @@ cat commands.txt <span class="p">|</span> dav run -
 <span class="n">du</span>
 </pre></div>
 </div>
-</div>
-</div>
+</section>
+</section>
 
       </article>
       <footer>
@@ -295,6 +298,7 @@ cat commands.txt <span class="p">|</span> dav run -
   </main>
 </div>
     <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
     <script src="../_static/jquery.js"></script>
     <script src="../_static/underscore.js"></script>
     <script src="../_static/doctools.js"></script>
