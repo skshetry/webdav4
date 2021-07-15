@@ -1,8 +1,9 @@
 """Testing fsspec based WebdavFileSystem."""
 import errno
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, List, Set, Tuple, Union
 
+import fsspec
 import pytest
 
 from webdav4.fsspec import WebdavFileSystem
@@ -825,3 +826,42 @@ def test_touch_not_truncate(storage_dir: TmpDir, fs: WebdavFileSystem):
     with pytest.raises(NotImplementedError):
         # this should update the timestamp, but it's not implemented yet.
         fs.touch("foo", truncate=False)
+
+
+def test_callbacks(storage_dir: TmpDir, fs: WebdavFileSystem):
+    """Test fsspec callbacks."""
+    src_file = storage_dir / "source"
+    dest_file = "data/get_put_file/dest"
+
+    data = b"test" * 4
+
+    with open(src_file, "wb") as stream:
+        stream.write(data)
+
+    class EventLogger(fsspec.Callback):
+        """Log callback values."""
+
+        def __init__(self) -> None:
+            self.events: List[Tuple[str, int]] = []
+            super().__init__()
+
+        def set_size(self, size: int) -> None:
+            """Log a set_size call."""
+            self.events.append(("set_size", size))
+
+        def relative_update(self, value: int) -> None:
+            """Log a relative_update call."""
+            self.events.append(("relative_update", value))
+
+    event_logger = EventLogger()
+    fs.put_file(src_file, dest_file, chunk_size=4, callback=event_logger)
+    assert fs.exists(dest_file)
+
+    assert event_logger.events[0] == ("set_size", len(data))
+    assert event_logger.events[1:] == [
+        ("relative_update", 4),
+        ("relative_update", 4),
+        ("relative_update", 4),
+        ("relative_update", 4),
+        ("relative_update", 0),
+    ]
