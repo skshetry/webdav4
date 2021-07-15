@@ -41,6 +41,8 @@ if TYPE_CHECKING:
     from os import PathLike
     from typing import AnyStr
 
+    from fsspec import Callback
+
     from .types import AuthTypes, URLTypes
 
 
@@ -325,13 +327,20 @@ class WebdavFileSystem(AbstractFileSystem):
         self.client.upload_fileobj(buff, path, **kwargs)
 
     def put_file(
-        self, lpath: "PathLike[AnyStr]", rpath: str, **kwargs: Any
+        self,
+        lpath: "PathLike[AnyStr]",
+        rpath: str,
+        callback: "Callback" = None,
+        **kwargs: Any,
     ) -> None:
         """Copy file to remote webdav server."""
         rpath = self._strip_protocol(rpath)
         if os.path.isdir(lpath):
             self.makedirs(rpath, exist_ok=True)
         else:
+            if callback is not None:
+                callback.set_size(os.path.getsize(lpath))
+                kwargs.setdefault("callback", callback.relative_update)
             self.mkdirs(os.path.dirname(rpath), exist_ok=True)
             kwargs.setdefault("overwrite", True)
             self.client.upload_file(lpath, rpath, **kwargs)
