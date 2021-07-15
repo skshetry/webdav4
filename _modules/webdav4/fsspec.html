@@ -180,6 +180,8 @@
     <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">PathLike</span>
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">AnyStr</span>
 
+    <span class="kn">from</span> <span class="nn">fsspec</span> <span class="kn">import</span> <span class="n">Callback</span>
+
     <span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">AuthTypes</span><span class="p">,</span> <span class="n">URLTypes</span>
 
 
@@ -464,13 +466,20 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.put_file"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.put_file">[docs]</a>    <span class="k">def</span> <span class="nf">put_file</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">lpath</span><span class="p">:</span> <span class="s2">"PathLike[AnyStr]"</span><span class="p">,</span> <span class="n">rpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lpath</span><span class="p">:</span> <span class="s2">"PathLike[AnyStr]"</span><span class="p">,</span>
+        <span class="n">rpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="s2">"Callback"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Copy file to remote webdav server."""</span>
         <span class="n">rpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">rpath</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">lpath</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">rpath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">callback</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">lpath</span><span class="p">))</span>
+                <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"callback"</span><span class="p">,</span> <span class="n">callback</span><span class="o">.</span><span class="n">relative_update</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">rpath</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"overwrite"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">rpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
