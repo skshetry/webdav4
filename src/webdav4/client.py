@@ -4,7 +4,7 @@ import shutil
 import threading
 from contextlib import contextmanager, suppress
 from http import HTTPStatus
-from io import TextIOWrapper, UnsupportedOperation
+from io import TextIOWrapper
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -662,8 +662,7 @@ class Client:
         # if we are not successfull in that, we gracefully fallback
         # to the chunked encoding.
         if size is None:
-            with suppress(TypeError, AttributeError, UnsupportedOperation):
-                size = peek_filelike_length(file_obj)
+            size = peek_filelike_length(file_obj)
 
         headers = {"Content-Length": str(size)} if size is not None else None
         if not overwrite and self.exists(to_path):

@@ -22,6 +22,7 @@ from typing import (
     cast,
 )
 
+from fsspec import Callback
 from fsspec.spec import AbstractBufferedFile, AbstractFileSystem
 
 from .client import (
@@ -32,6 +33,7 @@ from .client import (
     ResourceConflict,
     ResourceNotFound,
 )
+from .fs_utils import peek_filelike_length
 from .stream import read_into
 
 if TYPE_CHECKING:
@@ -41,8 +43,7 @@ if TYPE_CHECKING:
     from os import PathLike
     from typing import AnyStr
 
-    from fsspec import Callback
-
+    from .callback import CallbackFn
     from .types import AuthTypes, URLTypes
 
 
@@ -319,12 +320,41 @@ class WebdavFileSystem(AbstractFileSystem):
 
     def pipe_file(self, path: str, value: bytes, **kwargs: Any) -> None:
         """Upload the contents to given file in the remote webdav server."""
-        path = self._strip_protocol(path)
         buff = io.BytesIO(value)
         kwargs.setdefault("overwrite", True)
-        # maybe it's not a bad idea to make a `self.open` for `mode="rb"`
-        # on top of `io.BytesIO`?
-        self.client.upload_fileobj(buff, path, **kwargs)
+        return self.upload_fileobj(buff, path, **kwargs)
+
+    def upload_fileobj(
+        self,
+        fobj: BinaryIO,
+        rpath: str,
+        callback: "Callback" = None,
+        overwrite: bool = True,
+        size: int = None,
+        **kwargs: Any,
+    ) -> None:
+        """Upload contents from the fileobj to the remote path."""
+        rpath = self._strip_protocol(rpath)
+        self.mkdirs(os.path.dirname(rpath), exist_ok=True)
+
+        if size is None:
+            size = peek_filelike_length(fobj)
+
+        callback = cast("Callback", Callback.as_callback(callback))
+        if size is not None:  # pragma: no cover
+            callback.set_size(size)
+        progress_callback = cast("CallbackFn", callback.relative_update)
+
+        return self.client.upload_fileobj(
+            fobj,
+            rpath,
+            overwrite=overwrite,
+            callback=progress_callback,
+            size=size,
+            **kwargs,
+        )
+
+    put_fileobj = upload_fileobj
 
     def put_file(
         self,
@@ -334,16 +364,19 @@ class WebdavFileSystem(AbstractFileSystem):
         **kwargs: Any,
     ) -> None:
         """Copy file to remote webdav server."""
-        rpath = self._strip_protocol(rpath)
         if os.path.isdir(lpath):
-            self.makedirs(rpath, exist_ok=True)
-        else:
-            if callback is not None:
-                callback.set_size(os.path.getsize(lpath))
-                kwargs.setdefault("callback", callback.relative_update)
-            self.mkdirs(os.path.dirname(rpath), exist_ok=True)
+            rpath = self._strip_protocol(rpath)
+            return self.makedirs(rpath, exist_ok=True)
+
+        with open(lpath, mode="rb") as fobj:
             kwargs.setdefault("overwrite", True)
-            self.client.upload_file(lpath, rpath, **kwargs)
+            kwargs.setdefault("size", None)
+            return self.upload_fileobj(
+                fobj,
+                rpath,
+                callback=callback,
+                **kwargs,
+            )
 
 
 class WebdavFile(AbstractBufferedFile):

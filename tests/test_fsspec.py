@@ -9,6 +9,7 @@ import pytest
 from webdav4.fsspec import WebdavFileSystem
 from webdav4.urls import URL, join_url
 
+from .test_callback import ReadWrapper
 from .utils import TmpDir, approx_datetime
 
 
@@ -828,15 +829,44 @@ def test_touch_not_truncate(storage_dir: TmpDir, fs: WebdavFileSystem):
         fs.touch("foo", truncate=False)
 
 
+@pytest.mark.parametrize("with_size", [True, False])
+@pytest.mark.parametrize("wrap_fobj", [True, False])
+def test_upload_fileobj(
+    storage_dir: TmpDir,
+    fs: WebdavFileSystem,
+    with_size: bool,
+    wrap_fobj: bool,
+):
+    """Test upload_fileobj.
+
+    If with_size, size hints are provided to the API.
+    If wrap_fobj, the file object is wrapped with the ReadWrapper
+       that makes the peek_fileobj_length util to not be able to
+       figure out the size of the given fileobj. For the most part,
+       it should still work in this case.
+    """
+    if wrap_fobj and not with_size:
+        pytest.skip("the test server does not work without content-length :(")
+
+    foo = storage_dir / "foo"
+    length = foo.write_bytes(b"foo")
+
+    with foo.open(mode="rb") as fobj:
+        if wrap_fobj:
+            fobj = ReadWrapper(fobj)  # type: ignore
+        size = length if with_size else None
+        fs.upload_fileobj(fobj, "data/foobar", size=size)
+
+    assert (storage_dir / "data").cat() == {"foobar": "foo"}
+
+
 def test_callbacks(storage_dir: TmpDir, fs: WebdavFileSystem):
     """Test fsspec callbacks."""
     src_file = storage_dir / "source"
     dest_file = "data/get_put_file/dest"
 
     data = b"test" * 4
-
-    with open(src_file, "wb") as stream:
-        stream.write(data)
+    size = src_file.write_bytes(data)
 
     class EventLogger(fsspec.Callback):
         """Log callback values."""
@@ -855,9 +885,9 @@ def test_callbacks(storage_dir: TmpDir, fs: WebdavFileSystem):
 
     event_logger = EventLogger()
     fs.put_file(src_file, dest_file, chunk_size=4, callback=event_logger)
-    assert fs.exists(dest_file)
+    assert (storage_dir / dest_file).cat() == data.decode()
 
-    assert event_logger.events[0] == ("set_size", len(data))
+    assert event_logger.events[0] == ("set_size", size)
     assert event_logger.events[1:] == [
         ("relative_update", 4),
         ("relative_update", 4),
