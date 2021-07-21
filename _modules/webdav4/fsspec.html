@@ -161,6 +161,7 @@
     <span class="n">cast</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="kn">from</span> <span class="nn">fsspec</span> <span class="kn">import</span> <span class="n">Callback</span>
 <span class="kn">from</span> <span class="nn">fsspec.spec</span> <span class="kn">import</span> <span class="n">AbstractBufferedFile</span><span class="p">,</span> <span class="n">AbstractFileSystem</span>
 
 <span class="kn">from</span> <span class="nn">.client</span> <span class="kn">import</span> <span class="p">(</span>
@@ -171,6 +172,7 @@
     <span class="n">ResourceConflict</span><span class="p">,</span>
     <span class="n">ResourceNotFound</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.fs_utils</span> <span class="kn">import</span> <span class="n">peek_filelike_length</span>
 <span class="kn">from</span> <span class="nn">.stream</span> <span class="kn">import</span> <span class="n">read_into</span>
 
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
@@ -180,8 +182,7 @@
     <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">PathLike</span>
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">AnyStr</span>
 
-    <span class="kn">from</span> <span class="nn">fsspec</span> <span class="kn">import</span> <span class="n">Callback</span>
-
+    <span class="kn">from</span> <span class="nn">.callback</span> <span class="kn">import</span> <span class="n">CallbackFn</span>
     <span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">AuthTypes</span><span class="p">,</span> <span class="n">URLTypes</span>
 
 
@@ -458,12 +459,41 @@
 
 <div class="viewcode-block" id="WebdavFileSystem.pipe_file"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.pipe_file">[docs]</a>    <span class="k">def</span> <span class="nf">pipe_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Upload the contents to given file in the remote webdav server."""</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">buff</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"overwrite"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="c1"># maybe it's not a bad idea to make a `self.open` for `mode="rb"`</span>
-        <span class="c1"># on top of `io.BytesIO`?</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WebdavFileSystem.upload_fileobj"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.upload_fileobj">[docs]</a>    <span class="k">def</span> <span class="nf">upload_fileobj</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fobj</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">,</span>
+        <span class="n">rpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="s2">"Callback"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">"""Upload contents from the fileobj to the remote path."""</span>
+        <span class="n">rpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">rpath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">rpath</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">size</span> <span class="o">=</span> <span class="n">peek_filelike_length</span><span class="p">(</span><span class="n">fobj</span><span class="p">)</span>
+
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">"Callback"</span><span class="p">,</span> <span class="n">Callback</span><span class="o">.</span><span class="n">as_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="n">callback</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">progress_callback</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">"CallbackFn"</span><span class="p">,</span> <span class="n">callback</span><span class="o">.</span><span class="n">relative_update</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span>
+            <span class="n">fobj</span><span class="p">,</span>
+            <span class="n">rpath</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+            <span class="n">callback</span><span class="o">=</span><span class="n">progress_callback</span><span class="p">,</span>
+            <span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+    <span class="n">put_fileobj</span> <span class="o">=</span> <span class="n">upload_fileobj</span>
 
 <div class="viewcode-block" id="WebdavFileSystem.put_file"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.put_file">[docs]</a>    <span class="k">def</span> <span class="nf">put_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -473,16 +503,19 @@
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Copy file to remote webdav server."""</span>
-        <span class="n">rpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">rpath</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">lpath</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">rpath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">callback</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">lpath</span><span class="p">))</span>
-                <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"callback"</span><span class="p">,</span> <span class="n">callback</span><span class="o">.</span><span class="n">relative_update</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">rpath</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">rpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">rpath</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">rpath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fobj</span><span class="p">:</span>
             <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"overwrite"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">rpath</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span>
+                <span class="n">fobj</span><span class="p">,</span>
+                <span class="n">rpath</span><span class="p">,</span>
+                <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="WebdavFile"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile">[docs]</a><span class="k">class</span> <span class="nc">WebdavFile</span><span class="p">(</span><span class="n">AbstractBufferedFile</span><span class="p">):</span>
