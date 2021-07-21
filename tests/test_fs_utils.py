@@ -12,4 +12,4 @@ def test_peek_filelike_length():
 
     assert peek_filelike_length(fobj) == 13
     assert peek_filelike_length(ReadWrapper(fobj)) is None  # type: ignore
-    assert peek_filelike_length(object()) is None
+    assert peek_filelike_length(object()) is None  # type: ignore
