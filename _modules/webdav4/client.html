@@ -490,9 +490,11 @@
         <span class="n">detected_features</span> <span class="o">=</span> <span class="n">FeatureDetection</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">detected_features</span><span class="o">.</span><span class="n">dav_compliances</span></div>
 
-<div class="viewcode-block" id="Client.join_url"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.join_url">[docs]</a>    <span class="k">def</span> <span class="nf">join_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
+<div class="viewcode-block" id="Client.join_url"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.join_url">[docs]</a>    <span class="k">def</span> <span class="nf">join_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
         <span class="sd">"""Join resource path with base url of the webdav server."""</span>
-        <span class="k">return</span> <span class="n">join_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">join_url</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="n">add_trailing_slash</span>
+        <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Client.propfind"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.propfind">[docs]</a>    <span class="k">def</span> <span class="nf">propfind</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="s2">"HeaderTypes"</span> <span class="o">=</span> <span class="kc">None</span>
@@ -538,13 +540,17 @@
         <span class="sd">"""Setting additional property to a resource."""</span></div>
 
     <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">add_trailing_slash</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"HTTPResponse"</span><span class="p">:</span>
         <span class="sd">"""Internal method for sending request to the server.</span>
 
 <span class="sd">        It handles joining path correctly and checks for common http errors.</span>
 <span class="sd">        """</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="n">add_trailing_slash</span><span class="p">)</span>
         <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">http</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">http_resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="n">HTTPStatus</span><span class="o">.</span><span class="n">NOT_FOUND</span><span class="p">:</span>
@@ -645,7 +651,9 @@
 
 <div class="viewcode-block" id="Client.mkdir"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.mkdir">[docs]</a>    <span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">"""Create a collection."""</span>
-        <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MKCOL</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MKCOL</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
