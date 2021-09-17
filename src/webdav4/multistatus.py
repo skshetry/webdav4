@@ -1,5 +1,6 @@
 """Parsing propfind response."""
 
+from contextlib import suppress
 from http.client import responses
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 from xml.etree.ElementTree import Element, ElementTree, SubElement
@@ -88,6 +89,27 @@ class DAVProperties:
 
         self.display_name = extract_text("display_name")
 
+        status_line = (
+            prop(response_xml, "status", relative=True)
+            if response_xml
+            else None
+        )
+        self.status_code: Optional[int] = None
+        if status_line:
+            _, code_str, *_ = status_line.split()
+            with suppress(ValueError):
+                self.status_code = int(code_str)
+
+        self.reason_phrase = (
+            responses[self.status_code] if self.status_code else None
+        )
+
+    def status_ok(self) -> bool:
+        """Check if the propstat:status is ok."""
+        if not self.status_code:
+            return True
+        return 200 <= self.status_code < 300
+
     def as_dict(self, raw: bool = False) -> Dict[str, Any]:
         """Returns all properties that it supports parsing.
 
@@ -144,7 +166,8 @@ class Response:
         code = None
         if status_line:
             _, code_str, *_ = status_line.split()
-            code = int(code_str)
+            with suppress(ValueError):
+                code = int(code_str)
 
         self.status_code = code
         self.reason_phrase = (

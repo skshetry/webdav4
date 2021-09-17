@@ -1,4 +1,5 @@
 """Tests for webdav client."""
+import textwrap
 from datetime import datetime, timezone
 from http import HTTPStatus
 from io import DEFAULT_BUFFER_SIZE, BytesIO
@@ -8,6 +9,7 @@ from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
+from respx import MockRouter
 
 from webdav4.client import (
     BadGatewayError,
@@ -792,23 +794,8 @@ def test_isdir_isfile(storage_dir: TmpDir, client: Client):
     assert client.isfile("/data/foo")
     assert not client.isdir("/data/foo")
 
-    with pytest.raises(ResourceNotFound) as exc_info:
-        client.isdir("/data/file")
-
-    assert exc_info.value.path == "/data/file"
-    assert (
-        str(exc_info.value)
-        == "The resource /data/file could not be found in the server"
-    )
-
-    with pytest.raises(ResourceNotFound) as exc_info:
-        client.isdir("/data/file")
-
-    assert exc_info.value.path == "/data/file"
-    assert (
-        str(exc_info.value)
-        == "The resource /data/file could not be found in the server"
-    )
+    assert not client.isfile("/data/file")
+    assert not client.isdir("/data/file")
 
 
 def test_exists(storage_dir: TmpDir, client: Client):
@@ -969,3 +956,43 @@ def test_client_retries(client: Client, server_address: URL):
     )
     client.copy("/container1", "/container2")
     assert func.call_count == 3
+
+
+def test_handle_nginx_propfind_responses_correctly(respx_mock: MockRouter):
+    """Add support for Propfind response from nginx."""
+    from httpx import Response
+
+    path = "not-existing-file"
+    content = textwrap.dedent(
+        f"""\
+        <?xml version="1.0" encoding="utf-8" ?>
+        <D:multistatus xmlns:D="DAV:">
+            <D:response>
+                <D:href>/{path}</D:href>
+                <D:propstat>
+                    <D:prop></D:prop>
+                    <D:status>HTTP/1.1 404 Not Found</D:status>
+                </D:propstat>
+            </D:response>
+        </D:multistatus>"""
+    )
+    base_url = "https://example.org"
+    client = Client(base_url)
+    route = respx_mock.request(Method.PROPFIND, f"{base_url}/{path}").mock(
+        return_value=Response(HTTPStatus.MULTI_STATUS, content=content)
+    )
+
+    assert not client.exists(path)
+    with pytest.raises(ResourceNotFound):
+        client.propfind(path)
+
+    assert not client.isdir(path)
+    assert not client.isfile(path)
+
+    with pytest.raises(ResourceNotFound):
+        client.info(path)
+
+    with pytest.raises(ResourceNotFound):
+        assert client.ls(path)
+
+    assert route.called

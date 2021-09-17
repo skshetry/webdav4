@@ -71,6 +71,9 @@ def test_dav_properties_empty(args: Tuple[Element]):
     assert props.display_name is None
     assert props.collection is None
     assert props.resource_type is None
+    assert props.status_code is None
+    assert props.reason_phrase is None
+    assert props.status_ok()
 
 
 def test_dav_properties():
@@ -88,6 +91,7 @@ def test_dav_properties():
           <d:getetag>"8db748065bfed5c0731e9c7ee5f9bf4c"</d:getetag>
           <d:getcontenttype>text/plain</d:getcontenttype>
         </d:prop>
+        <d:status>HTTP/1.1 200 OK</d:status>
       </d:propstat>
     </d:response>"""
     elem = fromstring(content)
@@ -116,6 +120,8 @@ def test_dav_properties():
     assert props.display_name == "foo"
     assert props.collection is False
     assert props.resource_type == "file"
+    assert props.status_code == 200
+    assert props.reason_phrase == "OK"
 
     assert props.as_dict() == {
         "created": datetime(2020, 1, 2, 3, 4, 5, tzinfo=tzutc()),
@@ -127,6 +133,7 @@ def test_dav_properties():
         "display_name": "foo",
         "type": "file",
     }
+    assert props.status_ok()
 
 
 def test_dav_properties_partial():
@@ -165,6 +172,10 @@ def test_dav_properties_partial():
     assert props.display_name == "foo"
     assert props.collection is True
     assert props.resource_type == "directory"
+
+    assert props.status_code is None
+    assert props.reason_phrase is None
+    assert props.status_ok()
 
 
 @pytest.mark.parametrize(

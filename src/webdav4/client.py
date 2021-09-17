@@ -311,7 +311,12 @@ class Client:
             headers=headers,
         )
         http_resp = self.with_retry(call)
-        return parse_multistatus_response(http_resp)
+        msr = parse_multistatus_response(http_resp)
+        if not data and len(msr.responses) == 1:
+            _, response = next(iter(msr.responses.items()))
+            if response.has_propstat and not response.properties.status_ok():
+                raise ResourceNotFound(path)
+        return msr
 
     def get_props(
         self,
@@ -547,11 +552,17 @@ class Client:
 
     def isdir(self, path: str) -> bool:
         """Checks whether the resource with the given path is a directory."""
-        return bool(self.get_props(path).collection)
+        try:
+            return bool(self.get_props(path).collection)
+        except ResourceNotFound:
+            return False
 
     def isfile(self, path: str) -> bool:
         """Checks whether the resource with the given path is a file."""
-        return not self.isdir(path)
+        try:
+            return not self.get_props(path).collection
+        except ResourceNotFound:
+            return False
 
     def content_length(self, path: str) -> Optional[int]:
         """Returns content-length of the resource with the given path."""
@@ -586,7 +597,8 @@ class Client:
         chunk_size: int = None,
     ) -> Iterator[Union[TextIO, BinaryIO]]:
         """Returns file-like object to a resource."""
-        if self.isdir(path):
+        props = self.get_props(path)
+        if props.collection:
             raise IsACollectionError(path, "Cannot open a collection")
         assert mode in {"r", "rt", "rb"}
 
