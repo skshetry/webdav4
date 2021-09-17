@@ -24,6 +24,7 @@ from webdav4.client import (
     ResourceNotFound,
 )
 from webdav4.http import Client as HTTPClient
+from webdav4.http import Method
 from webdav4.http import Method as HTTPMethod
 from webdav4.urls import URL
 
@@ -400,6 +401,27 @@ def test_mkdir_forbidden_operations(client: Client, server_address: URL):
         "the server does not allow creation in the namespace"
         "or cannot accept members"
     )
+
+
+@pytest.mark.parametrize(
+    "path", ["collections", "/collections", "/collections", "/collections/"]
+)
+def test_mkdir_sends_a_trailing_slash(path: str):
+    """Test that mkdir sends a request to the url with a trailing slash.
+
+    See: https://github.com/skshetry/webdav4/issues/55
+    """
+    from httpx import Request, Response
+
+    response = Response(200, request=Request(Method.MKCOL, "url"))
+    client = Client(
+        "http://example.org", http_client=mock.MagicMock(return_value=response)
+    )
+    with mock.patch.object(client.http, "request", return_value=response) as m:
+        client.mkdir(path)
+        assert m.call_args == mock.call(
+            "MKCOL", URL("http://example.org/collections/")
+        )
 
 
 def test_remove_collection(storage_dir: TmpDir, client: Client):

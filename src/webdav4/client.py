@@ -293,9 +293,11 @@ class Client:
         detected_features = FeatureDetection(resp)
         return detected_features.dav_compliances
 
-    def join_url(self, path: str) -> URL:
+    def join_url(self, path: str, add_trailing_slash: bool = False) -> URL:
         """Join resource path with base url of the webdav server."""
-        return join_url(self.base_url, path)
+        return join_url(
+            self.base_url, path, add_trailing_slash=add_trailing_slash
+        )
 
     def propfind(
         self, path: str, data: str = None, headers: "HeaderTypes" = None
@@ -341,13 +343,17 @@ class Client:
         """Setting additional property to a resource."""
 
     def _request(
-        self, method: str, path: str, **kwargs: Any
+        self,
+        method: str,
+        path: str,
+        add_trailing_slash: bool = False,
+        **kwargs: Any,
     ) -> "HTTPResponse":
         """Internal method for sending request to the server.
 
         It handles joining path correctly and checks for common http errors.
         """
-        url = self.join_url(path)
+        url = self.join_url(path, add_trailing_slash=add_trailing_slash)
         http_resp = self.http.request(method, url, **kwargs)
 
         if http_resp.status_code == HTTPStatus.NOT_FOUND:
@@ -448,7 +454,9 @@ class Client:
 
     def mkdir(self, path: str) -> None:
         """Create a collection."""
-        call = wrap_fn(self.request, HTTPMethod.MKCOL, path)
+        call = wrap_fn(
+            self.request, HTTPMethod.MKCOL, path, add_trailing_slash=True
+        )
         try:
             http_resp = self.with_retry(call)
         except HTTPError as exc:
