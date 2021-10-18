@@ -43,7 +43,7 @@ def request(
         headers.update({"Range": f"bytes={pos}-"})
 
     req = client.build_request(HTTPMethod.GET, url, headers=headers)
-    response = client.send(req, stream=True, allow_redirects=True)
+    response = client.send(req, stream=True, follow_redirects=True)
     return response
 
 
