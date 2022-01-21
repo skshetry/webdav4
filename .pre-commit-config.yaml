@@ -32,7 +32,7 @@ repos:
          language_version: python3
          additional_dependencies:
            - .[dev]
-           - httpx==0.20.0  # for some reasons, httpx is not getting installed
+           - httpx>=0.20.0,<1.0.0  # for some reasons, httpx is not getting installed
            - typing_extensions
            - types-python-dateutil
            - types-pkg_resources
