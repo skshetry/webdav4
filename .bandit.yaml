@@ -1,3 +1,0 @@
-targets: /src
-exclude: /tests
-skips: ['B101', 'B314', 'B405']
