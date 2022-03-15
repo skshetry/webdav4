@@ -72,3 +72,12 @@ module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 warn_unused_ignores = false
+
+[tool.pylint.message_control]
+enable = ["c-extension-no-member", "no-else-return"]
+disable = ["cyclic-import", "design", "fixme"]
+
+[tool.bandit]
+targets = ["/src"]
+exclude = ["/tests"]
+skips = ["B101", "B314", "B405"]
