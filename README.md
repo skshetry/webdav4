@@ -69,4 +69,4 @@ Please checkout [CLI Usage](docs/reference/cli.md) for more information.
 ### Contributing
 
 Contributions are welcome. Please take a look at
-[Contributing Guide](docs/contributing.md) for more details.
+[Contributing Guide](CONTRIBUTING.md) for more details.
