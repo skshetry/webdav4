@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 _T = TypeVar("_T")
 
 
-DEFAULT_CHUNK_SIZE = 2 ** 22
+DEFAULT_CHUNK_SIZE = 2**22
 
 
 def _prepare_result_info(
