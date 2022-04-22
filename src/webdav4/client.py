@@ -300,7 +300,11 @@ class Client:
         )
 
     def propfind(
-        self, path: str, data: str = None, headers: "HeaderTypes" = None
+        self, 
+        path: str, 
+        data: str = None, 
+        headers: "HeaderTypes" = None, 
+        add_trailing_slash: bool = False,
     ) -> "MultiStatusResponse":
         """Returns properties of the specific resource by propfind request."""
         call = wrap_fn(
@@ -309,6 +313,7 @@ class Client:
             path,
             content=data,
             headers=headers,
+            add_trailing_slash=add_trailing_slash,
         )
         http_resp = self.with_retry(call)
         return parse_multistatus_response(http_resp)
@@ -502,7 +507,11 @@ class Client:
                 (non-collection), ls will return the file entry/details.
                 Otherwise, it will raise an error.
         """
-        result = self.propfind(path, headers={"Depth": "1"})
+        result = self.propfind(
+            path, 
+            headers={"Depth": "1"}, 
+            add_trailing_slash=True,
+        )
         responses = result.responses
 
         url = self.join_url(path)
