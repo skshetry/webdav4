@@ -48,7 +48,7 @@ if TYPE_CHECKING:
 _T = TypeVar("_T")
 
 
-DEFAULT_CHUNK_SIZE = 2 ** 22
+DEFAULT_CHUNK_SIZE = 2**22
 
 
 def _prepare_result_info(
@@ -300,10 +300,10 @@ class Client:
         )
 
     def propfind(
-        self, 
-        path: str, 
-        data: str = None, 
-        headers: "HeaderTypes" = None, 
+        self,
+        path: str,
+        data: str = None,
+        headers: "HeaderTypes" = None,
         add_trailing_slash: bool = False,
     ) -> "MultiStatusResponse":
         """Returns properties of the specific resource by propfind request."""
@@ -508,8 +508,8 @@ class Client:
                 Otherwise, it will raise an error.
         """
         result = self.propfind(
-            path, 
-            headers={"Depth": "1"}, 
+            path,
+            headers={"Depth": "1"},
             add_trailing_slash=True,
         )
         responses = result.responses
