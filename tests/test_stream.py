@@ -209,3 +209,17 @@ def test_open_binary(storage_dir: TmpDir, fs: WebdavFileSystem):
         assert f.readlines() == [text2] * 9
     assert f.closed
     f.close()
+
+
+def test_close_connection_if_nothing_is_read(client: Client):
+    """Test that http connection is closed when nothing is read."""
+    from unittest.mock import MagicMock, patch
+
+    response = MagicMock()
+
+    with patch.object(
+        client.http, "send", return_value=response
+    ), patch.object(client, "isdir", return_value=False):
+        with client.open("sample.txt", mode="rb"):
+            response.close.assert_not_called()
+        response.close.assert_called_once()

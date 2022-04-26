@@ -93,7 +93,9 @@ def iter_url(  # noqa: C901
     try:
         yield response, chunks
     finally:
-        chunks.close()  # Ensure connection is closed
+        # Ensure connection is closed
+        chunks.close()
+        response.close()
 
 
 class IterStream(RawIOBase):
