@@ -9,8 +9,8 @@ repos:
   - hooks:
       - id: black
         language_version: python3
-    repo: https://github.com/ambv/black
-    rev: 21.6b0
+    repo: https://github.com/psf/black
+    rev: 22.3.0
   - hooks:
       - id: isort
         language_version: python3
