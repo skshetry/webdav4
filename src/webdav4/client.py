@@ -304,7 +304,7 @@ class Client:
         path: str,
         data: str = None,
         headers: "HeaderTypes" = None,
-        add_trailing_slash: bool = False,
+        follow_redirects: bool = False,
     ) -> "MultiStatusResponse":
         """Returns properties of the specific resource by propfind request."""
         call = wrap_fn(
@@ -313,7 +313,7 @@ class Client:
             path,
             content=data,
             headers=headers,
-            add_trailing_slash=add_trailing_slash,
+            follow_redirects=follow_redirects,
         )
         http_resp = self.with_retry(call)
         return parse_multistatus_response(http_resp)
@@ -508,9 +508,7 @@ class Client:
                 Otherwise, it will raise an error.
         """
         result = self.propfind(
-            path,
-            headers={"Depth": "1"},
-            add_trailing_slash=True,
+            path, headers={"Depth": "1"}, follow_redirects=True
         )
         responses = result.responses
 
