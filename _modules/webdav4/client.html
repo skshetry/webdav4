@@ -503,7 +503,11 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Client.propfind"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.propfind">[docs]</a>    <span class="k">def</span> <span class="nf">propfind</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="s2">"HeaderTypes"</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">headers</span><span class="p">:</span> <span class="s2">"HeaderTypes"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">follow_redirects</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"MultiStatusResponse"</span><span class="p">:</span>
         <span class="sd">"""Returns properties of the specific resource by propfind request."""</span>
         <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span>
@@ -512,6 +516,7 @@
             <span class="n">path</span><span class="p">,</span>
             <span class="n">content</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
             <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+            <span class="n">follow_redirects</span><span class="o">=</span><span class="n">follow_redirects</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">parse_multistatus_response</span><span class="p">(</span><span class="n">http_resp</span><span class="p">)</span></div>
@@ -705,7 +710,9 @@
 <span class="sd">                (non-collection), ls will return the file entry/details.</span>
 <span class="sd">                Otherwise, it will raise an error.</span>
 <span class="sd">        """</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">propfind</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Depth"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">})</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">propfind</span><span class="p">(</span>
+            <span class="n">path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">"Depth"</span><span class="p">:</span> <span class="s2">"1"</span><span class="p">},</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
         <span class="n">responses</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">responses</span>
 
         <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
