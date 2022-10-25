@@ -46,7 +46,7 @@ class CallbackIOWrapper(Iterable):
 
             @wraps(swrite)
             def fwrite(chunk: AnyStr, *args: Any, **kw: Any) -> int:
-                result = swrite(chunk, *args, **kw)  # type: ignore[call-arg]
+                result = swrite(chunk, *args, **kw)
                 cb_func(len(chunk))
                 return result
 

@@ -1,6 +1,8 @@
 """Testing stream utilities."""
 from io import DEFAULT_BUFFER_SIZE, BytesIO, StringIO
 from typing import Any, Iterator
+from unittest import mock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest import MonkeyPatch
@@ -8,6 +10,7 @@ from pytest import MonkeyPatch
 from tests.utils import TmpDir
 from webdav4.client import Client
 from webdav4.fsspec import WebdavFileSystem
+from webdav4.http import HTTPNetworkError, HTTPResponse
 from webdav4.stream import read_until
 
 
@@ -32,7 +35,7 @@ def test_read_until_binary():
 @pytest.mark.parametrize("buff", [StringIO(), BytesIO()])
 def test_read_until_empty(buff):
     """Test read_until with empty data."""
-    assert list(read_until(buff, "\n")) == []
+    assert not list(read_until(buff, "\n"))
 
 
 def test_read_until_not_found_any_match():
@@ -50,10 +53,6 @@ def test_retry_reconnect_on_failure(
     monkeypatch: MonkeyPatch,
 ):
     """Test retry/reconnect on network failures."""
-    from unittest import mock
-
-    from webdav4.http import HTTPNetworkError, HTTPResponse
-
     original_iter_content = HTTPResponse.iter_bytes
 
     def bad_iter_content(
@@ -106,6 +105,7 @@ def test_retry_reconnect_on_failure(
         # when we cannot detect support for ranges, we should just raise error
         client.detected_features.supports_ranges = False
         with client.open("sample.txt", mode="rb") as fd:
+            # pylint: disable=protected-access
             fd._initial_response.headers.clear()  # type: ignore
             with pytest.raises(HTTPNetworkError):
                 fd.read()
@@ -116,6 +116,7 @@ def test_retry_reconnect_on_failure(
             assert str(exc_info.value) == "server does not support ranges"
 
         with fs.open("sample.txt", mode="rb") as fd:
+            # pylint: disable=protected-access
             fd.reader._initial_response.headers.clear()  # type: ignore
             with pytest.raises(HTTPNetworkError):
                 fd.read()
@@ -213,8 +214,6 @@ def test_open_binary(storage_dir: TmpDir, fs: WebdavFileSystem):
 
 def test_close_connection_if_nothing_is_read(client: Client):
     """Test that http connection is closed when nothing is read."""
-    from unittest.mock import MagicMock, patch
-
     response = MagicMock()
 
     with patch.object(

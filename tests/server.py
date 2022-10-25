@@ -1,7 +1,7 @@
 """Server for testing purposes, used on repl and pytest as a fixture."""
 
 import threading
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import ContextManager, Iterator, Tuple
 
 from cheroot import wsgi
@@ -18,7 +18,7 @@ def get_server_address(srvr: wsgi.Server) -> URL:
 
 def get_url_from_addr(host, port) -> URL:
     """Builds URL from the host and port."""
-    return URL("http://{0}:{1}".format(host, port))
+    return URL(f"http://{host}:{port}")
 
 
 @contextmanager
@@ -47,7 +47,7 @@ def run_server(
     """Runs a webdav server."""
     dirmap = {"/": directory}
 
-    user, pwd = authentication
+    user, pwd = authentication  # pylint: disable=redefined-outer-name
     app = WsgiDAVApp(
         {
             "host": host,
@@ -67,7 +67,6 @@ if __name__ == "__main__":
     import argparse
     import code
     import tempfile
-    from contextlib import suppress
 
     from webdav4.client import Client
     from webdav4.fsspec import WebdavFileSystem
@@ -92,7 +91,9 @@ if __name__ == "__main__":
         fs = WebdavFileSystem(server_address, client=client)
 
         print(f"Running server on {server_address} ...")
-        print("Authenticate with {0}:{1}".format(*AUTH))
+
+        user, password = AUTH
+        print(f"Authenticate with {user}:{password}")
 
         try:
             if args.interactive:
@@ -106,6 +107,7 @@ if __name__ == "__main__":
                     embed(colors="neutral")
                 except ImportError:
                     with suppress(ImportError):
+                        # pylint: disable=unused-import
                         import readline  # noqa: F401
 
                     shell = code.InteractiveConsole({**globals(), **locals()})

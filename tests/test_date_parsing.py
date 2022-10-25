@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-import pytest as pytest
+import pytest
 from dateutil.tz import tzutc
 
 from webdav4.date_utils import from_rfc1123, fromisoformat

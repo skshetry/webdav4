@@ -662,7 +662,7 @@ class CommandCopy(CommandTransfer):
     """Command for cp."""
 
     def transfer_remote(self) -> None:
-        """Copy files/diretories between remotes."""
+        """Copy files/directories between remotes."""
         self.fs.cp(
             self.args.path1, self.args.path2, recursive=self.args.recursive
         )
@@ -675,7 +675,7 @@ class CommandMove(CommandTransfer):
     """
 
     def transfer_remote(self) -> None:
-        """Move files/diretories between remotes."""
+        """Move files/directories between remotes."""
         self.fs.mv(
             self.args.path1, self.args.path2, recursive=self.args.recursive
         )
@@ -906,7 +906,11 @@ class CommandMkdir(Command):
 
     def run(self) -> None:
         """Create directory."""
-        self.fs.mkdir(self.args.path, create_parents=self.args.parents)
+        try:
+            self.fs.mkdir(self.args.path, create_parents=self.args.parents)
+        except FileExistsError:
+            if not self.args.parents:
+                raise
 
 
 class CommandDiskUsage(Command):

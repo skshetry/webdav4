@@ -35,7 +35,7 @@ def _exp_backoff(attempt: int) -> float:
 def retry(
     arg: bool = False, tries: int = 3
 ) -> Callable[[Callable[[], _T]], _T]:
-    """Retry if arg upto `tries` times."""
+    """Retry if arg up to `tries` times."""
     # pylint: disable=import-outside-toplevel
     from .client import BadGatewayError, HTTPError, ResourceLocked
 

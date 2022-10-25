@@ -1,10 +1,11 @@
 """Test fixtures."""
 
-from typing import Tuple
+from typing import Iterator, Tuple
 
 import pytest
 from cheroot import wsgi
 
+from webdav4 import retry
 from webdav4.client import Client
 from webdav4.fsspec import WebdavFileSystem
 from webdav4.urls import URL
@@ -16,9 +17,12 @@ from .utils import TmpDir
 @pytest.fixture(autouse=True)
 def reduce_backoff_factor():
     """Reduce backoff factor in tests."""
-    from webdav4 import retry
-
-    retry.BACKOFF = 0.001
+    backoff = retry.BACKOFF
+    try:
+        retry.BACKOFF = 0.001
+        yield
+    finally:
+        retry.BACKOFF = backoff
 
 
 @pytest.fixture
@@ -38,7 +42,7 @@ def storage_dir(tmp_path_factory) -> TmpDir:
 def server(
     storage_dir: TmpDir,
     auth: Tuple[str, str],
-) -> wsgi.Server:
+) -> Iterator[wsgi.Server]:
     """Creates a server fixture for testing purpose."""
     with run_server("localhost", 0, str(storage_dir), auth) as (httpd, _):
         yield httpd

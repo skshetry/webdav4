@@ -448,7 +448,7 @@ class WebdavFile(AbstractBufferedFile):
     def seek(self, loc: int, whence: int = 0) -> int:
         """Set current file location."""
         super().seek(loc, whence=whence)
-        return self.reader.seek(loc, whence=whence)
+        return self.reader.seek(loc, whence)
 
     def isatty(self) -> bool:
         """Check if it is an interactive fileobj."""
@@ -547,15 +547,15 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         """Upload file by seeking to first byte on exit."""
         self.close()
 
-    def readable(self) -> bool:  # pylint: disable=no-self-use
+    def readable(self) -> bool:
         """It is readable."""
         return True
 
-    def writable(self) -> bool:  # pylint: disable=no-self-use
+    def writable(self) -> bool:
         """It is writable."""
         return True
 
-    def seekable(self) -> bool:  # pylint: disable=no-self-use
+    def seekable(self) -> bool:
         """It is seekable."""
         return True
 
@@ -581,15 +581,15 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         if not self.closed:
             super().close()
 
-    def info(self) -> NoReturn:  # pylint: disable=no-self-use
+    def info(self) -> NoReturn:
         """Info about the file upload that is in progress."""
         raise ValueError("cannot provide info in write-mode")
 
     def readinto(
-        self, sequence: Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
+        self, b: Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
     ) -> int:
         """Read bytes into the given buffer."""
-        return read_into(self, sequence)
+        return read_into(self, b)
 
     def readuntil(self, char: bytes = b"\n", blocks: int = None) -> bytes:
         """Read until the given character is found."""

@@ -1,0 +1,9 @@
+[flake8]
+docstring-convention=google
+max_line_length=79
+max-complexity = 7
+show_source=true
+count=true
+ignore=
+    E203, # Whitespace before ':'
+    W503, # Line break occurred before a binary operator

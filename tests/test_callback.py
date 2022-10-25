@@ -44,6 +44,7 @@ def test_callback_read():
     # adding to __dict__ works, and is being wrapped properly
     assert wrapper.__wrapped_stream__ is buff
 
+    # pylint: disable=comparison-with-callable
     method = wrapper.write
     assert method.__self__ is buff and method == buff.write
     assert wrapper.read != buff.read
@@ -51,8 +52,8 @@ def test_callback_read():
 
     # setattr works
     wrapper.add_something_here = True
-    assert wrapper.add_something_here
-    assert buff.add_something_here
+    assert wrapper.add_something_here  # pylint: disable=no-member
+    assert buff.add_something_here  # pylint: disable=no-member
 
 
 @no_type_check
@@ -83,6 +84,7 @@ def test_callback_write():
     # __dict__ overwrite works, wrapped function gets called
     assert wrapper.__wrapped_stream__ is write_buffer
 
+    # pylint: disable=comparison-with-callable
     method = wrapper.read
     assert method.__self__ is write_buffer and method == write_buffer.read
     assert wrapper.write != write_buffer.write
@@ -91,8 +93,8 @@ def test_callback_write():
 
     # setattr works
     wrapper.add_something_here = True
-    assert wrapper.add_something_here
-    assert write_buffer.add_something_here
+    assert wrapper.add_something_here  # pylint: disable=no-member
+    assert write_buffer.add_something_here  # pylint: disable=no-member
 
 
 class ReadWrapper:

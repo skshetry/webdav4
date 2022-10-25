@@ -24,6 +24,7 @@ from .http import Method as HTTPMethod
 
 if TYPE_CHECKING:
     from array import ArrayType
+    from ctypes import _CData
     from mmap import mmap
 
     from .client import Client
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
     from .types import HTTPResponse, URLTypes
 
 
-Buffer = Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
+Buffer = Union[bytearray, memoryview, "ArrayType[Any]", "mmap", "_CData"]
 
 
 def request(

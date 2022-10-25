@@ -38,7 +38,7 @@ from webdav4.cli import (
 from .utils import TmpDir
 
 
-class MemoryFileSystem(_MemoryFS):
+class MemoryFileSystem(_MemoryFS):  # pylint: disable=abstract-method
     """Overriding to make memory per instance and extend protocol support."""
 
     cachable = False
@@ -48,43 +48,6 @@ class MemoryFileSystem(_MemoryFS):
         super().__init__(*args, **storage_options)
         self.store: Dict[str, Any] = {}
         self.pseudo_dirs: List[str] = []
-
-    def mkdir(
-        self, path: str, create_parents: bool = True, **kwargs: Any
-    ) -> None:
-        """Adds support for protocol."""
-        path = self._strip_protocol(path)
-        if create_parents and self.isdir(path):
-            return
-        super().mkdir(path, create_parents=create_parents, **kwargs)
-
-    def copy(
-        self,
-        path1: str,
-        path2: str,
-        recursive: bool = False,
-        on_error: str = None,
-        **kwargs: Any
-    ) -> None:
-        """Adds support for protocol."""
-        path1 = self._strip_protocol(path1)
-        path2 = self._strip_protocol(path2)
-        super().copy(
-            path1, path2, recursive=recursive, on_error=on_error, **kwargs
-        )
-
-    def mv(self, path1: str, path2: str, **kwargs: Any) -> None:
-        """Adds support for protocol."""
-        path1 = self._strip_protocol(path1)
-        path2 = self._strip_protocol(path2)
-        super().mv(path1, path2, **kwargs)
-
-    def rm(
-        self, path: str, recursive: bool = False, maxdepth: int = None
-    ) -> None:
-        """Adds support for protocol."""
-        path = self._strip_protocol(path)
-        super().rm(path, recursive=recursive, maxdepth=maxdepth)
 
 
 @pytest.fixture(autouse=True)
@@ -151,10 +114,12 @@ def test_ls_colors(m):
     assert theme.codes == {"rs": "0", "di": "01;34", "ex": "01;32"}
     assert theme.extensions == {"py": "33", "zip": "35"}
     assert theme.colored
+    m.assert_called()
 
 
 def test_lstheme_should_color(monkeypatch: MonkeyPatch):
     """Test LSTheme color deciding factors."""
+    # pylint: disable=protected-access
     theme = LSTheme()
     with mock.patch.object(sys.stdout, "isatty", return_value=False):
         assert not theme._should_color()
@@ -241,6 +206,8 @@ def test_style_size_datetime():
     assert theme.style_size(*human_size(2027)) == "2.0k"
 
     theme.colored = True
+
+    # pylint: disable=consider-using-f-string
     assert theme.style_datetime(
         format_datetime(dt)
     ) == "\x1b[34m{0}\x1b[0m".format(dt.strftime("%b %d %H:%M"))

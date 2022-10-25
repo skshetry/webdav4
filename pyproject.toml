@@ -1,15 +1,118 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=6.3.1"]
-build-backend = "setuptools.build_meta"
+build-backend = "hatchling.build"
+requires = [
+  "hatch-vcs",
+  "hatchling",
+]
 
-[tool.setuptools_scm]
-write_to = "src/webdav4/_version.py"
-write_to_template = "version = '{version}'\n"
+[project]
+name = "webdav4"
+description = "WebDAV client library with an fsspec-based filesystem and a CLI"
+readme = "README.md"
+keywords = [
+  "fsspec",
+  "webdav",
+  "webdav-cli",
+  "webdav-client",
+]
+license = "MIT"
+license-files = { paths = ["LICENSE"] }
+authors = [
+    { name = "Saugat Pachhai", email = "suagatchhetri@outlook.com" },
+]
+requires-python = ">=3.7"
+dependencies = [
+  "httpx<1.0.0,>=0.20",
+  "python-dateutil>=2.8.1",
+]
+dynamic = [
+  "version",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+[project.optional-dependencies]
+all = [
+  "webdav4[fsspec,http2]",
+]
+dev = [
+  "webdav4[docs,fsspec,http2,qa,tests]",
+]
+docs = [
+  "furo==2022.4.7",
+  "myst-parser==0.17.2",
+  "Sphinx==4.5",
+  "sphinx-copybutton==0.5",
+]
+fsspec = [
+  "fsspec>=2021.7",
+]
+http2 = [
+  "httpx[http2]<1.0.0,>=0.20",
+]
+qa = [
+  "mypy==0.960",
+  "pre-commit",
+  "pylint==2.15.5",
+  "pylint-pytest==1.1.2",
+  "types-pkg_resources",
+  "types-python-dateutil",
+]
+tests = [
+  "cheroot",
+  "colorama",
+  "pytest",
+  "pytest-cov",
+  "typing_extensions",
+  "WsgiDAV",
+]
+
+[project.urls]
+"Bug Tracker" = "https://github.com/skshetry/webdav4/issues"
+Documentation = "https://skshetry.github.io/webdav4"
+"Source Code" = "https://github.com/skshetry/webdav4"
+
+[project.scripts]
+dav = "webdav4.cli:main"
+
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/webdav4/_version.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/webdav4"]
+
+[tool.hatch.envs.default]
+features = ["dev"]
+type = "virtual"
+
+[tool.hatch.envs.default.scripts]
+tests = "pytest"
+lint = [
+    "pre-commit run --all-files --show-diff-on-failure",
+    "pylint src tests",
+    "mypy",
+]
+docs = "sphinx-build docs build/docs"
+
+[tool.hatch.envs.upstream.scripts]
+dependencies = [
+    "fsspec @ git+https://github.com/fsspec/filesystem_spec.git",
+]
 
 [tool.coverage.run]
 parallel = true
 branch = true
-source = ["src", "tests"]
+source = ["webdav4", "tests"]
 
 [tool.coverage.report]
 show_missing = true
@@ -23,10 +126,10 @@ exclude_lines = [
 ]
 
 [tool.coverage.paths]
-source = ["src", ".tox/*/site-packages"]
+source = ["src", "*/site-packages"]
 
 [tool.pytest.ini_options]
-addopts = "-ra --cov"
+addopts = "-ra"
 
 [tool.black]
 line-length = 79
@@ -59,7 +162,7 @@ warn_no_return = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 check_untyped_defs = true
-files = ["src/webdav4", "tests", "setup.py", "docs"]
+files = ["src/webdav4", "tests", "docs"]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
@@ -73,11 +176,17 @@ disallow_untyped_defs = false
 disallow_incomplete_defs = false
 warn_unused_ignores = false
 
+[tool.pylint.master]
+load-plugins = ["pylint_pytest"]
+
 [tool.pylint.message_control]
 enable = ["c-extension-no-member", "no-else-return"]
-disable = ["cyclic-import", "design", "fixme"]
+disable = ["cyclic-import", "design", "fixme", "missing-module-docstring", "invalid-name", "duplicate-code"]
 
 [tool.bandit]
 targets = ["/src"]
 exclude = ["/tests"]
 skips = ["B101", "B314", "B405"]
+
+[tool.codespell]
+ignore-words-list = "cachable"
