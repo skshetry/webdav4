@@ -1,13 +1,13 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.04.07"/>
+    <meta name="generator" content="sphinx-5.3.0, furo 2022.09.29"/>
         <title>webdav4.fsspec - webdav4</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=68f4518137b9aefe99b631505a2064c3c42c9852" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
@@ -186,7 +186,8 @@
           </svg>
           <span>Back to top</span>
         </a>
-        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
@@ -201,7 +202,7 @@
         </div>
         <article role="main">
           <h1>Source code for webdav4.fsspec</h1><div class="highlight"><pre>
-<span></span><span class="sd">"""fsspec compliant webdav file system."""</span>
+<span></span><span class="sd">&quot;&quot;&quot;fsspec compliant webdav file system.&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">errno</span>
 <span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -250,64 +251,64 @@
     <span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">AuthTypes</span><span class="p">,</span> <span class="n">URLTypes</span>
 
 
-<span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"content_length"</span><span class="p">:</span> <span class="s2">"size"</span><span class="p">,</span> <span class="s2">"path"</span><span class="p">:</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"type"</span><span class="p">}</span>
+<span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;content_length&quot;</span><span class="p">:</span> <span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;type&quot;</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="translate_info"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.translate_info">[docs]</a><span class="k">def</span> <span class="nf">translate_info</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-    <span class="sd">"""Translate info from the client to as per fsspec requirements."""</span>
+    <span class="sd">&quot;&quot;&quot;Translate info from the client to as per fsspec requirements.&quot;&quot;&quot;</span>
     <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="n">mapping</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
 
 
 <div class="viewcode-block" id="translate_exceptions"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.translate_exceptions">[docs]</a><span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">translate_exceptions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
-    <span class="sd">"""Translate exceptions from Client to the fsspec compatible one."""</span>
+    <span class="sd">&quot;&quot;&quot;Translate exceptions from Client to the fsspec compatible one.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">yield</span>
     <span class="k">except</span> <span class="n">ResourceNotFound</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-            <span class="n">errno</span><span class="o">.</span><span class="n">ENOENT</span><span class="p">,</span> <span class="s2">"No such file or directory"</span><span class="p">,</span> <span class="n">exc</span><span class="o">.</span><span class="n">path</span>
+            <span class="n">errno</span><span class="o">.</span><span class="n">ENOENT</span><span class="p">,</span> <span class="s2">&quot;No such file or directory&quot;</span><span class="p">,</span> <span class="n">exc</span><span class="o">.</span><span class="n">path</span>
         <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
     <span class="k">except</span> <span class="n">IsACollectionError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">IsADirectoryError</span><span class="p">(</span>
-            <span class="n">errno</span><span class="o">.</span><span class="n">EISDIR</span><span class="p">,</span> <span class="s2">"Is a directory"</span><span class="p">,</span> <span class="n">exc</span><span class="o">.</span><span class="n">path</span>
+            <span class="n">errno</span><span class="o">.</span><span class="n">EISDIR</span><span class="p">,</span> <span class="s2">&quot;Is a directory&quot;</span><span class="p">,</span> <span class="n">exc</span><span class="o">.</span><span class="n">path</span>
         <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
     <span class="k">except</span> <span class="n">IsAResourceError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotADirectoryError</span><span class="p">(</span>
-            <span class="n">errno</span><span class="o">.</span><span class="n">ENOTDIR</span><span class="p">,</span> <span class="s2">"Not a directory"</span><span class="p">,</span> <span class="n">exc</span><span class="o">.</span><span class="n">path</span>
+            <span class="n">errno</span><span class="o">.</span><span class="n">ENOTDIR</span><span class="p">,</span> <span class="s2">&quot;Not a directory&quot;</span><span class="p">,</span> <span class="n">exc</span><span class="o">.</span><span class="n">path</span>
         <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span></div>
 
 
 <div class="viewcode-block" id="WebdavFileSystem"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem">[docs]</a><span class="k">class</span> <span class="nc">WebdavFileSystem</span><span class="p">(</span><span class="n">AbstractFileSystem</span><span class="p">):</span>
-    <span class="sd">"""Provides access to webdav through fsspec-compliant APIs."""</span>
+    <span class="sd">&quot;&quot;&quot;Provides access to webdav through fsspec-compliant APIs.&quot;&quot;&quot;</span>
 
-    <span class="n">protocol</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"webdav"</span><span class="p">,</span> <span class="s2">"dav"</span><span class="p">)</span>
+    <span class="n">protocol</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;webdav&quot;</span><span class="p">,</span> <span class="s2">&quot;dav&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">base_url</span><span class="p">:</span> <span class="s2">"URLTypes"</span><span class="p">,</span>
-        <span class="n">auth</span><span class="p">:</span> <span class="s2">"AuthTypes"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">client</span><span class="p">:</span> <span class="s2">"Client"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">base_url</span><span class="p">:</span> <span class="s2">&quot;URLTypes&quot;</span><span class="p">,</span>
+        <span class="n">auth</span><span class="p">:</span> <span class="s2">&quot;AuthTypes&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="s2">&quot;Client&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">client_opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Instantiate WebdavFileSystem with base_url and auth.</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate WebdavFileSystem with base_url and auth.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            base_url: base url of the server</span>
 <span class="sd">            auth: Authentication to the server</span>
-<span class="sd">                Refer to HTTPX's auth for more information.</span>
+<span class="sd">                Refer to HTTPX&#39;s auth for more information.</span>
 <span class="sd">            client: Webdav client to use instead, useful for testing/mocking,</span>
 <span class="sd">                or extending WebdavFileSystem.</span>
 <span class="sd">            client_opts: Extra args that are passed to Webdav Client.</span>
-<span class="sd">                (refer to it's documenting for more information).</span>
-<span class="sd">        """</span>
+<span class="sd">                (refer to it&#39;s documenting for more information).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="n">client_opts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"chunk_size"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">)</span>
+        <span class="n">client_opts</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;chunk_size&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span> <span class="ow">or</span> <span class="n">Client</span><span class="p">(</span><span class="n">base_url</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span><span class="p">,</span> <span class="o">**</span><span class="n">client_opts</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_strip_protocol</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">"""Strips protocol from the given path, overriding for type-casting."""</span>
+        <span class="sd">&quot;&quot;&quot;Strips protocol from the given path, overriding for type-casting.&quot;&quot;&quot;</span>
         <span class="n">stripped</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">stripped</span><span class="p">)</span>
 
@@ -315,7 +316,7 @@
     <span class="k">def</span> <span class="nf">ls</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
-        <span class="sd">"""`ls` implementation for fsspec, see fsspec for more information."""</span>
+        <span class="sd">&quot;&quot;&quot;`ls` implementation for fsspec, see fsspec for more information.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
         <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span>
             <span class="n">path</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="n">detail</span><span class="p">,</span> <span class="n">allow_listing_resource</span><span class="o">=</span><span class="kc">False</span>
@@ -326,38 +327,38 @@
 
 <div class="viewcode-block" id="WebdavFileSystem.info"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.info">[docs]</a>    <span class="nd">@translate_exceptions</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="sd">"""Return information about the current path."""</span>
+        <span class="sd">&quot;&quot;&quot;Return information about the current path.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">translate_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">path</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.rm_file"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.rm_file">[docs]</a>    <span class="nd">@translate_exceptions</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">rm_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Remove a file."""</span>
+        <span class="sd">&quot;&quot;&quot;Remove a file.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="c1"># not checking if it's a directory as `rm` also passes a directory</span>
+        <span class="c1"># not checking if it&#39;s a directory as `rm` also passes a directory</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
     <span class="n">_rm</span> <span class="o">=</span> <span class="n">rm_file</span>
 
 <div class="viewcode-block" id="WebdavFileSystem.cp_file"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.cp_file">[docs]</a>    <span class="nd">@translate_exceptions</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">cp_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Copy a file from one path to the other."""</span>
+        <span class="sd">&quot;&quot;&quot;Copy a file from one path to the other.&quot;&quot;&quot;</span>
         <span class="n">path1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path1</span><span class="p">)</span>
         <span class="n">path2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path2</span><span class="p">)</span>
-        <span class="c1"># not checking if it's a directory as `cp` also passes a directory</span>
+        <span class="c1"># not checking if it&#39;s a directory as `cp` also passes a directory</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">path1</span><span class="p">,</span> <span class="n">path2</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.rmdir"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.rmdir">[docs]</a>    <span class="k">def</span> <span class="nf">rmdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Remove a directory, if empty."""</span>
+        <span class="sd">&quot;&quot;&quot;Remove a directory, if empty.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">ENOTEMPTY</span><span class="p">,</span> <span class="s2">"Directory not empty"</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">ENOTEMPTY</span><span class="p">,</span> <span class="s2">&quot;Directory not empty&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.rm"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.rm">[docs]</a>    <span class="k">def</span> <span class="nf">rm</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">maxdepth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Delete files and directories."""</span>
+        <span class="sd">&quot;&quot;&quot;Delete files and directories.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">recursive</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">maxdepth</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rm_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -372,11 +373,11 @@
         <span class="n">on_error</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Copy files and directories."""</span>
+        <span class="sd">&quot;&quot;&quot;Copy files and directories.&quot;&quot;&quot;</span>
         <span class="n">path1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path1</span><span class="p">)</span>
         <span class="n">path2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path2</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">recursive</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"maxdepth"</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">recursive</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;maxdepth&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path1</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp_file</span><span class="p">(</span><span class="n">path1</span><span class="p">,</span> <span class="n">path2</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">recursive</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path1</span><span class="p">):</span>
@@ -395,7 +396,7 @@
         <span class="n">maxdepth</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Move a file/directory from one path to the other."""</span>
+        <span class="sd">&quot;&quot;&quot;Move a file/directory from one path to the other.&quot;&quot;&quot;</span>
         <span class="n">path1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path1</span><span class="p">)</span>
         <span class="n">path2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path2</span><span class="p">)</span>
 
@@ -411,7 +412,7 @@
         <span class="k">return</span> <span class="kc">None</span></div>
 
     <span class="k">def</span> <span class="nf">_mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exist_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Creates directory and translates to an appropriate exceptions.</span>
+        <span class="sd">&quot;&quot;&quot;Creates directory and translates to an appropriate exceptions.</span>
 
 <span class="sd">        Internally, Client tries to do as much less API call as possible.</span>
 <span class="sd">        And, usually, the ResourceAlreadyExists and ResourceConflict are</span>
@@ -423,38 +424,38 @@
 <span class="sd">        3. path already exists (FileNotFoundError), etc.</span>
 
 <span class="sd">        We also spend some API calls to be sure on error.</span>
-<span class="sd">        """</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">ResourceAlreadyExists</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">details</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">details</span> <span class="ow">and</span> <span class="n">details</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"directory"</span> <span class="ow">and</span> <span class="n">exist_ok</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">details</span> <span class="ow">and</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;directory&quot;</span> <span class="ow">and</span> <span class="n">exist_ok</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
 
-            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">EEXIST</span><span class="p">,</span> <span class="s2">"File exists"</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">EEXIST</span><span class="p">,</span> <span class="s2">&quot;File exists&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
         <span class="k">except</span> <span class="n">ResourceConflict</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
             <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
             <span class="n">details</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">details</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"directory"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;directory&quot;</span><span class="p">:</span>
                 <span class="k">raise</span>  <span class="c1"># pragma: no cover</span>
             <span class="k">raise</span> <span class="ne">NotADirectoryError</span><span class="p">(</span>
-                <span class="n">errno</span><span class="o">.</span><span class="n">ENOTDIR</span><span class="p">,</span> <span class="s2">"Not a directory"</span><span class="p">,</span> <span class="n">parent</span>
+                <span class="n">errno</span><span class="o">.</span><span class="n">ENOTDIR</span><span class="p">,</span> <span class="s2">&quot;Not a directory&quot;</span><span class="p">,</span> <span class="n">parent</span>
             <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
 
 <div class="viewcode-block" id="WebdavFileSystem.mkdir"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.mkdir">[docs]</a>    <span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">create_parents</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Create directory."""</span>
+        <span class="sd">&quot;&quot;&quot;Create directory.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">create_parents</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.makedirs"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.makedirs">[docs]</a>    <span class="k">def</span> <span class="nf">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">exist_ok</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Creates directory to the given path."""</span>
+        <span class="sd">&quot;&quot;&quot;Creates directory to the given path.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parent</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">({</span><span class="s2">""</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_marker</span><span class="p">}</span> <span class="o">&amp;</span> <span class="p">{</span><span class="n">path</span><span class="p">,</span> <span class="n">parent</span><span class="p">})</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">({</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root_marker</span><span class="p">}</span> <span class="o">&amp;</span> <span class="p">{</span><span class="n">path</span><span class="p">,</span> <span class="n">parent</span><span class="p">})</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span>
             <span class="n">parent</span>
         <span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="n">exist_ok</span><span class="p">)</span>
@@ -462,14 +463,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="n">exist_ok</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.created"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.created">[docs]</a>    <span class="nd">@translate_exceptions</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">created</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"datetime"</span><span class="p">]:</span>
-        <span class="sd">"""Returns creation time/date."""</span>
+    <span class="k">def</span> <span class="nf">created</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns creation time/date.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">created</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.modified"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.modified">[docs]</a>    <span class="nd">@translate_exceptions</span><span class="p">()</span>
-    <span class="k">def</span> <span class="nf">modified</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">"datetime"</span><span class="p">]:</span>
-        <span class="sd">"""Returns last modified time/data."""</span>
+    <span class="k">def</span> <span class="nf">modified</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;datetime&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns last modified time/data.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">modified</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
@@ -477,19 +478,19 @@
     <span class="k">def</span> <span class="nf">_open</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rb"</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rb&quot;</span><span class="p">,</span>
         <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">autocommit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">cache_options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s2">"WebdavFile"</span><span class="p">,</span> <span class="s2">"UploadFile"</span><span class="p">]:</span>
-        <span class="sd">"""Return a file-like object from the filesystem."""</span>
-        <span class="n">size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="s2">"a"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mode</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;WebdavFile&quot;</span><span class="p">,</span> <span class="s2">&quot;UploadFile&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Return a file-like object from the filesystem.&quot;&quot;&quot;</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s2">&quot;a&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mode</span>
 
-        <span class="k">if</span> <span class="s2">"x"</span> <span class="ow">in</span> <span class="n">mode</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">EEXIST</span><span class="p">,</span> <span class="s2">"File exists"</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s2">"w"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="s2">&quot;x&quot;</span> <span class="ow">in</span> <span class="n">mode</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="n">errno</span><span class="o">.</span><span class="n">EEXIST</span><span class="p">,</span> <span class="s2">&quot;File exists&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">}:</span>
             <span class="k">return</span> <span class="n">UploadFile</span><span class="p">(</span>
                 <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">block_size</span><span class="o">=</span><span class="n">block_size</span>
             <span class="p">)</span>
@@ -507,46 +508,46 @@
 
 <div class="viewcode-block" id="WebdavFileSystem.checksum"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.checksum">[docs]</a>    <span class="nd">@translate_exceptions</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">checksum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">"""Returns checksum/etag of the path."""</span>
+        <span class="sd">&quot;&quot;&quot;Returns checksum/etag of the path.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">etag</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.size"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.size">[docs]</a>    <span class="nd">@translate_exceptions</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">"""Returns size of the path."""</span>
+        <span class="sd">&quot;&quot;&quot;Returns size of the path.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">content_length</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.sign"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.sign">[docs]</a>    <span class="k">def</span> <span class="nf">sign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">expiration</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Create a signed URL representing the given path."""</span>
+        <span class="sd">&quot;&quot;&quot;Create a signed URL representing the given path.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.pipe_file"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.pipe_file">[docs]</a>    <span class="k">def</span> <span class="nf">pipe_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Upload the contents to given file in the remote webdav server."""</span>
+        <span class="sd">&quot;&quot;&quot;Upload the contents to given file in the remote webdav server.&quot;&quot;&quot;</span>
         <span class="n">buff</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"overwrite"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;overwrite&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.upload_fileobj"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.upload_fileobj">[docs]</a>    <span class="k">def</span> <span class="nf">upload_fileobj</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">fobj</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">,</span>
         <span class="n">rpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">callback</span><span class="p">:</span> <span class="s2">"Callback"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="s2">&quot;Callback&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Upload contents from the fileobj to the remote path."""</span>
+        <span class="sd">&quot;&quot;&quot;Upload contents from the fileobj to the remote path.&quot;&quot;&quot;</span>
         <span class="n">rpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">rpath</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mkdirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">rpath</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">size</span> <span class="o">=</span> <span class="n">peek_filelike_length</span><span class="p">(</span><span class="n">fobj</span><span class="p">)</span>
 
-        <span class="n">callback</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">"Callback"</span><span class="p">,</span> <span class="n">Callback</span><span class="o">.</span><span class="n">as_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">))</span>
+        <span class="n">callback</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;Callback&quot;</span><span class="p">,</span> <span class="n">Callback</span><span class="o">.</span><span class="n">as_callback</span><span class="p">(</span><span class="n">callback</span><span class="p">))</span>
         <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
             <span class="n">callback</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
-        <span class="n">progress_callback</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">"CallbackFn"</span><span class="p">,</span> <span class="n">callback</span><span class="o">.</span><span class="n">relative_update</span><span class="p">)</span>
+        <span class="n">progress_callback</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;CallbackFn&quot;</span><span class="p">,</span> <span class="n">callback</span><span class="o">.</span><span class="n">relative_update</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span>
             <span class="n">fobj</span><span class="p">,</span>
@@ -561,19 +562,19 @@
 
 <div class="viewcode-block" id="WebdavFileSystem.put_file"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.put_file">[docs]</a>    <span class="k">def</span> <span class="nf">put_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">lpath</span><span class="p">:</span> <span class="s2">"PathLike[AnyStr]"</span><span class="p">,</span>
+        <span class="n">lpath</span><span class="p">:</span> <span class="s2">&quot;PathLike[AnyStr]&quot;</span><span class="p">,</span>
         <span class="n">rpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">callback</span><span class="p">:</span> <span class="s2">"Callback"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="s2">&quot;Callback&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Copy file to remote webdav server."""</span>
+        <span class="sd">&quot;&quot;&quot;Copy file to remote webdav server.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">lpath</span><span class="p">):</span>
             <span class="n">rpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">rpath</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">rpath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fobj</span><span class="p">:</span>
-            <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"overwrite"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-            <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">lpath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fobj</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;overwrite&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span>
                 <span class="n">fobj</span><span class="p">,</span>
                 <span class="n">rpath</span><span class="p">,</span>
@@ -583,27 +584,27 @@
 
 
 <div class="viewcode-block" id="WebdavFile"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile">[docs]</a><span class="k">class</span> <span class="nc">WebdavFile</span><span class="p">(</span><span class="n">AbstractBufferedFile</span><span class="p">):</span>
-    <span class="sd">"""WebdavFile that provides file-like access to remote file."""</span>
+    <span class="sd">&quot;&quot;&quot;WebdavFile that provides file-like access to remote file.&quot;&quot;&quot;</span>
 
     <span class="n">size</span><span class="p">:</span> <span class="nb">int</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">fs</span><span class="p">:</span> <span class="s2">"WebdavFileSystem"</span><span class="p">,</span>
+        <span class="n">fs</span><span class="p">:</span> <span class="s2">&quot;WebdavFileSystem&quot;</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"rb"</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rb&quot;</span><span class="p">,</span>
         <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">autocommit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">cache_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"readahead"</span><span class="p">,</span>
+        <span class="n">cache_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;readahead&quot;</span><span class="p">,</span>
         <span class="n">cache_options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Instantiate a file-like object with the provided options.</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate a file-like object with the provided options.</span>
 
 <span class="sd">        See fsspec for more information.</span>
-<span class="sd">        """</span>
-        <span class="n">size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"size"</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">"size"</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"file"</span><span class="p">}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;size&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">details</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">path</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;file&quot;</span><span class="p">}</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">fs</span><span class="p">,</span>
             <span class="n">path</span><span class="p">,</span>
@@ -614,7 +615,7 @@
             <span class="n">cache_options</span><span class="o">=</span><span class="n">cache_options</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="n">encoding</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"encoding"</span><span class="p">)</span>
+        <span class="n">encoding</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;encoding&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fobj</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
             <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span>
@@ -626,7 +627,7 @@
         <span class="c1"># only get the file size if GET request didnot send Content-Length</span>
         <span class="c1"># or was retrieved before.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="p">,</span> <span class="s2">"size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">size</span>  <span class="c1"># type: ignore</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
@@ -634,42 +635,42 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="WebdavFile.read"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-        <span class="sd">"""Read chunk of bytes."""</span>
+        <span class="sd">&quot;&quot;&quot;Read chunk of bytes.&quot;&quot;&quot;</span>
         <span class="n">chunk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">chunk</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">chunk</span></div>
 
-    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"WebdavFile"</span><span class="p">:</span>
-        <span class="sd">"""Start streaming."""</span>
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;WebdavFile&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Start streaming.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="nf">_fetch_range</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">end</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Not essential. Creating stub to make pylint happy."""</span>
+        <span class="sd">&quot;&quot;&quot;Not essential. Creating stub to make pylint happy.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
 <div class="viewcode-block" id="WebdavFile.seek"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.seek">[docs]</a>    <span class="k">def</span> <span class="nf">seek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">whence</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">"""Set current file location."""</span>
+        <span class="sd">&quot;&quot;&quot;Set current file location.&quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">whence</span><span class="o">=</span><span class="n">whence</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">whence</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFile.isatty"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.isatty">[docs]</a>    <span class="k">def</span> <span class="nf">isatty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">"""Check if it is an interactive fileobj."""</span>
+        <span class="sd">&quot;&quot;&quot;Check if it is an interactive fileobj.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
 <div class="viewcode-block" id="WebdavFile.close"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Close stream."""</span>
+        <span class="sd">&quot;&quot;&quot;Close stream.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
             <span class="k">return</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"reader"</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;reader&quot;</span><span class="p">):</span>
             <span class="c1"># fs.client.open might have raised an error</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span></div>
 
     <span class="k">def</span> <span class="nf">__reduce_ex__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">"ReopenArgs"</span><span class="p">],</span> <span class="n">Type</span><span class="p">[</span><span class="s2">"WebdavFile"</span><span class="p">]],</span> <span class="s2">"ReopenArgs"</span><span class="p">]:</span>
-        <span class="sd">"""Recreate/reopen file when restored."""</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;ReopenArgs&quot;</span><span class="p">],</span> <span class="n">Type</span><span class="p">[</span><span class="s2">&quot;WebdavFile&quot;</span><span class="p">]],</span> <span class="s2">&quot;ReopenArgs&quot;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Recreate/reopen file when restored.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">reopen</span><span class="p">,</span> <span class="n">ReopenArgs</span><span class="p">(</span>  <span class="c1"># pragma: no cover</span>
             <span class="n">WebdavFile</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="p">,</span>
@@ -681,10 +682,10 @@
 
 
 <div class="viewcode-block" id="ReopenArgs"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.ReopenArgs">[docs]</a><span class="k">class</span> <span class="nc">ReopenArgs</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>  <span class="c1"># pylint: disable=inherit-non-class</span>
-    <span class="sd">"""Args to reopen the file."""</span>
+    <span class="sd">&quot;&quot;&quot;Args to reopen the file.&quot;&quot;&quot;</span>
 
     <span class="n">file</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">WebdavFile</span><span class="p">]</span>
-    <span class="n">fs</span><span class="p">:</span> <span class="s2">"WebdavFileSystem"</span>
+    <span class="n">fs</span><span class="p">:</span> <span class="s2">&quot;WebdavFileSystem&quot;</span>
     <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">blocksize</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
     <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span>
@@ -692,7 +693,7 @@
 
 
 <div class="viewcode-block" id="reopen"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.reopen">[docs]</a><span class="k">def</span> <span class="nf">reopen</span><span class="p">(</span><span class="n">args</span><span class="p">:</span> <span class="n">ReopenArgs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">WebdavFile</span><span class="p">:</span>
-    <span class="sd">"""Reopen file when unpickled."""</span>
+    <span class="sd">&quot;&quot;&quot;Reopen file when unpickled.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">(</span>  <span class="c1"># pragma: no cover</span>
         <span class="n">args</span><span class="o">.</span><span class="n">fs</span><span class="p">,</span>
         <span class="n">args</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
@@ -707,35 +708,35 @@
 
 
 <div class="viewcode-block" id="UploadFile"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile">[docs]</a><span class="k">class</span> <span class="nc">UploadFile</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">SpooledTemporaryFile</span><span class="p">):</span>
-    <span class="sd">"""UploadFile for Webdav, that uses SpooledTemporaryFile.</span>
+    <span class="sd">&quot;&quot;&quot;UploadFile for Webdav, that uses SpooledTemporaryFile.</span>
 
 <span class="sd">    In Webdav, you cannot upload in chunks. Similar to http, we need some kind</span>
 <span class="sd">    of protocol on top to be able to do that. Sabredav provides a way to upload</span>
-<span class="sd">    chunks, but it's not implemented in Owncloud and Nextcloud. They have a</span>
+<span class="sd">    chunks, but it&#39;s not implemented in Owncloud and Nextcloud. They have a</span>
 <span class="sd">    different chunking mechanism. On top of it, there are TUS implementations</span>
 <span class="sd">    in newer version of Owncloud.</span>
 
 <span class="sd">    However, as they are only for chunking, it needs to be seen if it is</span>
 <span class="sd">    possible to implement full-breadth of FileObj API through that (I doubt it)</span>
 
-<span class="sd">    Note that, fsspec's put_file/pipe_file don't use this technique and are</span>
-<span class="sd">    thus faster as they don't need buffering. It is recommended to use that</span>
-<span class="sd">    if you don't need to upload content dynamically.</span>
-<span class="sd">    """</span>
+<span class="sd">    Note that, fsspec&#39;s put_file/pipe_file don&#39;t use this technique and are</span>
+<span class="sd">    thus faster as they don&#39;t need buffering. It is recommended to use that</span>
+<span class="sd">    if you don&#39;t need to upload content dynamically.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">fs</span><span class="p">:</span> <span class="s2">"WebdavFileSystem"</span><span class="p">,</span>
+        <span class="n">fs</span><span class="p">:</span> <span class="s2">&quot;WebdavFileSystem&quot;</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"wb"</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;wb&quot;</span><span class="p">,</span>
         <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">"""Extended interface with path and fs."""</span>
+        <span class="sd">&quot;&quot;&quot;Extended interface with path and fs.&quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="n">fs</span>
         <span class="k">assert</span> <span class="n">path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">AbstractBufferedFile</span><span class="o">.</span><span class="n">DEFAULT_BLOCK_SIZE</span>
-            <span class="k">if</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"default"</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">block_size</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
             <span class="k">else</span> <span class="n">block_size</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="p">:</span> <span class="n">WebdavFileSystem</span> <span class="o">=</span> <span class="n">fs</span>  <span class="c1"># pylint: disable=invalid-name</span>
@@ -744,29 +745,29 @@
 
         <span class="c1"># whatever the mode be, we should try to open the file</span>
         <span class="c1"># in both rw mode.</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"wb+"</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">max_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">blocksize</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;wb+&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">exc</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Upload file by seeking to first byte on exit."""</span>
+        <span class="sd">&quot;&quot;&quot;Upload file by seeking to first byte on exit.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 <div class="viewcode-block" id="UploadFile.readable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readable">[docs]</a>    <span class="k">def</span> <span class="nf">readable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">"""It is readable."""</span>
+        <span class="sd">&quot;&quot;&quot;It is readable.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="UploadFile.writable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.writable">[docs]</a>    <span class="k">def</span> <span class="nf">writable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">"""It is writable."""</span>
+        <span class="sd">&quot;&quot;&quot;It is writable.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="UploadFile.seekable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.seekable">[docs]</a>    <span class="k">def</span> <span class="nf">seekable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">"""It is seekable."""</span>
+        <span class="sd">&quot;&quot;&quot;It is seekable.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="UploadFile.commit"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Commits the file to the given path.</span>
+        <span class="sd">&quot;&quot;&quot;Commits the file to the given path.</span>
 
 <span class="sd">        As we cannot upload in chunk, this is where we really upload file.</span>
-<span class="sd">        """</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">fileobj</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">upload_fileobj</span><span class="p">(</span>
@@ -774,28 +775,28 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="UploadFile.close"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Close the file."""</span>
+        <span class="sd">&quot;&quot;&quot;Close the file.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="UploadFile.discard"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.discard">[docs]</a>    <span class="k">def</span> <span class="nf">discard</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">"""Discard the file."""</span>
+        <span class="sd">&quot;&quot;&quot;Discard the file.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="UploadFile.info"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoReturn</span><span class="p">:</span>
-        <span class="sd">"""Info about the file upload that is in progress."""</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cannot provide info in write-mode"</span><span class="p">)</span></div>
+        <span class="sd">&quot;&quot;&quot;Info about the file upload that is in progress.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cannot provide info in write-mode&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="UploadFile.readinto"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readinto">[docs]</a>    <span class="k">def</span> <span class="nf">readinto</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">,</span> <span class="s2">"ArrayType[Any]"</span><span class="p">,</span> <span class="s2">"mmap"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">,</span> <span class="s2">&quot;ArrayType[Any]&quot;</span><span class="p">,</span> <span class="s2">&quot;mmap&quot;</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="sd">"""Read bytes into the given buffer."""</span>
+        <span class="sd">&quot;&quot;&quot;Read bytes into the given buffer.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">read_into</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="UploadFile.readuntil"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readuntil">[docs]</a>    <span class="k">def</span> <span class="nf">readuntil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">char</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="sd">"""Read until the given character is found."""</span>
+<div class="viewcode-block" id="UploadFile.readuntil"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readuntil">[docs]</a>    <span class="k">def</span> <span class="nf">readuntil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">char</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Read until the given character is found.&quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">AbstractBufferedFile</span><span class="o">.</span><span class="n">readuntil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">char</span><span class="o">=</span><span class="n">char</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="n">blocks</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span></div></div>
 </pre></div>
@@ -835,7 +836,9 @@
 </div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/scripts/furo.js"></script>
     <script src="../../_static/clipboard.min.js"></script>
     <script src="../../_static/copybutton.js"></script>

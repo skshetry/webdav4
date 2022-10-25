@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Client" href="reference/client.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.04.07"/>
+    <meta name="generator" content="sphinx-5.3.0, furo 2022.09.29"/>
         <title>webdav4</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=68f4518137b9aefe99b631505a2064c3c42c9852" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
@@ -187,7 +187,9 @@
           </svg>
           <span>Back to top</span>
         </a>
-        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
@@ -202,35 +204,35 @@
         </div>
         <article role="main">
           <section id="webdav4">
-<h1>webdav4<a class="headerlink" href="#webdav4" title="Permalink to this headline">#</a></h1>
-<p><a class="reference external" href="https://www.repostatus.org/#wip"><img alt="Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public." src="https://www.repostatus.org/badges/latest/wip.svg"/></a>
-<a class="reference external" href="https://anaconda.org/conda-forge/webdav4"><img alt="Conda" src="https://anaconda.org/conda-forge/webdav4/badges/version.svg"/></a>
-<a class="reference external" href="https://pypi.org/project/webdav4"><img alt="PyPi" src="https://img.shields.io/pypi/v/webdav4.svg"/></a>
-<img alt="ci" src="https://github.com/skshetry/webdav4/workflows/CI/badge.svg"/>
-<a class="reference external" href="https://codecov.io/gh/skshetry/webdav4"><img alt="codecov" src="https://codecov.io/gh/skshetry/webdav4/branch/main/graph/badge.svg"/></a></p>
+<h1>webdav4<a class="headerlink" href="#webdav4" title="Permalink to this heading">#</a></h1>
+<p><a class="reference external" href="https://www.repostatus.org/#wip"><img alt="Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public." src="https://www.repostatus.org/badges/latest/wip.svg" /></a>
+<a class="reference external" href="https://anaconda.org/conda-forge/webdav4"><img alt="Conda" src="https://anaconda.org/conda-forge/webdav4/badges/version.svg" /></a>
+<a class="reference external" href="https://pypi.org/project/webdav4"><img alt="PyPi" src="https://img.shields.io/pypi/v/webdav4.svg" /></a>
+<img alt="ci" src="https://github.com/skshetry/webdav4/workflows/CI/badge.svg" />
+<a class="reference external" href="https://codecov.io/gh/skshetry/webdav4"><img alt="codecov" src="https://codecov.io/gh/skshetry/webdav4/branch/main/graph/badge.svg" /></a></p>
 <p>Webdav API with an (optional) <span class="xref myst">fsspec</span> implementation and a <span class="xref myst">CLI</span>.</p>
 <section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">#</a></h2>
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h2>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip install webdav4
 </pre></div>
 </div>
 <section id="usage">
-<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">#</a></h3>
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h3>
 <section id="webdav4-client">
-<h4>webdav4 Client<a class="headerlink" href="#webdav4-client" title="Permalink to this headline">#</a></h4>
+<h4>webdav4 Client<a class="headerlink" href="#webdav4-client" title="Permalink to this heading">#</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">webdav4.client</span> <span class="kn">import</span> <span class="n">Client</span>
 
-<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s2">"https://webdav.com"</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">"username"</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">))</span>
-<span class="n">client</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"Documents/Readme.md"</span><span class="p">)</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s2">&quot;https://webdav.com&quot;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">))</span>
+<span class="n">client</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;Documents/Readme.md&quot;</span><span class="p">)</span>
 
-<span class="n">client</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="s2">"Photos"</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">client</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="s2">"Gorilla.jpg"</span><span class="p">,</span> <span class="s2">"Photos/Gorilla.jpg"</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="s2">&quot;Photos&quot;</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">upload_file</span><span class="p">(</span><span class="s2">&quot;Gorilla.jpg&quot;</span><span class="p">,</span> <span class="s2">&quot;Photos/Gorilla.jpg&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Check out <a class="reference internal" href="reference/client.html"><span class="doc std std-doc">Client API</span></a> reference for more information.</p>
 </section>
 <section id="fsspec">
-<h4>fsspec<a class="headerlink" href="#fsspec" title="Permalink to this headline">#</a></h4>
+<h4>fsspec<a class="headerlink" href="#fsspec" title="Permalink to this heading">#</a></h4>
 <p><a class="reference external" href="https://filesystem-spec.readthedocs.io"><code class="docutils literal notranslate"><span class="pre">fsspec</span></code></a> tries to provide a
 consistent APIs to different storage backends, by defining standard
 interfaces, so that other code using them could operate without depending
@@ -243,23 +245,23 @@ follows:</p>
 </div>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">webdav4.fsspec</span> <span class="kn">import</span> <span class="n">WebdavFileSystem</span>
 
-<span class="n">fs</span> <span class="o">=</span> <span class="n">WebdavFileSystem</span><span class="p">(</span><span class="s2">"https://webdav.com"</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">"username"</span><span class="p">,</span> <span class="s2">"password"</span><span class="p">))</span>
-<span class="n">fs</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">"Documents/Readme.md"</span><span class="p">)</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="n">WebdavFileSystem</span><span class="p">(</span><span class="s2">&quot;https://webdav.com&quot;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">))</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;Documents/Readme.md&quot;</span><span class="p">)</span>
 
-<span class="n">fs</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="s2">"Photos"</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">ls</span><span class="p">(</span><span class="s2">&quot;Photos&quot;</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Check out <a class="reference internal" href="reference/fsspec.html"><span class="doc std std-doc">WebdavFileSystem API</span></a> reference for more information.</p>
 </section>
 <section id="cli">
-<h4>CLI<a class="headerlink" href="#cli" title="Permalink to this headline">#</a></h4>
+<h4>CLI<a class="headerlink" href="#cli" title="Permalink to this heading">#</a></h4>
 <p>webdav4 also provides a CLI similar to <code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span></code> to make it easier to work with webdav servers.
-<img alt="cli-usage" src="_images/usage.png"/></p>
+<img alt="cli-usage" src="_images/usage.png" /></p>
 <p>Please checkout <a class="reference internal" href="reference/cli.html"><span class="doc std std-doc">CLI Usage</span></a> for more information.</p>
 </section>
 </section>
 <section id="contributing">
-<h3>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">#</a></h3>
+<h3>Contributing<a class="headerlink" href="#contributing" title="Permalink to this heading">#</a></h3>
 <p>Contributions are welcome. Please take a look at
 <span class="xref myst">Contributing Guide</span> for more details.</p>
 <div class="toctree-wrapper compound">
@@ -284,7 +286,7 @@ follows:</p>
                 </div>
                 <div class="title">Client</div>
               </div>
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
           
         </div>
@@ -316,7 +318,9 @@ follows:</p>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>

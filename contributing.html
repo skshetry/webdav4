@@ -1,14 +1,14 @@
 <!doctype html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="dav CLI" href="reference/cli.html" />
 
-    <meta name="generator" content="sphinx-4.5.0, furo 2022.04.07"/>
+    <meta name="generator" content="sphinx-5.3.0, furo 2022.09.29"/>
         <title>Contributing Guide - webdav4</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=68f4518137b9aefe99b631505a2064c3c42c9852" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
     
@@ -187,7 +187,9 @@
           </svg>
           <span>Back to top</span>
         </a>
-        <div class="content-icon-container"><div class="theme-toggle-container theme-toggle-content">
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
@@ -202,23 +204,23 @@
         </div>
         <article role="main">
           <section id="contributing-guide">
-<h1>Contributing Guide<a class="headerlink" href="#contributing-guide" title="Permalink to this headline">#</a></h1>
+<h1>Contributing Guide<a class="headerlink" href="#contributing-guide" title="Permalink to this heading">#</a></h1>
 <p>Thank you for taking an interest in the project.
 🙏</p>
 <p>Please see below on how to setup/test and work on this project.</p>
 <section id="setup">
-<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">#</a></h2>
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading">#</a></h2>
 <p>Install all the requirements with:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -e <span class="s2">".[dev]"</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -e <span class="s2">&quot;.[dev]&quot;</span>
 </pre></div>
 </div>
 </section>
 <section id="tests">
-<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this headline">#</a></h2>
+<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this heading">#</a></h2>
 <p>You can run all the tests with <code class="docutils literal notranslate"><span class="pre">pytest</span></code> command.
 The code changes are expected to have tests.</p>
 <section id="test-servers">
-<h3>Test Servers<a class="headerlink" href="#test-servers" title="Permalink to this headline">#</a></h3>
+<h3>Test Servers<a class="headerlink" href="#test-servers" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">webdav4</span></code> also provides a test server, that it uses in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> itself.</p>
 <p>It can be run with the following commands:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python -m tests.server
@@ -242,7 +244,7 @@ For example, for me, running in <code class="docutils literal notranslate"><span
 </section>
 </section>
 <section id="formatting">
-<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline">#</a></h2>
+<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this heading">#</a></h2>
 <p>Please install <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> and add the hooks, so that it enforces proper
 code standard in your code changes.</p>
 </section>
@@ -255,7 +257,7 @@ code standard in your code changes.</p>
         <div class="related-pages">
           
           <a class="prev-page" href="reference/cli.html">
-              <svg><use href="#svg-arrow-right"></use></svg>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
@@ -291,7 +293,7 @@ code standard in your code changes.</p>
       <div class="toc-sticky toc-scroll">
         <div class="toc-title-container">
           <span class="toc-title">
-            Contents
+            On this page
           </span>
         </div>
         <div class="toc-tree-container">
@@ -318,7 +320,9 @@ code standard in your code changes.</p>
 </div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/scripts/furo.js"></script>
     <script src="_static/clipboard.min.js"></script>
     <script src="_static/copybutton.js"></script>
