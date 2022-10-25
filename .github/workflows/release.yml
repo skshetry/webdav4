@@ -27,6 +27,9 @@ jobs:
           echo SETUPTOOLS_SCM_PRETEND_VERSION=$version >> $GITHUB_ENV
           echo version $version
 
+      - name: Install requirements
+        run: pip install -U pip wheel hatch
+
       - run: hatch build
 
       - name: Publish to Test PyPI
