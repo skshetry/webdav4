@@ -8,6 +8,7 @@ Please see below on how to setup/test and work on this project.
 ## Setup
 Install all the requirements with:
 ```shell
+pip install pip>=21.3  # required for editable installs
 pip install -e ".[dev]"
 ```
 
@@ -42,3 +43,9 @@ or an [ownCloud server using docker-compose](https://doc.owncloud.com/server/adm
 ## Formatting
 Please install `pre-commit` and add the hooks, so that it enforces proper
 code standard in your code changes.
+
+Also make sure to run `pylint` and `mypy`.
+```shell
+pylint src tests
+mypy
+```

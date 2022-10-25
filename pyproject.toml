@@ -47,7 +47,7 @@ dev = [
 docs = [
   "furo==2022.9.29",
   "myst-parser==0.18.1",
-  "Sphinx==5.3.0",
+  "Sphinx==5.3",
   "sphinx-copybutton==0.5",
 ]
 fsspec = [
