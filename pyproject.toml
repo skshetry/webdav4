@@ -45,7 +45,7 @@ dev = [
   "webdav4[docs,fsspec,http2,qa,tests]",
 ]
 docs = [
-  "furo==2022.4.7",
+  "furo==2022.9.29",
   "myst-parser==0.17.2",
   "Sphinx==4.5",
   "sphinx-copybutton==0.5",
