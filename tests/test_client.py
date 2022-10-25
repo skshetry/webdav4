@@ -8,6 +8,7 @@ from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
+from httpx import Request, Response
 
 from webdav4.client import (
     BadGatewayError,
@@ -24,10 +25,10 @@ from webdav4.client import (
     ResourceNotFound,
 )
 from webdav4.http import Client as HTTPClient
-from webdav4.http import Method
 from webdav4.http import Method as HTTPMethod
 from webdav4.urls import URL
 
+from .test_callback import ReadWrapper
 from .utils import TmpDir, approx_datetime
 
 
@@ -292,8 +293,6 @@ def test_transfer_multistatus_failure(client: Client, method: str):
     Since it's hard to reproduce them with the current wsgidav, went with the
     xml raw response content to test with.
     """
-    from httpx import Request, Response
-
     url = "http://www.example.com/container/"
     request = Request(HTTPMethod.MOVE, url)
     response = Response(
@@ -328,8 +327,6 @@ def test_transfer_forbidden_operations(
     This might happen due to number of issues, but mainly it's because
     the source and destination resource are the same.
     """
-    from httpx import Request, Response
-
     url = server_address.join("container")
     request = Request(HTTPMethod.MKCOL, url)
     response = Response(status_code=403, request=request)
@@ -385,8 +382,6 @@ def test_mkdir_forbidden_operations(client: Client, server_address: URL):
         2) the parent collection of the Request-URI exists but cannot accept
             members
     """
-    from httpx import Request, Response
-
     url = server_address.join("container")
     request = Request(HTTPMethod.MKCOL, url)
     response = Response(status_code=403, request=request)
@@ -411,9 +406,7 @@ def test_mkdir_sends_a_trailing_slash(path: str):
 
     See: https://github.com/skshetry/webdav4/issues/55
     """
-    from httpx import Request, Response
-
-    response = Response(200, request=Request(Method.MKCOL, "url"))
+    response = Response(200, request=Request(HTTPMethod.MKCOL, "url"))
     client = Client(
         "http://example.org", http_client=mock.MagicMock(return_value=response)
     )
@@ -601,8 +594,6 @@ def test_open_binary(storage_dir: TmpDir, client: Client):
 
 def test_feature_detection_util():
     """Test parsing of response in FeatureDetection util."""
-    from httpx import Response
-
     fd = FeatureDetection()
     assert fd.supports_ranges is False
     assert not fd.dav_compliances
@@ -684,8 +675,6 @@ def test_open_file(storage_dir: TmpDir, client: Client):
 
 def test_raising_insufficient_storage():
     """Test that insufficient storage is raised."""
-    from httpx import Request, Response
-
     client = Client("https://example.org")
     url = client.join_url("test")
     req = Request(HTTPMethod.COPY, url)
@@ -724,8 +713,6 @@ def test_upload_fobj_size_hints(client: Client):
 
     This is used to choose between chunked and non-chunked transfers.
     """
-    from .test_callback import ReadWrapper
-
     with patch.object(client, "request") as m:
         client.upload_fileobj(BytesIO(b"foobar"), "foobar", size=3)
         assert m.call_args[1]["headers"] == {"Content-Length": "3"}
@@ -878,8 +865,6 @@ def test_client_bad_gateway_error(client: Client, server_address: URL):
     are in remote server and the remote server refused the request or
     is unavailable to address the request.
     """
-    from httpx import Request, Response
-
     url = server_address.join("container")
     request = Request(HTTPMethod.PROPFIND, url)
     response = Response(status_code=502, request=request)
@@ -955,8 +940,6 @@ def test_auth_errors(server_address: URL):
 
 def test_client_retries(client: Client, server_address: URL):
     """Test that the client retries."""
-    from httpx import Request, Response
-
     url = server_address.join("container1")
     request = Request(HTTPMethod.PROPFIND, url)
     failed_response = Response(status_code=502, request=request)

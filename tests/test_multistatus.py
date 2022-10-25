@@ -367,7 +367,7 @@ def test_parse_multistatus_response():
         HTTPResponse(status_code=207, text="<d></d>")
     )
     assert isinstance(res, MultiStatusResponse)
-    assert res.responses == {}
+    assert not res.responses
     assert res.response_description is None
     assert res.content == "<d></d>"
 

@@ -558,11 +558,11 @@ def test_info(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
 
 def test_walk(storage_dir: TmpDir, fs: WebdavFileSystem):
     """Test that walk is compliance with fsspec."""
-    assert list(fs.walk("not-existing")) == []
+    assert not list(fs.walk("not-existing"))
 
     storage_dir.gen({"data": {"foo": "foo"}})
 
-    assert list(fs.walk("data/foo")) == []
+    assert not list(fs.walk("data/foo"))
     assert list(fs.walk("data")) == [
         ("data", [], ["foo"]),
     ]
@@ -848,10 +848,10 @@ def test_upload_fileobj(
     if wrap_fobj and not with_size:
         pytest.skip("the test server does not work without content-length :(")
 
-    foo = storage_dir / "foo"
-    length = foo.write_bytes(b"foo")
+    file = storage_dir / "foo"
+    length = file.write_bytes(b"foo")
 
-    with foo.open(mode="rb") as fobj:
+    with file.open(mode="rb") as fobj:
         if wrap_fobj:
             fobj = ReadWrapper(fobj)  # type: ignore
         size = length if with_size else None
@@ -879,9 +879,9 @@ def test_callbacks(storage_dir: TmpDir, fs: WebdavFileSystem):
             """Log a set_size call."""
             self.events.append(("set_size", size))
 
-        def relative_update(self, value: int) -> None:
+        def relative_update(self, inc: int = 1) -> None:
             """Log a relative_update call."""
-            self.events.append(("relative_update", value))
+            self.events.append(("relative_update", inc))
 
     event_logger = EventLogger()
     fs.put_file(src_file, dest_file, chunk_size=4, callback=event_logger)

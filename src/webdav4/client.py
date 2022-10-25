@@ -245,7 +245,7 @@ class Client:
 
                 - True (uses default CA bundle),
                 - a path to an SSL certificate file,
-                - False (disable verfication), or
+                - False (disable verification), or
                 - a :py:class:`ssl.SSLContext`
 
             cert: An SSL certificate used by the requested host to
@@ -674,7 +674,7 @@ class Client:
         # we try to avoid chunked transfer as much as possible
         # so we try to use size as a hint if provided.
         # else, we will try to find that out from the file object
-        # if we are not successfull in that, we gracefully fallback
+        # if we are not successful in that, we gracefully fallback
         # to the chunked encoding.
         if size is None:
             size = peek_filelike_length(file_obj)
