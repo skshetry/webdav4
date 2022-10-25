@@ -211,7 +211,8 @@
 <section id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading">#</a></h2>
 <p>Install all the requirements with:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -e <span class="s2">&quot;.[dev]&quot;</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install pip&gt;<span class="o">=</span><span class="m">21</span>.3  <span class="c1"># required for editable installs</span>
+pip install -e <span class="s2">&quot;.[dev]&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -247,6 +248,11 @@ For example, for me, running in <code class="docutils literal notranslate"><span
 <h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this heading">#</a></h2>
 <p>Please install <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> and add the hooks, so that it enforces proper
 code standard in your code changes.</p>
+<p>Also make sure to run <code class="docutils literal notranslate"><span class="pre">pylint</span></code> and <code class="docutils literal notranslate"><span class="pre">mypy</span></code>.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pylint src tests
+mypy
+</pre></div>
+</div>
 </section>
 </section>
 
