@@ -651,7 +651,7 @@
 <div class="viewcode-block" id="WebdavFile.seek"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.seek">[docs]</a>    <span class="k">def</span> <span class="nf">seek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loc</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">whence</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">"""Set current file location."""</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">whence</span><span class="o">=</span><span class="n">whence</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">whence</span><span class="o">=</span><span class="n">whence</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">loc</span><span class="p">,</span> <span class="n">whence</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFile.isatty"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFile.isatty">[docs]</a>    <span class="k">def</span> <span class="nf">isatty</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">"""Check if it is an interactive fileobj."""</span>
@@ -750,15 +750,15 @@
         <span class="sd">"""Upload file by seeking to first byte on exit."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-<div class="viewcode-block" id="UploadFile.readable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readable">[docs]</a>    <span class="k">def</span> <span class="nf">readable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=no-self-use</span>
+<div class="viewcode-block" id="UploadFile.readable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readable">[docs]</a>    <span class="k">def</span> <span class="nf">readable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">"""It is readable."""</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="UploadFile.writable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.writable">[docs]</a>    <span class="k">def</span> <span class="nf">writable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=no-self-use</span>
+<div class="viewcode-block" id="UploadFile.writable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.writable">[docs]</a>    <span class="k">def</span> <span class="nf">writable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">"""It is writable."""</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="UploadFile.seekable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.seekable">[docs]</a>    <span class="k">def</span> <span class="nf">seekable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>  <span class="c1"># pylint: disable=no-self-use</span>
+<div class="viewcode-block" id="UploadFile.seekable"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.seekable">[docs]</a>    <span class="k">def</span> <span class="nf">seekable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">"""It is seekable."""</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
@@ -784,15 +784,15 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
             <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="UploadFile.info"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoReturn</span><span class="p">:</span>  <span class="c1"># pylint: disable=no-self-use</span>
+<div class="viewcode-block" id="UploadFile.info"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.info">[docs]</a>    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NoReturn</span><span class="p">:</span>
         <span class="sd">"""Info about the file upload that is in progress."""</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"cannot provide info in write-mode"</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="UploadFile.readinto"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readinto">[docs]</a>    <span class="k">def</span> <span class="nf">readinto</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">,</span> <span class="s2">"ArrayType[Any]"</span><span class="p">,</span> <span class="s2">"mmap"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytearray</span><span class="p">,</span> <span class="nb">memoryview</span><span class="p">,</span> <span class="s2">"ArrayType[Any]"</span><span class="p">,</span> <span class="s2">"mmap"</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">"""Read bytes into the given buffer."""</span>
-        <span class="k">return</span> <span class="n">read_into</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">read_into</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="UploadFile.readuntil"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readuntil">[docs]</a>    <span class="k">def</span> <span class="nf">readuntil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">char</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
         <span class="sd">"""Read until the given character is found."""</span>

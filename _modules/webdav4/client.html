@@ -448,7 +448,7 @@
 
 <span class="sd">                - True (uses default CA bundle),</span>
 <span class="sd">                - a path to an SSL certificate file,</span>
-<span class="sd">                - False (disable verfication), or</span>
+<span class="sd">                - False (disable verification), or</span>
 <span class="sd">                - a :py:class:`ssl.SSLContext`</span>
 
 <span class="sd">            cert: An SSL certificate used by the requested host to</span>
@@ -877,7 +877,7 @@
         <span class="c1"># we try to avoid chunked transfer as much as possible</span>
         <span class="c1"># so we try to use size as a hint if provided.</span>
         <span class="c1"># else, we will try to find that out from the file object</span>
-        <span class="c1"># if we are not successfull in that, we gracefully fallback</span>
+        <span class="c1"># if we are not successful in that, we gracefully fallback</span>
         <span class="c1"># to the chunked encoding.</span>
         <span class="k">if</span> <span class="n">size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">size</span> <span class="o">=</span> <span class="n">peek_filelike_length</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
