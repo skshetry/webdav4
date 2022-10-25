@@ -368,6 +368,9 @@ def test_mkdir_cli():
     cmd.run()
     assert memfs.isdir("data1")
 
+    with pytest.raises(FileExistsError):
+        cmd.run()
+
     cmd = CommandMkdir(Namespace(path="data1/dir1/dir2", parents=True), memfs)
     cmd.run()
     assert memfs.isdir("data1/dir1")
