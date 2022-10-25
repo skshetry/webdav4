@@ -329,7 +329,7 @@ def test_prepare_propfind_data_empty():
 
     Should return empty in this case.
     """
-    return prepare_propfind_request_data() is None
+    assert prepare_propfind_request_data() is None
 
 
 @pytest.mark.parametrize(

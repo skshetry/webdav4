@@ -69,6 +69,7 @@ tests = [
   "colorama",
   "pytest",
   "pytest-cov",
+  "pytest-xdist",
   "typing_extensions",
   "WsgiDAV",
 ]
@@ -112,6 +113,7 @@ dependencies = [
 [tool.coverage.run]
 parallel = true
 branch = true
+concurrency = ["multiprocessing"]
 source = ["webdav4", "tests"]
 
 [tool.coverage.report]
@@ -129,7 +131,7 @@ exclude_lines = [
 source = ["src", "*/site-packages"]
 
 [tool.pytest.ini_options]
-addopts = "-ra"
+addopts = "-ra --cov -nauto"
 
 [tool.black]
 line-length = 79
