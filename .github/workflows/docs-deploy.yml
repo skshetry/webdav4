@@ -9,17 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-
-      - name: Install requirements
-        run: pip install -U pip wheel hatch
-
-      - name: Build documentation
-        run: hatch run docs
-
-      - name: Upload to gh-pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/docs/
+      - uses: actions/setup-python@v4
+      - run: pip install -U pip wheel hatch
+      - run: hatch run docs
