@@ -104,6 +104,7 @@ lint = [
     "pylint src tests",
     "mypy",
 ]
+cov-xml = ["tests", "coverage xml"]
 docs = "sphinx-build docs build/docs"
 
 [tool.hatch.envs.upstream.scripts]

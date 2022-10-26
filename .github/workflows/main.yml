@@ -64,9 +64,7 @@ jobs:
       - run: python -m pip install --upgrade hatch
       - run: hatch version
       - run: hatch run lint
-      - run: |
-          hatch run tests
-          coverage xml  # coverage.xml is not being generated
+      - run: hatch run cov-xml
       - uses: codecov/codecov-action@v3
       - run: hatch build
       - run: hatch run docs
