@@ -103,7 +103,8 @@ dependencies = ["importlib_metadata"]
 tests = [
   """python -c "\
 from importlib_metadata import version
-print(version('fsspec'))"""",
+print(version('fsspec'))"\
+""",
   "pytest"
 ]
 lint = [
