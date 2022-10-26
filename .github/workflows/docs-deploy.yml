@@ -6,6 +6,9 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_COLOR: "1"
+
 jobs:
   docs:
     timeout-minutes: 5

@@ -10,6 +10,9 @@ on:
 
 permissions: {}
 
+env:
+  FORCE_COLOR: "1"
+
 jobs:
   build-and-publish:
     timeout-minutes: 5
