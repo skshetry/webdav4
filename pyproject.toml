@@ -101,9 +101,9 @@ dependencies = ["importlib_metadata"]
 
 [tool.hatch.envs.default.scripts]
 tests = [
-  """python -c '\
+  """python -c "\
 from importlib_metadata import version
-print(version("fsspec"))'""",
+print(version('fsspec'))"""",
   "pytest"
 ]
 lint = [
