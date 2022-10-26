@@ -18,8 +18,7 @@ on:
         - default
         - upstream
 
-permissions:
-  contents: none
+permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
