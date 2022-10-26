@@ -17,6 +17,7 @@ on:
         options:
         - default
         - upstream
+        - lower-bound
 
 permissions: {}
 

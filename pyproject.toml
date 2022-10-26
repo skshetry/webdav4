@@ -51,6 +51,7 @@ docs = [
   "sphinx-copybutton==0.5",
 ]
 fsspec = [
+  # when changing lower-bound, keep `lower-bound` env dependencies up-to-date.
   "fsspec>=2021.7",
 ]
 http2 = [
@@ -98,7 +99,7 @@ type = "virtual"
 path = ".hatch"
 
 [tool.hatch.envs.default.scripts]
-tests = "pytest"
+tests = ["python -c 'from importlib.metadata import version; print(version(\"fsspec\"))'", "pytest"]
 lint = [
     "pre-commit run --all-files --show-diff-on-failure",
     "pylint src tests",
@@ -107,10 +108,13 @@ lint = [
 cov-xml = ["tests", "coverage xml"]
 docs = "sphinx-build docs build/docs"
 
-[tool.hatch.envs.upstream.scripts]
+[tool.hatch.envs.upstream]
 dependencies = [
     "fsspec @ git+https://github.com/fsspec/filesystem_spec.git",
 ]
+
+[tool.hatch.envs.lower-bound]
+dependencies = ["fsspec==2021.7"]
 
 [tool.coverage.run]
 parallel = true
