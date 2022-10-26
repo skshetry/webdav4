@@ -97,9 +97,15 @@ packages = ["src/webdav4"]
 features = ["dev"]
 type = "virtual"
 path = ".hatch"
+dependencies = ["importlib_metadata"]
 
 [tool.hatch.envs.default.scripts]
-tests = ["python -c 'from importlib.metadata import version; print(version(\"fsspec\"))'", "pytest"]
+tests = [
+  """python -c '\
+from importlib_metadata import version
+print(version("fsspec"))'""",
+  "pytest"
+]
 lint = [
     "pre-commit run --all-files --show-diff-on-failure",
     "pylint src tests",
