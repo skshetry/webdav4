@@ -95,6 +95,7 @@ packages = ["src/webdav4"]
 [tool.hatch.envs.default]
 features = ["dev"]
 type = "virtual"
+path = ".hatch"
 
 [tool.hatch.envs.default.scripts]
 tests = "pytest"
