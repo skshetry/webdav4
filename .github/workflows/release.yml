@@ -28,7 +28,7 @@ jobs:
 
       - run: python -m pip install --upgrade hatch
       - if: ${{ !startsWith(github.ref, 'refs/tags') }}
-        run: echo version=$(hatch version | awk -F+ '{print $1}') >> $GITHUB_ENV
+        run: echo version=$(hatch version | awk -F+ '{print $1}' | tail -1) >> $GITHUB_ENV
         env:
           NO_COLOR: "1"
 
