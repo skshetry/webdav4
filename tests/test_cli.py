@@ -1,5 +1,6 @@
 """Testing dav cli."""
 import os
+import re
 import sys
 import textwrap
 from argparse import Namespace
@@ -48,6 +49,12 @@ class MemoryFileSystem(_MemoryFS):  # pylint: disable=abstract-method
         super().__init__(*args, **storage_options)
         self.store: Dict[str, Any] = {}
         self.pseudo_dirs: List[str] = []
+
+
+def escape_ansi(line: str) -> str:
+    """Escape ansi."""
+    ansi_escape = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
+    return ansi_escape.sub("", line)
 
 
 @pytest.fixture(autouse=True)
@@ -264,7 +271,7 @@ def test_du_cli(capsys: CaptureFixture, path: str, text: str):
     CommandDiskUsage(ns, mfs).run()
 
     out, _ = capsys.readouterr()
-    assert text in out
+    assert text in escape_ansi(out)
     mfs.clear_instance_cache()
 
 
@@ -493,14 +500,16 @@ def test_ls_cli(capsys: CaptureFixture):
         Apr 05 09:40 148.0k README.md
         Jun 03 03:33   6.2M my-docs.docx"""
         )
-        in out
+        in escape_ansi(out)
     )
 
     ns = Namespace(
         path="data/foo", recursive=True, level=None, full_path=False
     )
     CommandLS(ns, mfs).run()
-    assert capsys.readouterr() == ("-  3 foo\n", "")
+    out, err = capsys.readouterr()
+    assert not err
+    assert escape_ansi(out) == "-  3 foo\n"
 
     with pytest.raises(FileNotFoundError):
         ns = Namespace(
