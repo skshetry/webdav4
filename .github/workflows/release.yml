@@ -8,6 +8,8 @@ on:
     types:
       - released
 
+permissions: {}
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
@@ -20,7 +22,7 @@ jobs:
         with:
             python-version: 3.7
 
-      - run: pip install -U pip wheel hatch
+      - run: python -m pip install --upgrade hatch
       - if: ${{ !startsWith(github.ref, 'refs/tags') }}
         run: |
           version=$(hatch version | awk -F+ '{print $1}' | tail -1)

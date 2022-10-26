@@ -18,6 +18,8 @@ on:
         - default
         - upstream
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
@@ -40,8 +42,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.pyv }}
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
 
-      - run: python -m pip install -U pip wheel hatch
+      - run: python -m pip install --upgrade hatch
       - run: hatch version
       - run: hatch run lint
       - run: hatch run tests --cov-report=xml
