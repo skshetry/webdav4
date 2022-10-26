@@ -8,6 +8,7 @@ permissions:
 
 jobs:
   docs:
+    timeout-minutes: 5
     name: Documentation
     runs-on: ubuntu-latest
     steps:
