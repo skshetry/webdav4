@@ -8,7 +8,7 @@ from webdav4.urls import (
     join_url_path,
     normalize_path,
     relative_url_to,
-    strip_leading_slash,
+    strip_trailing_slash,
 )
 
 
@@ -144,4 +144,4 @@ def test_normalize_url(path: str, expected: str):
 )
 def test_strip_leading_slash(path: str, expected: str):
     """Test that it strips leading slash, except the "/" only urls."""
-    assert strip_leading_slash(path) == expected
+    assert strip_trailing_slash(path) == expected
