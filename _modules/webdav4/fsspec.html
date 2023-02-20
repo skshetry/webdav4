@@ -219,6 +219,7 @@
     <span class="n">NamedTuple</span><span class="p">,</span>
     <span class="n">NoReturn</span><span class="p">,</span>
     <span class="n">Optional</span><span class="p">,</span>
+    <span class="n">SupportsIndex</span><span class="p">,</span>
     <span class="n">TextIO</span><span class="p">,</span>
     <span class="n">Tuple</span><span class="p">,</span>
     <span class="n">Type</span><span class="p">,</span>
@@ -287,8 +288,8 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">base_url</span><span class="p">:</span> <span class="s2">&quot;URLTypes&quot;</span><span class="p">,</span>
-        <span class="n">auth</span><span class="p">:</span> <span class="s2">&quot;AuthTypes&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">client</span><span class="p">:</span> <span class="s2">&quot;Client&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">auth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;AuthTypes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Client&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">client_opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate WebdavFileSystem with base_url and auth.</span>
@@ -356,7 +357,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="WebdavFileSystem.rm"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.WebdavFileSystem.rm">[docs]</a>    <span class="k">def</span> <span class="nf">rm</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">maxdepth</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">maxdepth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Delete files and directories.&quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strip_protocol</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -370,7 +374,7 @@
         <span class="n">path1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">path2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">on_error</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">on_error</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy files and directories.&quot;&quot;&quot;</span>
@@ -393,7 +397,7 @@
         <span class="n">path1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">path2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">recursive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-        <span class="n">maxdepth</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">maxdepth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Move a file/directory from one path to the other.&quot;&quot;&quot;</span>
@@ -479,9 +483,9 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rb&quot;</span><span class="p">,</span>
-        <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">block_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">autocommit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">cache_options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cache_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;WebdavFile&quot;</span><span class="p">,</span> <span class="s2">&quot;UploadFile&quot;</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a file-like object from the filesystem.&quot;&quot;&quot;</span>
@@ -532,9 +536,9 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">fobj</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">,</span>
         <span class="n">rpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">callback</span><span class="p">:</span> <span class="s2">&quot;Callback&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Callback&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-        <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Upload contents from the fileobj to the remote path.&quot;&quot;&quot;</span>
@@ -564,7 +568,7 @@
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">lpath</span><span class="p">:</span> <span class="s2">&quot;PathLike[AnyStr]&quot;</span><span class="p">,</span>
         <span class="n">rpath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">callback</span><span class="p">:</span> <span class="s2">&quot;Callback&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Callback&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy file to remote webdav server.&quot;&quot;&quot;</span>
@@ -593,10 +597,10 @@
         <span class="n">fs</span><span class="p">:</span> <span class="s2">&quot;WebdavFileSystem&quot;</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;rb&quot;</span><span class="p">,</span>
-        <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">block_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">autocommit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">cache_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;readahead&quot;</span><span class="p">,</span>
-        <span class="n">cache_options</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">cache_options</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate a file-like object with the provided options.</span>
@@ -668,7 +672,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">closed</span> <span class="o">=</span> <span class="kc">True</span></div>
 
     <span class="k">def</span> <span class="nf">__reduce_ex__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="nb">int</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">:</span> <span class="n">SupportsIndex</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="s2">&quot;ReopenArgs&quot;</span><span class="p">],</span> <span class="n">Type</span><span class="p">[</span><span class="s2">&quot;WebdavFile&quot;</span><span class="p">]],</span> <span class="s2">&quot;ReopenArgs&quot;</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Recreate/reopen file when restored.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">reopen</span><span class="p">,</span> <span class="n">ReopenArgs</span><span class="p">(</span>  <span class="c1"># pragma: no cover</span>
@@ -729,7 +733,7 @@
         <span class="n">fs</span><span class="p">:</span> <span class="s2">&quot;WebdavFileSystem&quot;</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;wb&quot;</span><span class="p">,</span>
-        <span class="n">block_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">block_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Extended interface with path and fs.&quot;&quot;&quot;</span>
         <span class="k">assert</span> <span class="n">fs</span>
@@ -795,7 +799,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read bytes into the given buffer.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">read_into</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="UploadFile.readuntil"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readuntil">[docs]</a>    <span class="k">def</span> <span class="nf">readuntil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">char</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+<div class="viewcode-block" id="UploadFile.readuntil"><a class="viewcode-back" href="../../reference/fsspec.html#webdav4.fsspec.UploadFile.readuntil">[docs]</a>    <span class="k">def</span> <span class="nf">readuntil</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">char</span><span class="p">:</span> <span class="nb">bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Read until the given character is found.&quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">AbstractBufferedFile</span><span class="o">.</span><span class="n">readuntil</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">char</span><span class="o">=</span><span class="n">char</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="n">blocks</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span></div></div>
