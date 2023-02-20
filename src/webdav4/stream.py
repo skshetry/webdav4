@@ -26,13 +26,16 @@ if TYPE_CHECKING:
     from array import ArrayType
     from ctypes import _CData
     from mmap import mmap
+    from pickle import PickleBuffer  # nosec B403
 
     from .client import Client
     from .http import Client as HTTPClient
     from .types import HTTPResponse, URLTypes
 
 
-Buffer = Union[bytearray, memoryview, "ArrayType[Any]", "mmap", "_CData"]
+Buffer = Union[
+    bytearray, memoryview, "ArrayType[Any]", "mmap", "_CData", "PickleBuffer"
+]
 
 
 def request(
@@ -52,7 +55,7 @@ def request(
 def iter_url(  # noqa: C901
     client: "Client",
     url: "URLTypes",
-    chunk_size: int = None,
+    chunk_size: Optional[int] = None,
     pos: int = 0,
 ) -> Iterator[Tuple["HTTPResponse", Iterator[bytes]]]:
     """Iterate over chunks requested from url.
@@ -106,7 +109,7 @@ class IterStream(RawIOBase):
         self,
         client: "Client",
         url: "URLTypes",
-        chunk_size: int = None,
+        chunk_size: Optional[int] = None,
     ) -> None:
         """Pass a iterator to stream through."""
         super().__init__()
@@ -158,7 +161,7 @@ class IterStream(RawIOBase):
 
     def __enter__(self) -> "IterStream":
         """Send a streaming response."""
-        #  pylint: disable=no-member
+        #  pylint: disable=no-member,unpacking-non-sequence
         self._initial_response, self._iterator = self._cm.__enter__()
         return self
 
@@ -204,7 +207,7 @@ class IterStream(RawIOBase):
         self._cm = iter_url(
             self.client, self.url, pos=loc, chunk_size=self.chunk_size
         )
-        #  pylint: disable=no-member
+        #  pylint: disable=no-member,unpacking-non-sequence
         _, self._iterator = self._cm.__enter__()
         self.loc = loc
         return loc
@@ -272,7 +275,9 @@ class IterStream(RawIOBase):
         return read_into(self, sequence, read_once=True)  # type: ignore
 
 
-def read_chunks(obj: IO[AnyStr], chunk_size: int = None) -> Iterator[AnyStr]:
+def read_chunks(
+    obj: IO[AnyStr], chunk_size: Optional[int] = None
+) -> Iterator[AnyStr]:
     """Read file object in chunks."""
     func = partial(obj.read, chunk_size or DEFAULT_BUFFER_SIZE)
     return takewhile(bool, repeat_func(func))

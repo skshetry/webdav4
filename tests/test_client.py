@@ -457,9 +457,7 @@ def test_try_remove_locked_resource_non_coll(
     assert str(exc_info.value) == "the resource is locked"
 
 
-def test_try_remove_locked_resource_coll(
-    storage_dir: TmpDir, client: Client, server_address: URL
-):
+def test_try_remove_locked_resource_coll(storage_dir: TmpDir, client: Client):
     """Test trying to remove a resource that is locked."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
     lock_resource(client, "data")

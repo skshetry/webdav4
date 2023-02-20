@@ -15,6 +15,7 @@ from typing import (
     NamedTuple,
     NoReturn,
     Optional,
+    SupportsIndex,
     TextIO,
     Tuple,
     Type,
@@ -83,8 +84,8 @@ class WebdavFileSystem(AbstractFileSystem):
     def __init__(
         self,
         base_url: "URLTypes",
-        auth: "AuthTypes" = None,
-        client: "Client" = None,
+        auth: Optional["AuthTypes"] = None,
+        client: Optional["Client"] = None,
         **client_opts: Any,
     ) -> None:
         """Instantiate WebdavFileSystem with base_url and auth.
@@ -152,7 +153,10 @@ class WebdavFileSystem(AbstractFileSystem):
         return self.client.remove(path)
 
     def rm(
-        self, path: str, recursive: bool = False, maxdepth: int = None
+        self,
+        path: str,
+        recursive: bool = False,
+        maxdepth: Optional[int] = None,
     ) -> None:
         """Delete files and directories."""
         path = self._strip_protocol(path)
@@ -166,7 +170,7 @@ class WebdavFileSystem(AbstractFileSystem):
         path1: str,
         path2: str,
         recursive: bool = False,
-        on_error: str = None,
+        on_error: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         """Copy files and directories."""
@@ -189,7 +193,7 @@ class WebdavFileSystem(AbstractFileSystem):
         path1: str,
         path2: str,
         recursive: bool = False,
-        maxdepth: bool = None,
+        maxdepth: Optional[bool] = None,
         **kwargs: Any,
     ) -> None:
         """Move a file/directory from one path to the other."""
@@ -275,9 +279,9 @@ class WebdavFileSystem(AbstractFileSystem):
         self,
         path: str,
         mode: str = "rb",
-        block_size: int = None,
+        block_size: Optional[int] = None,
         autocommit: bool = True,
-        cache_options: Dict[str, str] = None,
+        cache_options: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> Union["WebdavFile", "UploadFile"]:
         """Return a file-like object from the filesystem."""
@@ -328,9 +332,9 @@ class WebdavFileSystem(AbstractFileSystem):
         self,
         fobj: BinaryIO,
         rpath: str,
-        callback: "Callback" = None,
+        callback: Optional["Callback"] = None,
         overwrite: bool = True,
-        size: int = None,
+        size: Optional[int] = None,
         **kwargs: Any,
     ) -> None:
         """Upload contents from the fileobj to the remote path."""
@@ -360,7 +364,7 @@ class WebdavFileSystem(AbstractFileSystem):
         self,
         lpath: "PathLike[AnyStr]",
         rpath: str,
-        callback: "Callback" = None,
+        callback: Optional["Callback"] = None,
         **kwargs: Any,
     ) -> None:
         """Copy file to remote webdav server."""
@@ -389,10 +393,10 @@ class WebdavFile(AbstractBufferedFile):
         fs: "WebdavFileSystem",
         path: str,
         mode: str = "rb",
-        block_size: int = None,
+        block_size: Optional[int] = None,
         autocommit: bool = True,
         cache_type: str = "readahead",
-        cache_options: Dict[str, str] = None,
+        cache_options: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> None:
         """Instantiate a file-like object with the provided options.
@@ -464,7 +468,7 @@ class WebdavFile(AbstractBufferedFile):
         self.closed = True
 
     def __reduce_ex__(
-        self, protocol: int
+        self, protocol: SupportsIndex
     ) -> Tuple[Callable[["ReopenArgs"], Type["WebdavFile"]], "ReopenArgs"]:
         """Recreate/reopen file when restored."""
         return reopen, ReopenArgs(  # pragma: no cover
@@ -525,7 +529,7 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         fs: "WebdavFileSystem",
         path: str,
         mode: str = "wb",
-        block_size: int = None,
+        block_size: Optional[int] = None,
     ):
         """Extended interface with path and fs."""
         assert fs
@@ -591,7 +595,9 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         """Read bytes into the given buffer."""
         return read_into(self, b)
 
-    def readuntil(self, char: bytes = b"\n", blocks: int = None) -> bytes:
+    def readuntil(
+        self, char: bytes = b"\n", blocks: Optional[int] = None
+    ) -> bytes:
         """Read until the given character is found."""
         ret = AbstractBufferedFile.readuntil(self, char=char, blocks=blocks)
         return cast(bytes, ret)

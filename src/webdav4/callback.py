@@ -1,7 +1,16 @@
 """Utilities to wrap file objects for callback purposes."""
 from collections.abc import Iterable
 from functools import wraps
-from typing import IO, TYPE_CHECKING, Any, AnyStr, Callable, Iterator, cast
+from typing import (
+    IO,
+    TYPE_CHECKING,
+    Any,
+    AnyStr,
+    Callable,
+    Iterator,
+    Optional,
+    cast,
+)
 
 if TYPE_CHECKING:
     from typing_extensions import Literal
@@ -20,7 +29,7 @@ class CallbackIOWrapper(Iterable):
     def __init__(
         self,
         stream: IO[AnyStr],
-        callback: CallbackFn = None,
+        callback: Optional[CallbackFn] = None,
         method: "Literal['read', 'write']" = "read",
     ) -> None:
         """Pass stream and callback and appropriate method to wrap."""
@@ -93,7 +102,7 @@ class CallbackIOWrapper(Iterable):
 
 def wrap_file_like(
     file_obj: IO[AnyStr],
-    callback: CallbackFn = None,
+    callback: Optional[CallbackFn] = None,
     method: "Literal['read', 'write']" = "read",
 ) -> IO[AnyStr]:
     """Wrap a file-like object that reports to callback on r/w operation.

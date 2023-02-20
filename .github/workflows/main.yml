@@ -36,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        pyv: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        pyv: ["3.8", "3.9", "3.10", "3.11"]
     env:
       HATCH_ENV: ${{ inputs.fsspec || (github.event_name == 'schedule' && 'upstream' || 'default')}}
 

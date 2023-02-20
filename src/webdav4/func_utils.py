@@ -8,6 +8,7 @@ from typing import (
     Callable,
     Iterable,
     Iterator,
+    Optional,
     Type,
     TypeVar,
     Union,
@@ -19,7 +20,9 @@ _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
 
 
-def repeat_func(func: Callable[[], _T], times: int = None) -> Iterator[_T]:
+def repeat_func(
+    func: Callable[[], _T], times: Optional[int] = None
+) -> Iterator[_T]:
     """Repeatedly calls a function multiple times.
 
     It will call infinite times if not specified, otherwise as many times as
@@ -33,7 +36,7 @@ def retry(  # noqa: C901
     retries: int,
     errors: Iterable[Type[Exception]],
     timeout: Union[float, Callable[[int], float]] = 0,
-    filter_errors: Callable[[Exception], bool] = None,
+    filter_errors: Optional[Callable[[Exception], bool]] = None,
 ) -> Callable[..., _T]:
     """Retry a given function."""
     _errors = tuple(errors)

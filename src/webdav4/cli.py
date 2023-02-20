@@ -81,7 +81,7 @@ class LSTheme:
     """
 
     def __init__(
-        self, lscolors: str = None, dir_trailing_slash: bool = False
+        self, lscolors: Optional[str] = None, dir_trailing_slash: bool = False
     ) -> None:
         """Build theme from optional lscolors and other configs."""
         self.extensions: Dict[str, str] = {}
@@ -524,7 +524,9 @@ def prepare_url_auth(  # noqa: C901
 class Command:
     """Base class for all commands."""
 
-    def __init__(self, args: Namespace, fs: AbstractFileSystem = None) -> None:
+    def __init__(
+        self, args: Namespace, fs: Optional[AbstractFileSystem] = None
+    ) -> None:
         """Pass the arguments and optionally fs."""
         self.args = args
         self.auth = None
@@ -784,6 +786,8 @@ class CommandSync(Command):
                 return datetime.utcfromtimestamp(mtime).replace(
                     tzinfo=timezone.utc
                 )
+            if isinstance(mtime, datetime):
+                return mtime.astimezone(timezone.utc)
             return mtime
 
         src_type = src_details.get("type")
@@ -799,6 +803,7 @@ class CommandSync(Command):
         if src_type == dest_type == "file":
             if src_size != dest_size:
                 return True
+
             if src_modified and dest_modified and src_modified > dest_modified:
                 return True
         if src_type == dest_type == "directory":
@@ -1113,14 +1118,16 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
     }
 
 
-def run_cmd(args: Namespace, fs: AbstractFileSystem = None) -> Optional[int]:
+def run_cmd(
+    args: Namespace, fs: Optional[AbstractFileSystem] = None
+) -> Optional[int]:
     """Run cmd from given args."""
     cmd = cast(Command, args.func(args, fs=fs))
     cmd.run()
     return 0
 
 
-def main(argv: List[str] = None) -> Optional[int]:
+def main(argv: Optional[List[str]] = None) -> Optional[int]:
     """Command line entrypoint."""
     parser, subparsers = get_parser()
     args = parser.parse_args(argv)

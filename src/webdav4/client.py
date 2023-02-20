@@ -180,7 +180,9 @@ class FeatureDetection:
     supports_ranges: bool
     dav_compliances: Set[str]
 
-    def __init__(self, options_response: "HTTPResponse" = None) -> None:
+    def __init__(
+        self, options_response: Optional["HTTPResponse"] = None
+    ) -> None:
         """Initialize with the given response."""
         dav_compliances = set()
         supports_ranges = False
@@ -201,8 +203,8 @@ class Client:
     def __init__(
         self,
         base_url: "URLTypes",
-        auth: "AuthTypes" = None,
-        http_client: "HTTPClient" = None,
+        auth: Optional["AuthTypes"] = None,
+        http_client: Optional["HTTPClient"] = None,
         retry: Union[Callable[[Callable[[], _T]], _T], bool] = True,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         **client_opts: Any,
@@ -302,8 +304,8 @@ class Client:
     def propfind(
         self,
         path: str,
-        data: str = None,
-        headers: "HeaderTypes" = None,
+        data: Optional[str] = None,
+        headers: Optional["HeaderTypes"] = None,
         follow_redirects: bool = False,
     ) -> "MultiStatusResponse":
         """Returns properties of the specific resource by propfind request."""
@@ -321,9 +323,9 @@ class Client:
     def get_props(
         self,
         path: str,
-        name: str = None,
-        namespace: str = None,
-        data: str = None,
+        name: Optional[str] = None,
+        namespace: Optional[str] = None,
+        data: Optional[str] = None,
     ) -> "DAVProperties":
         """Returns properties of a resource by doing a propfind request.
 
@@ -335,7 +337,9 @@ class Client:
         response = result.get_response_for_path(self.base_url.path, path)
         return response.properties
 
-    def get_property(self, path: str, name: str, namespace: str = None) -> Any:
+    def get_property(
+        self, path: str, name: str, namespace: Optional[str] = None
+    ) -> Any:
         """Returns appropriate property from the propfind response.
 
         Also supports getting named properties
@@ -589,8 +593,8 @@ class Client:
         self,
         path: str,
         mode: str = "r",
-        encoding: str = None,
-        chunk_size: int = None,
+        encoding: Optional[str] = None,
+        chunk_size: Optional[int] = None,
     ) -> Iterator[Union[TextIO, BinaryIO]]:
         """Returns file-like object to a resource."""
         if self.isdir(path):
@@ -618,8 +622,8 @@ class Client:
         self,
         from_path: str,
         file_obj: BinaryIO,
-        callback: Callable[[int], Any] = None,
-        chunk_size: int = None,
+        callback: Optional[Callable[[int], Any]] = None,
+        chunk_size: Optional[int] = None,
     ) -> None:
         """Write stream from path to given file object."""
         with self.open(
@@ -634,8 +638,8 @@ class Client:
         self,
         from_path: str,
         to_path: "PathLike[AnyStr]",
-        chunk_size: int = None,
-        callback: Callable[[int], Any] = None,
+        chunk_size: Optional[int] = None,
+        callback: Optional[Callable[[int], Any]] = None,
     ) -> None:
         """Download file from remote path to local path."""
         with open(to_path, mode="wb") as fobj:
@@ -648,8 +652,8 @@ class Client:
         from_path: "PathLike[AnyStr]",
         to_path: str,
         overwrite: bool = False,
-        chunk_size: int = None,
-        callback: Callable[[int], Any] = None,
+        chunk_size: Optional[int] = None,
+        callback: Optional[Callable[[int], Any]] = None,
     ) -> None:
         """Upload file from local path to a given remote path."""
         with open(from_path, mode="rb") as fobj:
@@ -666,9 +670,9 @@ class Client:
         file_obj: BinaryIO,
         to_path: str,
         overwrite: bool = False,
-        callback: Callable[[int], Any] = None,
-        chunk_size: int = None,
-        size: int = None,
+        callback: Optional[Callable[[int], Any]] = None,
+        chunk_size: Optional[int] = None,
+        size: Optional[int] = None,
     ) -> None:
         """Upload file from file object to given path."""
         # we try to avoid chunked transfer as much as possible

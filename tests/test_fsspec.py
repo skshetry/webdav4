@@ -114,7 +114,7 @@ def test_fs_ls(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
         fs.ls("data/not-existing-file")
 
 
-def test_open(storage_dir: TmpDir, fs: WebdavFileSystem, server_address: URL):
+def test_open(storage_dir: TmpDir, fs: WebdavFileSystem):
     """Test opening a remote file from webdav."""
     storage_dir.gen({"data": {"foo": "foo"}})
 

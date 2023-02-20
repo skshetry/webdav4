@@ -41,7 +41,7 @@ class DAVProperties:
     Only supports a certain set of properties to extract. Others are ignored.
     """
 
-    def __init__(self, response_xml: Element = None):
+    def __init__(self, response_xml: Optional[Element] = None):
         """Parses props to certain attributes.
 
         Args:
@@ -248,7 +248,7 @@ class MultiStatusResponse:
 
 # TODO: support `allprop`?
 def prepare_propfind_request_data(
-    name: str = None, namespace: str = None
+    name: Optional[str] = None, namespace: Optional[str] = None
 ) -> Optional[str]:
     """Prepares propfind request data from specified name.
 
