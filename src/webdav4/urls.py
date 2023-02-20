@@ -4,15 +4,15 @@ from re import sub
 from httpx import URL
 
 
-def strip_leading_slash(path: str) -> str:
-    """Strips leading slash from the path, except when it's a root."""
+def strip_trailing_slash(path: str) -> str:
+    """Strips trailing slash from the path, except when it's a root."""
     return path.rstrip("/") if path and path != "/" else path
 
 
 def normalize_path(path: str) -> str:
-    """Normalizes path, removes leading slash."""
+    """Normalizes path, removes trailing slash."""
     path = sub("/{2,}", "/", path)
-    return strip_leading_slash(path)
+    return strip_trailing_slash(path)
 
 
 def join_url(

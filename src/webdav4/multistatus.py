@@ -7,7 +7,7 @@ from xml.etree.ElementTree import fromstring as str2xml
 from xml.etree.ElementTree import tostring as xml2string
 
 from .date_utils import from_rfc1123, fromisoformat
-from .urls import URL, join_url_path, relative_url_to, strip_leading_slash
+from .urls import URL, join_url_path, relative_url_to, strip_trailing_slash
 
 if TYPE_CHECKING:
     from httpx import Response as HTTPResponse
@@ -138,7 +138,7 @@ class Response:
         # path_norm is the path-absolute without differentiating
         # `/` at the end. Used as a key for the responses.
         # but does have a slash in front.
-        self.path_norm = strip_leading_slash(self.path)
+        self.path_norm = strip_trailing_slash(self.path)
 
         status_line = prop(response_xml, "status")
         code = None
