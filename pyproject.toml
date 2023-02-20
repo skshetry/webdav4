@@ -47,7 +47,7 @@ docs = [
   "furo==2022.9.29",
   "myst-parser==0.18.1",
   "Sphinx==5.3",
-  "sphinx-copybutton==0.5",
+  "sphinx-copybutton==0.5.1",
 ]
 fsspec = [
   # when changing lower-bound, keep `lower-bound` env dependencies up-to-date.
