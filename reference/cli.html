@@ -208,7 +208,7 @@
 <p>If <code class="docutils literal notranslate"><span class="pre">webdav4</span></code> is installed with <code class="docutils literal notranslate"><span class="pre">fsspec</span></code> package, <code class="docutils literal notranslate"><span class="pre">dav</span></code> CLI similar to <code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span></code> is
 also available to make it easier for the interaction.</p>
 <p>If not, you can install it as follows:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -U <span class="s2">&quot;webdav4[fsspec]&quot;</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span><span class="s2">&quot;webdav4[fsspec]&quot;</span>
 </pre></div>
 </div>
 <section id="common-arguments">
@@ -216,7 +216,7 @@ also available to make it easier for the interaction.</p>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">--endpoint-url</span></code>: Path to the server/hostname. Can also be specified through
 <code class="docutils literal notranslate"><span class="pre">WEBDAV_ENDPOINT_URL</span></code> environment variable (and the url can contain password and user information as well).</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">WEBDAV_ENDPOINT_URL</span><span class="o">=</span><span class="s2">&quot;https://user:password@webdav.server.org/remote.php/dav/files/user&quot;</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">WEBDAV_ENDPOINT_URL</span><span class="o">=</span><span class="s2">&quot;https://user:password@webdav.server.org/remote.php/dav/files/user&quot;</span>
 </pre></div>
 </div>
 </li>
@@ -271,14 +271,14 @@ except when between remotes.</p>
 <p><strong>Periodically sync files</strong></p>
 <p>Similar to <code class="docutils literal notranslate"><span class="pre">aws</span> <span class="pre">s3</span> <span class="pre">sync</span></code> and uses file sizes and modified times
 to sync intelligently between local-remote, remote-local and local-remote.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dav sync dir dav://path/to/dir  <span class="c1"># local to remote</span>
-dav sync dav://path/to/dir dir  <span class="c1"># remote to local</span>
-dav sync dav://path/dir1 dav://path/dir2  <span class="c1"># remote-remote</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dav<span class="w"> </span>sync<span class="w"> </span>dir<span class="w"> </span>dav://path/to/dir<span class="w">  </span><span class="c1"># local to remote</span>
+dav<span class="w"> </span>sync<span class="w"> </span>dav://path/to/dir<span class="w"> </span>dir<span class="w">  </span><span class="c1"># remote to local</span>
+dav<span class="w"> </span>sync<span class="w"> </span>dav://path/dir1<span class="w"> </span>dav://path/dir2<span class="w">  </span><span class="c1"># remote-remote</span>
 </pre></div>
 </div>
 <p><strong>Run multiple commands at once</strong></p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dav run commands.txt  <span class="c1"># or,</span>
-cat commands.txt <span class="p">|</span> dav run -
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dav<span class="w"> </span>run<span class="w"> </span>commands.txt<span class="w">  </span><span class="c1"># or,</span>
+cat<span class="w"> </span>commands.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>dav<span class="w"> </span>run<span class="w"> </span>-
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">commands.txt</span></code> can look something like follows:</p>

@@ -211,8 +211,8 @@
 <section id="setup">
 <h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading">#</a></h2>
 <p>Install all the requirements with:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install pip&gt;<span class="o">=</span><span class="m">21</span>.3  <span class="c1"># required for editable installs</span>
-pip install -e <span class="s2">&quot;.[dev]&quot;</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pip&gt;<span class="o">=</span><span class="m">21</span>.3<span class="w">  </span><span class="c1"># required for editable installs</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span><span class="s2">&quot;.[dev]&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -224,11 +224,11 @@ The code changes are expected to have tests.</p>
 <h3>Test Servers<a class="headerlink" href="#test-servers" title="Permalink to this heading">#</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">webdav4</span></code> also provides a test server, that it uses in the <code class="docutils literal notranslate"><span class="pre">tests</span></code> itself.</p>
 <p>It can be run with the following commands:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python -m tests.server
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>tests.server
 </pre></div>
 </div>
 <p>You can also run it in an interactive python session with <code class="docutils literal notranslate"><span class="pre">-i/--interactive</span></code> flag:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python -m tests.server -i
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>tests.server<span class="w"> </span>-i
 </pre></div>
 </div>
 <p>This will open a <code class="docutils literal notranslate"><span class="pre">python</span></code> session and provides a few variables like <code class="docutils literal notranslate"><span class="pre">fs</span></code>,
@@ -249,7 +249,7 @@ For example, for me, running in <code class="docutils literal notranslate"><span
 <p>Please install <code class="docutils literal notranslate"><span class="pre">pre-commit</span></code> and add the hooks, so that it enforces proper
 code standard in your code changes.</p>
 <p>Also make sure to run <code class="docutils literal notranslate"><span class="pre">pylint</span></code> and <code class="docutils literal notranslate"><span class="pre">mypy</span></code>.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pylint src tests
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pylint<span class="w"> </span>src<span class="w"> </span>tests
 mypy
 </pre></div>
 </div>
