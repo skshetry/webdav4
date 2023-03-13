@@ -45,7 +45,7 @@ dev = [
 ]
 docs = [
   "furo==2022.12.7",
-  "myst-parser==0.18.1",
+  "myst-parser==1.0.0",
   "Sphinx==5.3",
   "sphinx-copybutton==0.5.1",
 ]
