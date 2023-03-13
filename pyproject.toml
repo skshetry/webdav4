@@ -57,7 +57,7 @@ http2 = [
   "httpx[http2]<1.0.0,>=0.20",
 ]
 qa = [
-  "mypy==1.0.1",
+  "mypy==1.1.1",
   "pre-commit",
   "pylint==2.16.2",
   "types-colorama",
