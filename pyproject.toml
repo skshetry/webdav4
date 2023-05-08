@@ -59,7 +59,7 @@ http2 = [
 qa = [
   "mypy==1.0.1",
   "pre-commit",
-  "pylint==2.16.2",
+  "pylint==2.17.4",
   "types-colorama",
   "types-pkg_resources",
   "types-python-dateutil",
