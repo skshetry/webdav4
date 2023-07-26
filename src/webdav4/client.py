@@ -680,7 +680,7 @@ class Client:
         # else, we will try to find that out from the file object
         # if we are not successful in that, we gracefully fallback
         # to the chunked encoding.
-        if size is None:
+        if size is None and chunk_size is None:
             size = peek_filelike_length(file_obj)
 
         headers = {"Content-Length": str(size)} if size is not None else None
