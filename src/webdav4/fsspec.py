@@ -170,6 +170,7 @@ class WebdavFileSystem(AbstractFileSystem):
         path1: str,
         path2: str,
         recursive: bool = False,
+        maxdepth: Optional[int] = None,
         on_error: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
@@ -177,14 +178,19 @@ class WebdavFileSystem(AbstractFileSystem):
         path1 = self._strip_protocol(path1)
         path2 = self._strip_protocol(path2)
 
-        if recursive and not kwargs.get("maxdepth") and self.isdir(path1):
+        if recursive and maxdepth is None and self.isdir(path1):
             return self.cp_file(path1, path2)
 
         if not recursive and self.isdir(path1):
             return self.makedirs(path2)
 
         super().copy(
-            path1, path2, recursive=recursive, on_error=on_error, **kwargs
+            path1,
+            path2,
+            recursive=recursive,
+            maxdepth=maxdepth,
+            on_error=on_error,
+            **kwargs,
         )
         return None
 

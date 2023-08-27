@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from typing import AnyStr
 
     from .multistatus import DAVProperties, MultiStatusResponse
+    from .retry import RetryFunc
     from .types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
 
 _T = TypeVar("_T")
@@ -205,7 +206,7 @@ class Client:
         base_url: "URLTypes",
         auth: Optional["AuthTypes"] = None,
         http_client: Optional["HTTPClient"] = None,
-        retry: Union[Callable[[Callable[[], _T]], _T], bool] = True,
+        retry: Union["RetryFunc", bool] = True,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         **client_opts: Any,
     ) -> None:
@@ -629,10 +630,8 @@ class Client:
         with self.open(
             from_path, mode="rb", chunk_size=chunk_size
         ) as remote_obj:
-            # TODO: fix typings for open to always return BinaryIO on mode=rb
-            remote_obj = cast(BinaryIO, remote_obj)
             wrapped = wrap_file_like(file_obj, callback, method="write")
-            shutil.copyfileobj(remote_obj, wrapped)
+            shutil.copyfileobj(remote_obj, wrapped)  # type: ignore[misc]
 
     def download_file(
         self,

@@ -37,7 +37,7 @@ repos:
           - flake8-string-format
           - flake8-docstrings
     repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
+    rev: 7.1.0
   - repo: https://github.com/econchick/interrogate
     rev: 1.5.0
     hooks:

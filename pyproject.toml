@@ -35,6 +35,8 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 [project.optional-dependencies]
 all = [
@@ -57,9 +59,9 @@ http2 = [
   "httpx[http2]<1.0.0,>=0.20",
 ]
 qa = [
-  "mypy==1.0.1",
+  "mypy==1.10.1",
   "pre-commit",
-  "pylint==2.16.2",
+  "pylint==3.2.5",
   "types-colorama",
   "types-pkg_resources",
   "types-python-dateutil",
@@ -140,7 +142,7 @@ exclude_lines = [
 source = ["src", "*/site-packages"]
 
 [tool.pytest.ini_options]
-addopts = "-ra --cov -nauto"
+addopts = "-ra -nauto -cov=src,tests"
 
 [tool.black]
 line-length = 79
