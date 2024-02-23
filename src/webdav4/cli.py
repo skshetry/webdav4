@@ -1072,11 +1072,11 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
     )
     sync_parser.add_argument(
         "path1",
-        help="Path to move from (locally or remotely if dav:// url is given)",
+        help="Path to sync from (locally or remotely if dav:// url is given)",
     )
     sync_parser.add_argument(
         "path2",
-        help="Path to move to (locally or remotely if dav:// url is given)",
+        help="Path to sync to (locally or remotely if dav:// url is given)",
     )
     sync_parser.add_argument(
         "--delete",
