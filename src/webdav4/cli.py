@@ -1075,7 +1075,9 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
     )
     sync_parser.set_defaults(func=CommandSync)
 
-    du_parser = subparsers.add_parser("du", help="Print remote file content")
+    du_parser = subparsers.add_parser(
+        "du", help="Print sizes of directories/files"
+    )
     du_parser.add_argument(
         "path",
         default="dav://",
