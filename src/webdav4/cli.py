@@ -1041,7 +1041,7 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         action="store_true",
         help="no error if existing, " "make parent directories as needed",
     )
-    mkdir_parser.add_argument("path", help="Path to remove")
+    mkdir_parser.add_argument("path", help="Path to create")
     mkdir_parser.set_defaults(func=CommandMkdir)
 
     run_parser = subparsers.add_parser("run", help="Run multiple commands")
