@@ -992,7 +992,11 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         "to another location locally or in remote.",
     )
     cp_parser.add_argument(
-        "--recursive", "-R", default=False, action="store_true", help=""
+        "--recursive",
+        "-R",
+        default=False,
+        action="store_true",
+        help="Recurse into directories",
     )
     cp_parser.add_argument(
         "path1",
@@ -1010,7 +1014,11 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         "to another location locally or in remote.",
     )
     mv_parser.add_argument(
-        "--recursive", "-R", default=False, action="store_true", help=""
+        "--recursive",
+        "-R",
+        default=False,
+        action="store_true",
+        help="Recurse into directories",
     )
     mv_parser.add_argument(
         "path1",
@@ -1026,7 +1034,11 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         "rm", help="Removes a file from the remote server."
     )
     rm_parser.add_argument(
-        "--recursive", "-R", default=False, action="store_true", help=""
+        "--recursive",
+        "-R",
+        default=False,
+        action="store_true",
+        help="Recurse into directories",
     )
     rm_parser.add_argument("path", help="Path to remove")
     rm_parser.set_defaults(func=CommandRemove)
