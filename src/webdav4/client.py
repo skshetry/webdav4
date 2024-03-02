@@ -654,6 +654,7 @@ class Client:
         overwrite: bool = False,
         chunk_size: Optional[int] = None,
         callback: Optional[Callable[[int], Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
     ) -> None:
         """Upload file from local path to a given remote path."""
         with open(from_path, mode="rb") as fobj:
@@ -663,6 +664,7 @@ class Client:
                 overwrite=overwrite,
                 chunk_size=chunk_size,
                 callback=callback,
+                headers=headers,
             )
 
     def upload_fileobj(
@@ -673,8 +675,12 @@ class Client:
         callback: Optional[Callable[[int], Any]] = None,
         chunk_size: Optional[int] = None,
         size: Optional[int] = None,
+        headers: Optional[Dict[str, str]] = None,
     ) -> None:
         """Upload file from file object to given path."""
+        if headers is None:
+            headers = {}
+
         # we try to avoid chunked transfer as much as possible
         # so we try to use size as a hint if provided.
         # else, we will try to find that out from the file object
@@ -683,7 +689,9 @@ class Client:
         if size is None:
             size = peek_filelike_length(file_obj)
 
-        headers = {"Content-Length": str(size)} if size is not None else None
+        if size is not None:
+            headers = {"Content-Length": str(size), **headers}
+
         if not overwrite and self.exists(to_path):
             raise ResourceAlreadyExists(to_path)
 
