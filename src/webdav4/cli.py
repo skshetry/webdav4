@@ -992,7 +992,11 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         "to another location locally or in remote.",
     )
     cp_parser.add_argument(
-        "--recursive", "-R", default=False, action="store_true", help=""
+        "--recursive",
+        "-R",
+        default=False,
+        action="store_true",
+        help="Recurse into directories",
     )
     cp_parser.add_argument(
         "path1",
@@ -1010,7 +1014,11 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         "to another location locally or in remote.",
     )
     mv_parser.add_argument(
-        "--recursive", "-R", default=False, action="store_true", help=""
+        "--recursive",
+        "-R",
+        default=False,
+        action="store_true",
+        help="Recurse into directories",
     )
     mv_parser.add_argument(
         "path1",
@@ -1026,7 +1034,11 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         "rm", help="Removes a file from the remote server."
     )
     rm_parser.add_argument(
-        "--recursive", "-R", default=False, action="store_true", help=""
+        "--recursive",
+        "-R",
+        default=False,
+        action="store_true",
+        help="Recurse into directories",
     )
     rm_parser.add_argument("path", help="Path to remove")
     rm_parser.set_defaults(func=CommandRemove)
@@ -1041,7 +1053,7 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         action="store_true",
         help="no error if existing, " "make parent directories as needed",
     )
-    mkdir_parser.add_argument("path", help="Path to remove")
+    mkdir_parser.add_argument("path", help="Path to create")
     mkdir_parser.set_defaults(func=CommandMkdir)
 
     run_parser = subparsers.add_parser("run", help="Run multiple commands")
@@ -1060,11 +1072,11 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
     )
     sync_parser.add_argument(
         "path1",
-        help="Path to move from (locally or remotely if dav:// url is given)",
+        help="Path to sync from (locally or remotely if dav:// url is given)",
     )
     sync_parser.add_argument(
         "path2",
-        help="Path to move to (locally or remotely if dav:// url is given)",
+        help="Path to sync to (locally or remotely if dav:// url is given)",
     )
     sync_parser.add_argument(
         "--delete",
@@ -1075,7 +1087,7 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
     )
     sync_parser.set_defaults(func=CommandSync)
 
-    du_parser = subparsers.add_parser("du", help="Print remote file content")
+    du_parser = subparsers.add_parser("du", help="Print sizes of directories/files")
     du_parser.add_argument(
         "path",
         default="dav://",
