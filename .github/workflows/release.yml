@@ -1,12 +1,9 @@
 name: Release webdav4
 
 on:
-  push:
-    branches:
-    - main
   release:
-    types:
-      - released
+    types: [published]
+  workflow_dispatch:
 
 permissions: {}
 
@@ -16,6 +13,9 @@ env:
 jobs:
   build-and-publish:
     timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,9 +26,6 @@ jobs:
         with:
             python-version: 3.8
 
-      - run: pip install build
-      - run: python -m build
-
-      - name: Publish to PyPI
-        if: github.event_name == 'release'
+      - run: pipx run build
+      - if: github.event_name == 'release'
         uses: pypa/gh-action-pypi-publish@release/v1
