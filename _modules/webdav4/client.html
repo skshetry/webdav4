@@ -203,6 +203,7 @@
         <article role="main">
           <h1>Source code for webdav4.client</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Client for the webdav.&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">locale</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">threading</span>
@@ -220,7 +221,6 @@
     <span class="n">Optional</span><span class="p">,</span>
     <span class="n">Set</span><span class="p">,</span>
     <span class="n">TextIO</span><span class="p">,</span>
-    <span class="n">TypeVar</span><span class="p">,</span>
     <span class="n">Union</span><span class="p">,</span>
     <span class="n">cast</span><span class="p">,</span>
 <span class="p">)</span>
@@ -247,9 +247,8 @@
     <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">AnyStr</span>
 
     <span class="kn">from</span> <span class="nn">.multistatus</span> <span class="kn">import</span> <span class="n">DAVProperties</span><span class="p">,</span> <span class="n">MultiStatusResponse</span>
+    <span class="kn">from</span> <span class="nn">.retry</span> <span class="kn">import</span> <span class="n">RetryFunc</span>
     <span class="kn">from</span> <span class="nn">.types</span> <span class="kn">import</span> <span class="n">AuthTypes</span><span class="p">,</span> <span class="n">HeaderTypes</span><span class="p">,</span> <span class="n">HTTPResponse</span><span class="p">,</span> <span class="n">URLTypes</span>
-
-<span class="n">_T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_T&quot;</span><span class="p">)</span>
 
 
 <span class="n">DEFAULT_CHUNK_SIZE</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">22</span>
@@ -282,15 +281,15 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">msg</span></div>
 
 
-<div class="viewcode-block" id="ResourceConflict"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ResourceConflict">[docs]</a><span class="k">class</span> <span class="nc">ResourceConflict</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="ResourceConflict"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ResourceConflict">[docs]</a><span class="k">class</span> <span class="nc">ResourceConflict</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>  <span class="c1"># noqa: N818</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when there was conflict during the operation (got 409).&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="ForbiddenOperation"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ForbiddenOperation">[docs]</a><span class="k">class</span> <span class="nc">ForbiddenOperation</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="ForbiddenOperation"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ForbiddenOperation">[docs]</a><span class="k">class</span> <span class="nc">ForbiddenOperation</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>  <span class="c1"># noqa: N818</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when the operation was forbidden (got 403).&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="ResourceAlreadyExists"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ResourceAlreadyExists">[docs]</a><span class="k">class</span> <span class="nc">ResourceAlreadyExists</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="ResourceAlreadyExists"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ResourceAlreadyExists">[docs]</a><span class="k">class</span> <span class="nc">ResourceAlreadyExists</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>  <span class="c1"># noqa: N818</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Error returned if the resource already exists.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -299,7 +298,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The resource </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> already exists&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="InsufficientStorage"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.InsufficientStorage">[docs]</a><span class="k">class</span> <span class="nc">InsufficientStorage</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="InsufficientStorage"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.InsufficientStorage">[docs]</a><span class="k">class</span> <span class="nc">InsufficientStorage</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>  <span class="c1"># noqa: N818</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Error when the resource does not exist on the server.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -317,19 +316,17 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ResourceLocked"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ResourceLocked">[docs]</a><span class="k">class</span> <span class="nc">ResourceLocked</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="ResourceLocked"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ResourceLocked">[docs]</a><span class="k">class</span> <span class="nc">ResourceLocked</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>  <span class="c1"># noqa: N818</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Error raised when the resource is locked.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="ResourceNotFound"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ResourceNotFound">[docs]</a><span class="k">class</span> <span class="nc">ResourceNotFound</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="ResourceNotFound"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.ResourceNotFound">[docs]</a><span class="k">class</span> <span class="nc">ResourceNotFound</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>  <span class="c1"># noqa: N818</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Error when the resource does not exist on the server.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate exception with path that does not exist.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;The resource </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> could not be found in the server&quot;</span>
-        <span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The resource </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> could not be found in the server&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="HTTPError"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.HTTPError">[docs]</a><span class="k">class</span> <span class="nc">HTTPError</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>
@@ -341,9 +338,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">request</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">request</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;received </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">reason_phrase</span><span class="si">}</span><span class="s2">)&quot;</span>
-        <span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;received </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">reason_phrase</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="IsAResourceError"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.IsAResourceError">[docs]</a><span class="k">class</span> <span class="nc">IsAResourceError</span><span class="p">(</span><span class="n">ClientError</span><span class="p">):</span>
@@ -384,18 +379,14 @@
     <span class="n">supports_ranges</span><span class="p">:</span> <span class="nb">bool</span>
     <span class="n">dav_compliances</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">options_response</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;HTTPResponse&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options_response</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;HTTPResponse&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize with the given response.&quot;&quot;&quot;</span>
         <span class="n">dav_compliances</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="n">supports_ranges</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">if</span> <span class="n">options_response</span><span class="p">:</span>
             <span class="n">dav_header</span> <span class="o">=</span> <span class="n">options_response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dav&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
             <span class="n">dav_compliances</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">dav_header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)}</span>
-            <span class="n">supports_ranges</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">options_response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;accept-ranges&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;bytes&quot;</span>
-            <span class="p">)</span>
+            <span class="n">supports_ranges</span> <span class="o">=</span> <span class="n">options_response</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;accept-ranges&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;bytes&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dav_compliances</span> <span class="o">=</span> <span class="n">dav_compliances</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">supports_ranges</span> <span class="o">=</span> <span class="n">supports_ranges</span></div>
@@ -404,12 +395,12 @@
 <div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Provides higher level APIs for interacting with Webdav server.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">base_url</span><span class="p">:</span> <span class="s2">&quot;URLTypes&quot;</span><span class="p">,</span>
         <span class="n">auth</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;AuthTypes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">http_client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;HTTPClient&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">retry</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Callable</span><span class="p">[[],</span> <span class="n">_T</span><span class="p">]],</span> <span class="n">_T</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">retry</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;RetryFunc&quot;</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">chunk_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_CHUNK_SIZE</span><span class="p">,</span>
         <span class="o">**</span><span class="n">client_opts</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -470,7 +461,7 @@
         <span class="n">client_opts</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;base_url&quot;</span><span class="p">:</span> <span class="n">base_url</span><span class="p">,</span> <span class="s2">&quot;auth&quot;</span><span class="p">:</span> <span class="n">auth</span><span class="p">})</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">http</span><span class="p">:</span> <span class="n">HTTPClient</span> <span class="o">=</span> <span class="n">http_client</span> <span class="ow">or</span> <span class="n">HTTPClient</span><span class="p">(</span><span class="o">**</span><span class="n">client_opts</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span> <span class="o">=</span> <span class="n">URL</span><span class="p">(</span><span class="n">base_url</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span> <span class="o">=</span> <span class="n">retry</span> <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span> <span class="k">else</span> <span class="n">_retry</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span> <span class="o">=</span> <span class="n">retry</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span> <span class="k">else</span> <span class="n">_retry</span><span class="p">(</span><span class="n">retry</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_detected_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FeatureDetection</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_detect_feature_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span> <span class="o">=</span> <span class="n">chunk_size</span>
@@ -501,9 +492,7 @@
 
 <div class="viewcode-block" id="Client.join_url"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.join_url">[docs]</a>    <span class="k">def</span> <span class="nf">join_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">URL</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Join resource path with base url of the webdav server.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">join_url</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="n">add_trailing_slash</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">join_url</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="n">add_trailing_slash</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Client.propfind"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.propfind">[docs]</a>    <span class="k">def</span> <span class="nf">propfind</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -602,15 +591,11 @@
 
         <span class="k">return</span> <span class="n">http_resp</span></div>
 
-<div class="viewcode-block" id="Client.move"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.move">[docs]</a>    <span class="k">def</span> <span class="nf">move</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">from_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="Client.move"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.move">[docs]</a>    <span class="k">def</span> <span class="nf">move</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">from_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Move resource to a new destination (with or without overwriting).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transfer</span><span class="p">(</span>
-            <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span> <span class="n">from_path</span><span class="p">,</span> <span class="n">to_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span>
-        <span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transfer</span><span class="p">(</span><span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MOVE</span><span class="p">,</span> <span class="n">from_path</span><span class="p">,</span> <span class="n">to_path</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">_transfer</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">_transfer</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">operation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">from_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -667,9 +652,7 @@
 
 <div class="viewcode-block" id="Client.mkdir"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.mkdir">[docs]</a>    <span class="k">def</span> <span class="nf">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a collection.&quot;&quot;&quot;</span>
-        <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MKCOL</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MKCOL</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
@@ -699,7 +682,7 @@
                 <span class="k">raise</span> <span class="n">ResourceLocked</span><span class="p">(</span><span class="s2">&quot;the resource is locked&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
             <span class="k">raise</span></div>
 
-<div class="viewcode-block" id="Client.ls"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.ls">[docs]</a>    <span class="k">def</span> <span class="nf">ls</span><span class="p">(</span>  <span class="c1"># pylint: disable=invalid-name</span>
+<div class="viewcode-block" id="Client.ls"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.ls">[docs]</a>    <span class="k">def</span> <span class="nf">ls</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">detail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
@@ -715,9 +698,7 @@
 <span class="sd">                (non-collection), ls will return the file entry/details.</span>
 <span class="sd">                Otherwise, it will raise an error.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">propfind</span><span class="p">(</span>
-            <span class="n">path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Depth&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">},</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">propfind</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Depth&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">},</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">responses</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">responses</span>
 
         <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -726,9 +707,7 @@
         <span class="k">if</span> <span class="n">response</span><span class="p">:</span>
             <span class="n">typ</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">resource_type</span>
             <span class="k">if</span> <span class="n">typ</span> <span class="o">==</span> <span class="s2">&quot;file&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">allow_listing_resource</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">IsAResourceError</span><span class="p">(</span>
-                    <span class="n">path</span><span class="p">,</span> <span class="s2">&quot;cannot list from a resource itself&quot;</span>
-                <span class="p">)</span>
+                <span class="k">raise</span> <span class="n">IsAResourceError</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;cannot list from a resource itself&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">typ</span> <span class="o">==</span> <span class="s2">&quot;directory&quot;</span><span class="p">:</span>
                 <span class="n">responses</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
@@ -745,9 +724,7 @@
         <span class="n">responses</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">responses</span>
 
         <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_url</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-        <span class="n">details</span> <span class="o">=</span> <span class="n">_prepare_result_info</span><span class="p">(</span>
-            <span class="n">responses</span><span class="p">[</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="n">_prepare_result_info</span><span class="p">(</span><span class="n">responses</span><span class="p">[</span><span class="n">url</span><span class="o">.</span><span class="n">path</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_url</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">details</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">details</span></div>
 
@@ -816,9 +793,7 @@
                 <span class="k">yield</span> <span class="n">buff</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">encoding</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">encoding</span>
-                    <span class="ow">or</span> <span class="n">buffer</span><span class="o">.</span><span class="n">encoding</span>
-                    <span class="ow">or</span> <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">encoding</span> <span class="ow">or</span> <span class="n">buffer</span><span class="o">.</span><span class="n">encoding</span> <span class="ow">or</span> <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
                 <span class="p">)</span>
                 <span class="k">yield</span> <span class="n">TextIOWrapper</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span></div>
 
@@ -830,13 +805,9 @@
         <span class="n">chunk_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Write stream from path to given file object.&quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
-            <span class="n">from_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span>
-        <span class="p">)</span> <span class="k">as</span> <span class="n">remote_obj</span><span class="p">:</span>
-            <span class="c1"># TODO: fix typings for open to always return BinaryIO on mode=rb</span>
-            <span class="n">remote_obj</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">BinaryIO</span><span class="p">,</span> <span class="n">remote_obj</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">from_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;rb&quot;</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span><span class="p">)</span> <span class="k">as</span> <span class="n">remote_obj</span><span class="p">:</span>
             <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrap_file_like</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;write&quot;</span><span class="p">)</span>
-            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfileobj</span><span class="p">(</span><span class="n">remote_obj</span><span class="p">,</span> <span class="n">wrapped</span><span class="p">)</span></div>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfileobj</span><span class="p">(</span><span class="n">remote_obj</span><span class="p">,</span> <span class="n">wrapped</span><span class="p">)</span>  <span class="c1"># type: ignore[misc]</span></div>
 
 <div class="viewcode-block" id="Client.download_file"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.download_file">[docs]</a>    <span class="k">def</span> <span class="nf">download_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -851,7 +822,7 @@
                 <span class="n">from_path</span><span class="p">,</span> <span class="n">fobj</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span>
             <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Client.upload_file"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.upload_file">[docs]</a>    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span>
+<div class="viewcode-block" id="Client.upload_file"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.upload_file">[docs]</a>    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">from_path</span><span class="p">:</span> <span class="s2">&quot;PathLike[AnyStr]&quot;</span><span class="p">,</span>
         <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -869,7 +840,7 @@
                 <span class="n">callback</span><span class="o">=</span><span class="n">callback</span><span class="p">,</span>
             <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Client.upload_fileobj"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.upload_fileobj">[docs]</a>    <span class="k">def</span> <span class="nf">upload_fileobj</span><span class="p">(</span>
+<div class="viewcode-block" id="Client.upload_fileobj"><a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.upload_fileobj">[docs]</a>    <span class="k">def</span> <span class="nf">upload_fileobj</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">file_obj</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">,</span>
         <span class="n">to_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -892,9 +863,7 @@
             <span class="k">raise</span> <span class="n">ResourceAlreadyExists</span><span class="p">(</span><span class="n">to_path</span><span class="p">)</span>
 
         <span class="n">wrapped</span> <span class="o">=</span> <span class="n">wrap_file_like</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">callback</span><span class="p">)</span>
-        <span class="n">content</span> <span class="o">=</span> <span class="n">read_chunks</span><span class="p">(</span>
-            <span class="n">wrapped</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span>
-        <span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">read_chunks</span><span class="p">(</span><span class="n">wrapped</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="n">chunk_size</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_size</span><span class="p">)</span>
 
         <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span>
             <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">PUT</span><span class="p">,</span> <span class="n">to_path</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span>
