@@ -687,7 +687,7 @@ def test_upload_fobj_size_hints(client: Client):
 
         wrapped = ReadWrapper(BytesIO(b"foobar"))  # type: ignore
         client.upload_fileobj(wrapped, "foobar")  # type: ignore
-        assert m.call_args[1]["headers"] is None
+        assert m.call_args[1]["headers"] == {}
 
         wrapped = ReadWrapper(BytesIO(b"foobar"))  # type: ignore
         client.upload_fileobj(wrapped, "foobar", size=6)  # type: ignore
