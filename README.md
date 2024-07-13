@@ -4,7 +4,6 @@
 [![Status](https://img.shields.io/pypi/status/webdav4.svg)](https://pypi.org/project/webdav4)
 [![Python Version](https://img.shields.io/pypi/pyversions/webdav4)](https://pypi.org/project/webdav4)
 ![ci](https://github.com/skshetry/webdav4/workflows/CI/badge.svg)
-[![codecov](https://codecov.io/gh/skshetry/webdav4/branch/main/graph/badge.svg)](https://codecov.io/gh/skshetry/webdav4)
 
 Webdav API with an (optional) [fsspec](#fsspec) implementation and a [CLI](#cli).
 
