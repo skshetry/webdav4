@@ -90,8 +90,7 @@ def test_retry_filter_errors():
         assert wrapped(func) == value
 
     assert all(
-        isinstance(val[0][0], typ)
-        for val, typ in zip(_filter.call_args_list, excs)
+        isinstance(val[0][0], typ) for val, typ in zip(_filter.call_args_list, excs)
     )
 
     assert func.call_count == 3

@@ -17,7 +17,6 @@ from typing import (
     Optional,
     Set,
     TextIO,
-    TypeVar,
     Union,
     cast,
 )
@@ -46,8 +45,6 @@ if TYPE_CHECKING:
     from .multistatus import DAVProperties, MultiStatusResponse
     from .retry import RetryFunc
     from .types import AuthTypes, HeaderTypes, HTTPResponse, URLTypes
-
-_T = TypeVar("_T")
 
 
 DEFAULT_CHUNK_SIZE = 2**22
@@ -80,15 +77,15 @@ class ClientError(Exception):
         return self.msg
 
 
-class ResourceConflict(ClientError):
+class ResourceConflict(ClientError):  # noqa: N818
     """Raised when there was conflict during the operation (got 409)."""
 
 
-class ForbiddenOperation(ClientError):
+class ForbiddenOperation(ClientError):  # noqa: N818
     """Raised when the operation was forbidden (got 403)."""
 
 
-class ResourceAlreadyExists(ClientError):
+class ResourceAlreadyExists(ClientError):  # noqa: N818
     """Error returned if the resource already exists."""
 
     def __init__(self, path: str) -> None:
@@ -97,7 +94,7 @@ class ResourceAlreadyExists(ClientError):
         super().__init__(f"The resource {path} already exists")
 
 
-class InsufficientStorage(ClientError):
+class InsufficientStorage(ClientError):  # noqa: N818
     """Error when the resource does not exist on the server."""
 
     def __init__(self, path: str) -> None:
@@ -115,19 +112,17 @@ class BadGatewayError(ClientError):
         super().__init__(msg)
 
 
-class ResourceLocked(ClientError):
+class ResourceLocked(ClientError):  # noqa: N818
     """Error raised when the resource is locked."""
 
 
-class ResourceNotFound(ClientError):
+class ResourceNotFound(ClientError):  # noqa: N818
     """Error when the resource does not exist on the server."""
 
     def __init__(self, path: str) -> None:
         """Instantiate exception with path that does not exist."""
         self.path = path
-        super().__init__(
-            f"The resource {path} could not be found in the server"
-        )
+        super().__init__(f"The resource {path} could not be found in the server")
 
 
 class HTTPError(ClientError):
@@ -139,9 +134,7 @@ class HTTPError(ClientError):
         self.status_code = response.status_code
         self.request = response.request
 
-        super().__init__(
-            f"received {self.status_code} ({self.response.reason_phrase})"
-        )
+        super().__init__(f"received {self.status_code} ({self.response.reason_phrase})")
 
 
 class IsAResourceError(ClientError):
@@ -182,18 +175,14 @@ class FeatureDetection:
     supports_ranges: bool
     dav_compliances: Set[str]
 
-    def __init__(
-        self, options_response: Optional["HTTPResponse"] = None
-    ) -> None:
+    def __init__(self, options_response: Optional["HTTPResponse"] = None) -> None:
         """Initialize with the given response."""
         dav_compliances = set()
         supports_ranges = False
         if options_response:
             dav_header = options_response.headers.get("dav", "")
             dav_compliances = {f.strip() for f in dav_header.split(",")}
-            supports_ranges = (
-                options_response.headers.get("accept-ranges") == "bytes"
-            )
+            supports_ranges = options_response.headers.get("accept-ranges") == "bytes"
 
         self.dav_compliances = dav_compliances
         self.supports_ranges = supports_ranges
@@ -202,7 +191,7 @@ class FeatureDetection:
 class Client:
     """Provides higher level APIs for interacting with Webdav server."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         base_url: "URLTypes",
         auth: Optional["AuthTypes"] = None,
@@ -299,9 +288,7 @@ class Client:
 
     def join_url(self, path: str, add_trailing_slash: bool = False) -> URL:
         """Join resource path with base url of the webdav server."""
-        return join_url(
-            self.base_url, path, add_trailing_slash=add_trailing_slash
-        )
+        return join_url(self.base_url, path, add_trailing_slash=add_trailing_slash)
 
     def propfind(
         self,
@@ -400,15 +387,11 @@ class Client:
 
         return http_resp
 
-    def move(
-        self, from_path: str, to_path: str, overwrite: bool = False
-    ) -> None:
+    def move(self, from_path: str, to_path: str, overwrite: bool = False) -> None:
         """Move resource to a new destination (with or without overwriting)."""
-        return self._transfer(
-            HTTPMethod.MOVE, from_path, to_path, overwrite=overwrite
-        )
+        return self._transfer(HTTPMethod.MOVE, from_path, to_path, overwrite=overwrite)
 
-    def _transfer(
+    def _transfer(  # noqa: PLR0913
         self,
         operation: str,
         from_path: str,
@@ -465,9 +448,7 @@ class Client:
 
     def mkdir(self, path: str) -> None:
         """Create a collection."""
-        call = wrap_fn(
-            self.request, HTTPMethod.MKCOL, path, add_trailing_slash=True
-        )
+        call = wrap_fn(self.request, HTTPMethod.MKCOL, path, add_trailing_slash=True)
         try:
             http_resp = self.with_retry(call)
         except HTTPError as exc:
@@ -497,7 +478,7 @@ class Client:
                 raise ResourceLocked("the resource is locked") from exc
             raise
 
-    def ls(  # pylint: disable=invalid-name
+    def ls(
         self,
         path: str,
         detail: bool = True,
@@ -513,9 +494,7 @@ class Client:
                 (non-collection), ls will return the file entry/details.
                 Otherwise, it will raise an error.
         """
-        result = self.propfind(
-            path, headers={"Depth": "1"}, follow_redirects=True
-        )
+        result = self.propfind(path, headers={"Depth": "1"}, follow_redirects=True)
         responses = result.responses
 
         url = self.join_url(path)
@@ -524,9 +503,7 @@ class Client:
         if response:
             typ = response.properties.resource_type
             if typ == "file" and not allow_listing_resource:
-                raise IsAResourceError(
-                    path, "cannot list from a resource itself"
-                )
+                raise IsAResourceError(path, "cannot list from a resource itself")
             if typ == "directory":
                 responses.pop(url.path)
         else:  # pragma: no cover
@@ -543,9 +520,7 @@ class Client:
         responses = result.responses
 
         url = self.join_url(path)
-        details = _prepare_result_info(
-            responses[url.path], self.base_url, detail=True
-        )
+        details = _prepare_result_info(responses[url.path], self.base_url, detail=True)
         assert not isinstance(details, str)
         return details
 
@@ -614,9 +589,7 @@ class Client:
                 yield buff
             else:
                 encoding = (
-                    encoding
-                    or buffer.encoding
-                    or locale.getpreferredencoding(False)
+                    encoding or buffer.encoding or locale.getpreferredencoding(False)
                 )
                 yield TextIOWrapper(buff, encoding=encoding)
 
@@ -628,9 +601,7 @@ class Client:
         chunk_size: Optional[int] = None,
     ) -> None:
         """Write stream from path to given file object."""
-        with self.open(
-            from_path, mode="rb", chunk_size=chunk_size
-        ) as remote_obj:
+        with self.open(from_path, mode="rb", chunk_size=chunk_size) as remote_obj:
             wrapped = wrap_file_like(file_obj, callback, method="write")
             shutil.copyfileobj(remote_obj, wrapped)  # type: ignore[misc]
 
@@ -647,7 +618,7 @@ class Client:
                 from_path, fobj, callback=callback, chunk_size=chunk_size
             )
 
-    def upload_file(
+    def upload_file(  # noqa: PLR0913
         self,
         from_path: "PathLike[AnyStr]",
         to_path: str,
@@ -665,7 +636,7 @@ class Client:
                 callback=callback,
             )
 
-    def upload_fileobj(
+    def upload_fileobj(  # noqa: PLR0913
         self,
         file_obj: BinaryIO,
         to_path: str,
@@ -688,9 +659,7 @@ class Client:
             raise ResourceAlreadyExists(to_path)
 
         wrapped = wrap_file_like(file_obj, callback)
-        content = read_chunks(
-            wrapped, chunk_size=chunk_size or self.chunk_size
-        )
+        content = read_chunks(wrapped, chunk_size=chunk_size or self.chunk_size)
 
         http_resp = self.request(
             HTTPMethod.PUT, to_path, content=content, headers=headers

@@ -16,9 +16,7 @@ def normalize_path(path: str) -> str:
     return strip_trailing_slash(path)
 
 
-def join_url(
-    base_url: URL, path: str, add_trailing_slash: bool = False
-) -> URL:
+def join_url(base_url: URL, path: str, add_trailing_slash: bool = False) -> URL:
     """Joins base url with a path."""
     base_path = base_url.path
     path = join_url_path(base_path, path)

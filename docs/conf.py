@@ -1,6 +1,5 @@
 """Configuration file for the Sphinx documentation builder."""
 
-# pylint: disable=invalid-name
 
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
@@ -14,7 +13,7 @@ from webdav4 import __version__
 sys.path.insert(0, "..")
 
 project = "webdav4"
-copyright = "2022, Saugat Pachhai"  # pylint: disable=redefined-builtin
+copyright = "2022, Saugat Pachhai"
 author = "Saugat Pachhai"
 version = __version__
 
@@ -46,8 +45,6 @@ intersphinx_mapping = {
 html_title = "webdav4"
 html_static_path = ["_static"]
 
-copybutton_prompt_text = (
-    r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
-)
+copybutton_prompt_text = r">>> |\.\.\. |\$ |In \[\d*\]: | {2,5}\.\.\.: | {5,8}: "
 copybutton_prompt_is_regexp = True
 autoclass_content = "both"

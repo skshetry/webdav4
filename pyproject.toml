@@ -59,7 +59,6 @@ optional-dependencies.http2 = [
 optional-dependencies.qa = [
   "mypy==1.10.1",
   "pre-commit",
-  "pylint==3.2.5",
   "types-colorama",
   "types-pkg-resources",
   "types-python-dateutil",
@@ -89,6 +88,84 @@ packages = [ "src/webdav4" ]
 
 [tool.black]
 line-length = 79
+
+[tool.ruff]
+show-fixes = true
+
+lint.select = [
+  "ASYNC",  # flake8-async
+  "B",      # flake8-bugbear
+  "BLE",    # flake8-blind-except
+  "C4",     # flake8-comprehensions
+  "C90",    # mccabe
+  "DTZ",    # flake8-datetimez
+  "E",      # pycodestyle - Error
+  "EXE",    # flake8-executable
+  "F",      # pyflakes
+  "FLY",    # flynt
+  "FURB",   # refurb
+  "G",      # flake8-logging-format
+  "I",      # isort
+  "ICN",    # flake8-import-conventions
+  "INP",    # flake8-no-pep420
+  "ISC",    # flake8-implicit-str-concat
+  "LOG",    # flake8-logging
+  "N",      # pep8-naming
+  "NPY",    # numpy
+  "PERF",   # perflint
+  "PGH",    # pygrep-hooks
+  "PIE",    # flake8-pie
+  "PL",     # pylint
+  "PYI",    # flake8-pyi
+  "Q",      # flake8-quotes
+  "RET",    # flake8-return
+  "RSE",    # flake8-raise
+  "RUF",    # ruff rules
+  "RUF022", # unsorted-dunder-all
+  "RUF023", # unsorted-dunder-slots
+  "RUF025", # unnecessary-dict-comprehension-for-iterable
+  "RUF027", # missing-f-string-syntax
+  "RUF030", # assert-with-print-message
+  "RUF101", # redirected-noqa
+  "S",      # flake8-bandit
+  "SIM",    # flake8-simplify
+  "SLOT",   # flake8-slots
+  "T10",    # flake8-debugger
+  "TCH",    # flake8-type-checking
+  "TID",    # flake8-tidy-imports
+  "TRY004", # type-check-without-type-error
+  "TRY201", # verbose-raise
+  "TRY302", # useless-try-except
+  "TRY401", # verbose-log-message
+  "UP",     # pyupgrade
+  "W",      # pycodestyle - Warning
+  "YTT",    # flake8-2020
+]
+lint.ignore = [
+  "ISC001",  # single-line-implicit-string-concatenation, incompatible with ruff format
+  "PERF203", # perflint - try-except-in-loop, irrelevant for Python>=3.11
+  "PGH003",
+  "PLR2004", # magic-value-comparison
+  "PLW2901", # redefined-loop-name
+  "RET502",  # implicit-return-value
+  "RET503",  # implicit-return
+  "S101",    # assert
+  "SIM105",  # suppressible-exception
+  "SIM108",  # if-else-block-instead-of-if-exp
+  "SIM117",  # multiple-with-statements
+]
+lint.explicit-preview-rules = true
+lint.per-file-ignores."docs/**" = [
+  "INP001",
+]
+lint.per-file-ignores."tests/**" = [
+  "DTZ002",
+  "S106",
+  "S314",
+]
+lint.flake8-type-checking.strict = true
+lint.isort.known-first-party = [ "webdav4" ]
+lint.preview = true
 
 [tool.isort]
 profile = "black"

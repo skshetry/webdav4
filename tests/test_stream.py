@@ -106,7 +106,6 @@ def test_retry_reconnect_on_failure(
         # when we cannot detect support for ranges, we should just raise error
         client.detected_features.supports_ranges = False
         with client.open("sample.txt", mode="rb") as fd:
-            # pylint: disable=protected-access
             fd._initial_response.headers.clear()  # type: ignore
             with pytest.raises(HTTPNetworkError):
                 fd.read()
@@ -117,7 +116,6 @@ def test_retry_reconnect_on_failure(
             assert str(exc_info.value) == "server does not support ranges"
 
         with fs.open("sample.txt", mode="rb") as fd:
-            # pylint: disable=protected-access
             fd.reader._initial_response.headers.clear()  # type: ignore
             with pytest.raises(HTTPNetworkError):
                 fd.read()
@@ -217,9 +215,9 @@ def test_close_connection_if_nothing_is_read(client: Client):
     """Test that http connection is closed when nothing is read."""
     response = MagicMock()
 
-    with patch.object(
-        client.http, "send", return_value=response
-    ), patch.object(client, "isdir", return_value=False):
+    with patch.object(client.http, "send", return_value=response), patch.object(
+        client, "isdir", return_value=False
+    ):
         with client.open("sample.txt", mode="rb"):
             response.close.assert_not_called()
         response.close.assert_called_once()

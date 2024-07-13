@@ -44,8 +44,7 @@ or an [ownCloud server using docker-compose](https://doc.owncloud.com/server/adm
 Please install `pre-commit` and add the hooks, so that it enforces proper
 code standard in your code changes.
 
-Also make sure to run `pylint` and `mypy`.
+Also make sure to run `mypy`:
 ```shell
-pylint src tests
 mypy
 ```

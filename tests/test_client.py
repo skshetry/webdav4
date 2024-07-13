@@ -107,17 +107,13 @@ def test_try_copy_file_when_destination_already_exists(
     assert exc_info.value.path == "data/bar"
 
 
-def test_try_copy_resource_that_does_not_exist(
-    storage_dir: TmpDir, client: Client
-):
+def test_try_copy_resource_that_does_not_exist(storage_dir: TmpDir, client: Client):
     """Try to copy a resource that does not exist."""
     with pytest.raises(ResourceNotFound) as exc_info:
         client.copy("data", "data2")
 
     assert storage_dir.cat() == {}
-    assert str(exc_info.value) == (
-        "The resource data could not be found in the server"
-    )
+    assert str(exc_info.value) == ("The resource data could not be found in the server")
     assert exc_info.value.path == "data"
 
 
@@ -167,17 +163,13 @@ def test_move_collection(storage_dir: TmpDir, client: Client):
     assert storage_dir.cat() == {"data2": {"foo": "foo", "bar": "bar"}}
 
 
-def test_try_move_resource_that_does_not_exist(
-    storage_dir: TmpDir, client: Client
-):
+def test_try_move_resource_that_does_not_exist(storage_dir: TmpDir, client: Client):
     """Test trying to move a resource that does not exist at all."""
     with pytest.raises(ResourceNotFound) as exc_info:
         client.move("data", "data2")
 
     assert storage_dir.cat() == {}
-    assert str(exc_info.value) == (
-        "The resource data could not be found in the server"
-    )
+    assert str(exc_info.value) == ("The resource data could not be found in the server")
 
     assert exc_info.value.path == "data"
 
@@ -191,9 +183,7 @@ def test_move_file_dest_exists_already(storage_dir: TmpDir, client: Client):
     assert storage_dir.cat() == {"data": {"foo": "foo", "bar": "bar"}}
 
 
-def test_move_collection_dest_exists_already(
-    storage_dir: TmpDir, client: Client
-):
+def test_move_collection_dest_exists_already(storage_dir: TmpDir, client: Client):
     """Test moving a collection to a destination that already exists."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}, "data2": {}})
     with pytest.raises(ResourceAlreadyExists) as exc_info:
@@ -268,17 +258,17 @@ def test_try_moving_a_resource_locked(
     (completely or partially, in src or dest)
     """
     storage_dir.gen(
-        {"data": {"foo": "foo", "bar": "bar"}, "data2": {"foobar": "foobar"}}
+        {
+            "data": {"foo": "foo", "bar": "bar"},
+            "data2": {"foobar": "foobar"},
+        }
     )
     lock_resource(client, lock_path)
 
     with pytest.raises(ResourceLocked) as exc_info:
         client.move(move_from, "data2")
 
-    assert (
-        str(exc_info.value)
-        == "the source or the destination resource is locked"
-    )
+    assert str(exc_info.value) == "the source or the destination resource is locked"
 
     # should not have been moved at all
     assert storage_dir.cat() == {
@@ -340,9 +330,7 @@ def test_transfer_forbidden_operations(
     with pytest.raises(ForbiddenOperation) as exc_info:
         func("container", "othercontainer")
 
-    assert str(exc_info.value) == (
-        "the source and the destination could be the same"
-    )
+    assert str(exc_info.value) == ("the source and the destination could be the same")
 
 
 def test_mkdir(storage_dir: TmpDir, client: Client):
@@ -351,9 +339,7 @@ def test_mkdir(storage_dir: TmpDir, client: Client):
     assert storage_dir.cat() == {"data": {}}
 
 
-def test_mkdir_but_parent_collection_not_exist(
-    storage_dir: TmpDir, client: Client
-):
+def test_mkdir_but_parent_collection_not_exist(storage_dir: TmpDir, client: Client):
     """Test creating a collection but parent collection does not exist."""
     with pytest.raises(ResourceConflict) as exc_info:
         client.mkdir("data/sub")
@@ -394,8 +380,7 @@ def test_mkdir_forbidden_operations(client: Client, server_address: URL):
         client.mkdir("container")
 
     assert str(exc_info.value) == (
-        "the server does not allow creation in the namespace"
-        "or cannot accept members"
+        "the server does not allow creation in the namespace" "or cannot accept members"
     )
 
 
@@ -413,9 +398,7 @@ def test_mkdir_sends_a_trailing_slash(path: str):
     )
     with mock.patch.object(client.http, "request", return_value=response) as m:
         client.mkdir(path)
-        assert m.call_args == mock.call(
-            "MKCOL", URL("http://example.org/collections/")
-        )
+        assert m.call_args == mock.call("MKCOL", URL("http://example.org/collections/"))
 
 
 def test_remove_collection(storage_dir: TmpDir, client: Client):
@@ -437,16 +420,11 @@ def test_remove_not_existing_resource(client: Client):
     with pytest.raises(ResourceNotFound) as exc_info:
         client.remove("data")
 
-    assert (
-        str(exc_info.value)
-        == "The resource data could not be found in the server"
-    )
+    assert str(exc_info.value) == "The resource data could not be found in the server"
     assert exc_info.value.path == "data"
 
 
-def test_try_remove_locked_resource_non_coll(
-    storage_dir: TmpDir, client: Client
-):
+def test_try_remove_locked_resource_non_coll(storage_dir: TmpDir, client: Client):
     """Test trying to remove a resource that is locked."""
     storage_dir.gen({"data": {"foo": "foo", "bar": "bar"}})
     lock_resource(client, "data/foo")
@@ -473,9 +451,7 @@ def test_try_remove_locked_resource_coll(storage_dir: TmpDir, client: Client):
         client.join_url("/data/bar").path: "Locked",
         client.join_url("/data/foo").path: "Locked",
     }
-    assert str(exc_info.value) == (
-        "multiple errors received: " + str(statuses)
-    )
+    assert str(exc_info.value) == ("multiple errors received: " + str(statuses))
 
 
 @pytest.mark.parametrize(
@@ -572,9 +548,7 @@ def test_open_binary(storage_dir: TmpDir, client: Client):
             f.seek(-10)
         with pytest.raises(ValueError):
             f.seek(10, 3)
-        with mock.patch.object(
-            type(f), "size", new_callable=mock.PropertyMock
-        ) as m:
+        with mock.patch.object(type(f), "size", new_callable=mock.PropertyMock) as m:
             m.return_value = None
             with pytest.raises(ValueError):
                 f.seek(-10, 2)
@@ -621,19 +595,14 @@ def test_download_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
     assert file_path.read_text()
 
 
-def test_try_download_directory(
-    tmp_path: Path, storage_dir: TmpDir, client: Client
-):
+def test_try_download_directory(tmp_path: Path, storage_dir: TmpDir, client: Client):
     """Test downloading a remote resource to a local file."""
     storage_dir.gen({"data": {"foo": "foo"}})
 
     with pytest.raises(IsACollectionError) as exc_info:
         client.download_file("/data", tmp_path / "foo")
 
-    assert (
-        str(exc_info.value)
-        == "/data is a collection. Cannot open a collection"
-    )
+    assert str(exc_info.value) == "/data is a collection. Cannot open a collection"
 
 
 def test_try_downloading_not_existing_resource(tmp_path: Path, client: Client):
@@ -642,10 +611,7 @@ def test_try_downloading_not_existing_resource(tmp_path: Path, client: Client):
     with pytest.raises(ResourceNotFound) as exc_info:
         client.download_file("foo", file_path)
 
-    assert (
-        str(exc_info.value)
-        == "The resource foo could not be found in the server"
-    )
+    assert str(exc_info.value) == "The resource foo could not be found in the server"
 
 
 def test_open_file(storage_dir: TmpDir, client: Client):
@@ -893,10 +859,10 @@ def test_options(client: Client):
 def test_feature_detection(client: Client):
     """Test feature detection in the Client."""
     assert client.detected_features
-    assert client._detected_features  # pylint: disable=protected-access
+    assert client._detected_features
     assert client.detected_features.dav_compliances
 
-    client._detected_features = None  # pylint: disable=protected-access
+    client._detected_features = None
     # should not fail at all even if auth is invalid
     client.http.auth = ("invalid", "invalid")  # type: ignore
     assert client.detected_features.dav_compliances
@@ -942,9 +908,7 @@ def test_client_retries(client: Client, server_address: URL):
     url = server_address.join("container1")
     request = Request(HTTPMethod.PROPFIND, url)
     failed_response = Response(status_code=502, request=request)
-    success_response = Response(
-        status_code=HTTPStatus.OK.value, request=request
-    )
+    success_response = Response(status_code=HTTPStatus.OK.value, request=request)
 
     client.http.request = func = MagicMock(  # type: ignore[assignment]
         side_effect=[failed_response, failed_response, success_response]

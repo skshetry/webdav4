@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines,invalid-name
 """CLI for the Webdav."""
 
 import argparse
@@ -362,7 +361,7 @@ def _color_file(  # noqa: C901
 ) -> Optional[str]:
     """Returns a color appropriate for file/dir based on ext/path etc."""
     try:
-        import colorama  # pylint: disable=import-outside-toplevel
+        import colorama
     except ModuleNotFoundError:  # pragma: no cover
         return None
 
@@ -396,7 +395,7 @@ def color_file(file: File, isdir: bool = False) -> str:
     color = _color_file(file, isdir=isdir)
     if color:
         try:
-            import colorama  # pylint: disable=import-outside-toplevel
+            import colorama
         except ModuleNotFoundError:  # pragma: no cover
             pass
         else:
@@ -409,7 +408,7 @@ def color_file(file: File, isdir: bool = False) -> str:
 def colored(name: str, color: str = "", style: str = "") -> str:
     """Colors a string with given color name."""
     try:
-        import colorama  # pylint: disable=import-outside-toplevel
+        import colorama
 
         colors = {
             "green": colorama.Fore.GREEN,
@@ -461,7 +460,7 @@ def format_datetime(mtime: Any) -> str:
         return "-"
     fmt = "%b %d %H:%M"
     # it's mostly for presentation, so we don't care much about tz
-    if mtime.replace(tzinfo=None) < datetime.today() - timedelta(days=180):
+    if mtime.replace(tzinfo=None) < datetime.today() - timedelta(days=180):  # noqa: DTZ002
         fmt = "%b %d %Y"
     return mtime.strftime(fmt)
 
@@ -483,7 +482,7 @@ def process_url(url: str) -> str:
     return url
 
 
-def prepare_url_auth(  # noqa: C901
+def prepare_url_auth(
     args: Namespace,
 ) -> Tuple[urls.URL, Optional[Tuple[str, str]]]:
     """Process url and auth from the given arguments or from the envvar.
@@ -570,19 +569,14 @@ class CommandLS(Command):
         withdirs = not self.args.recursive or bool(self.args.level)
         depth = self.args.level if self.args.recursive else 1
 
-        # pylint: disable-next=protected-access
         fs_path = self.fs._strip_protocol(self.args.path)
-        details = self.fs.find(
-            fs_path, maxdepth=depth, detail=True, withdirs=withdirs
-        )
+        details = self.fs.find(fs_path, maxdepth=depth, detail=True, withdirs=withdirs)
 
         # remove root path
         if details.get(fs_path, {}).get("type") == "directory":
             details.pop(fs_path, None)
 
-        path = self.fs._strip_protocol(  # pylint: disable=protected-access
-            self.args.path
-        ).strip("/")
+        path = self.fs._strip_protocol(self.args.path).strip("/")
         path_level = path.count(sep) + 1 if path else 0
 
         if not details:
@@ -616,7 +610,7 @@ class CommandLS(Command):
     def render(details: List[Row]) -> None:
         """Display provided information in a columnar format."""
         if not details:
-            return None
+            return
 
         date_maxsize = max(len(row.date) for row in details)
         size_maxsize = max(len(row.size.nbytes) for row in details)
@@ -631,7 +625,7 @@ class CommandLS(Command):
             file = theme.style_path(row.file, isdir=row.isdir)
             print(date, size, file)
 
-        return None
+        return
 
     def run(self) -> None:
         """List and render the ls output."""
@@ -672,9 +666,7 @@ class CommandCopy(CommandTransfer):
         """Copy files/directories between remotes."""
         if self.fs.isdir(self.args.path1) and not self.args.recursive:
             raise RuntimeError("cannot copy directory without -R flag")
-        self.fs.cp(
-            self.args.path1, self.args.path2, recursive=self.args.recursive
-        )
+        self.fs.cp(self.args.path1, self.args.path2, recursive=self.args.recursive)
 
 
 class CommandMove(CommandTransfer):
@@ -685,9 +677,7 @@ class CommandMove(CommandTransfer):
 
     def transfer_remote(self) -> None:
         """Move files/directories between remotes."""
-        self.fs.mv(
-            self.args.path1, self.args.path2, recursive=self.args.recursive
-        )
+        self.fs.mv(self.args.path1, self.args.path2, recursive=self.args.recursive)
 
 
 class CommandRemove(Command):
@@ -745,10 +735,7 @@ def is_fqpath(fs: AbstractFileSystem, path: str) -> bool:
     """Check if the path is fully qualified."""
     path = stringify_path(path)
     protos = (fs.protocol,) if isinstance(fs.protocol, str) else fs.protocol
-    for protocol in protos:
-        if path.startswith(protocol + "://"):
-            return True
-    return False
+    return any(path.startswith(protocol + "://") for protocol in protos)
 
 
 class CommandSync(Command):
@@ -764,8 +751,7 @@ class CommandSync(Command):
     ) -> None:
         """Supports copy in local-remote, remote-local, and remote-remote."""
         assert not (
-            isinstance(src_fs, LocalFileSystem)
-            and isinstance(dest_fs, LocalFileSystem)
+            isinstance(src_fs, LocalFileSystem) and isinstance(dest_fs, LocalFileSystem)
         )
 
         if isinstance(src_fs, LocalFileSystem):
@@ -775,18 +761,12 @@ class CommandSync(Command):
         else:
             dest_fs.copy(src, dest, recursive=recursive)
 
-    @classmethod  # noqa: C901
-    def changed(  # noqa: C901
-        cls, src_details: Dict[str, Any], dest_details: Dict[str, Any]
-    ) -> bool:
+    @classmethod
+    def changed(cls, src_details: Dict[str, Any], dest_details: Dict[str, Any]) -> bool:
         """See if a src and dest have changed or not."""
 
         def get_mtime(info: Dict[str, Any]) -> Optional[datetime]:
-            mtime = (
-                info.get("mtime")
-                or info.get("modified")
-                or info.get("created")
-            )
+            mtime = info.get("mtime") or info.get("modified") or info.get("created")
             if isinstance(mtime, float):
                 return datetime.fromtimestamp(mtime, timezone.utc)
             if isinstance(mtime, datetime):
@@ -836,9 +816,7 @@ class CommandSync(Command):
         return changed, only_in_dest
 
     @staticmethod
-    def _transform_info(
-        infos: List[Dict[str, Any]], rel: str
-    ) -> Dict[str, Any]:
+    def _transform_info(infos: List[Dict[str, Any]], rel: str) -> Dict[str, Any]:
         """Convert to relative paths for easier diff comparison."""
         return {os.path.relpath(info["name"], rel): info for info in infos}
 
@@ -853,7 +831,7 @@ class CommandSync(Command):
         details_src = src_fs.info(src)
         try:
             details_dest = dest_fs.info(dest)
-        except IOError:
+        except OSError:
             isdir = details_src.get("type") == "directory"
             print(
                 "copy:",
@@ -862,14 +840,12 @@ class CommandSync(Command):
                 theme.style_path(dest, isdir=isdir),
             )
             self.copy_fs(src, dest, src_fs, dest_fs, recursive=True)
-            return None
+            return
 
-        if details_src["type"] == "file" and self.changed(
-            details_src, details_dest
-        ):
+        if details_src["type"] == "file" and self.changed(details_src, details_dest):
             print("copy:", theme.style_path(src), "to", theme.style_path(dest))
             self.copy_fs(src, dest, src_fs, dest_fs, recursive=False)
-            return None
+            return
 
         src_info = src_fs.ls(src, detail=True)
         dest_info = dest_fs.ls(dest, detail=True)
@@ -888,7 +864,7 @@ class CommandSync(Command):
             is_dir = dest_d[file].get("type") == "directory"
             print("delete:", theme.style_path(new_dest, isdir=is_dir))
             dest_fs.rm(new_dest, recursive=True)
-        return None
+        return
 
     def run(self) -> None:
         """Run sync between src and dest."""
@@ -905,7 +881,6 @@ class CommandSync(Command):
         else:
             src_fs, dest_fs = LocalFileSystem(), self.fs
 
-        # pylint: disable=protected-access
         src = src_fs._strip_protocol(src)
         dest = dest_fs._strip_protocol(dest)
         return self.sync(src, dest, src_fs, dest_fs)
@@ -980,9 +955,7 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         required=False,
     )
 
-    subparsers = parser.add_subparsers(
-        title="actions", help="Available subcommands"
-    )
+    subparsers = parser.add_subparsers(title="actions", help="Available subcommands")
     subparsers.required = True
     subparsers.dest = "command"
 
@@ -1123,9 +1096,7 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
     }
 
 
-def run_cmd(
-    args: Namespace, fs: Optional[AbstractFileSystem] = None
-) -> Optional[int]:
+def run_cmd(args: Namespace, fs: Optional[AbstractFileSystem] = None) -> Optional[int]:
     """Run cmd from given args."""
     cmd = cast(Command, args.func(args, fs=fs))
     cmd.run()
@@ -1143,6 +1114,6 @@ def main(argv: Optional[List[str]] = None) -> Optional[int]:
 
     try:
         return run_cmd(args)
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # noqa: BLE001
         logger.error("%s: %s", type(exc).__name__, exc, exc_info=args.verbose)
         return 1

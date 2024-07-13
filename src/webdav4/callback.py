@@ -83,7 +83,6 @@ class CallbackIOWrapper(Iterable):
             if method != "read":
                 raise
 
-            # pylint: disable=import-outside-toplevel
             from .stream import read_until
 
             chunks = read_until(stream, "\n")

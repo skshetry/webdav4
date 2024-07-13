@@ -284,15 +284,11 @@ def test_get_response_for_path():
     assert prop2.resource_type == "directory"
 
     assert (
-        response.get_response_for_path(
-            "/remote.php/dav/files", "admin/sample1.txt"
-        )
+        response.get_response_for_path("/remote.php/dav/files", "admin/sample1.txt")
         == response.responses[expected_keys[0]]
     )
     assert (
-        response.get_response_for_path(
-            "/remote.php/dav/files/admin", "sample2.txt"
-        )
+        response.get_response_for_path("/remote.php/dav/files/admin", "sample2.txt")
         == response.responses[expected_keys[1]]
     )
 
@@ -321,7 +317,7 @@ def test_raise_for_status():
         "/othercontainer/C2/": "Locked",
         "/othercontainer/C3/": "Locked",
     }
-    assert str(exc_info.value) == f"multiple errors received: {str(expected)}"
+    assert str(exc_info.value) == f"multiple errors received: {expected!s}"
     assert exc_info.value.statuses == expected
 
 
@@ -364,9 +360,7 @@ def test_try_parse_multistatus_response_for_not_a_207_response():
 
 def test_parse_multistatus_response():
     """Test trying to parse multistatus response."""
-    res = parse_multistatus_response(
-        HTTPResponse(status_code=207, text="<d></d>")
-    )
+    res = parse_multistatus_response(HTTPResponse(status_code=207, text="<d></d>"))
     assert isinstance(res, MultiStatusResponse)
     assert not res.responses
     assert res.response_description is None

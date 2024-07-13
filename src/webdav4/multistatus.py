@@ -147,9 +147,7 @@ class Response:
             code = int(code_str)
 
         self.status_code = code
-        self.reason_phrase = (
-            responses[self.status_code] if self.status_code else None
-        )
+        self.reason_phrase = responses[self.status_code] if self.status_code else None
 
         self.response_description: Optional[str] = prop(
             response_xml, "responsedescription"
@@ -184,7 +182,7 @@ class MultiStatusResponseError(Exception):
         if len(self.statuses) > 1:
             msg = "multiple errors received: " + str(statuses)
         else:
-            path, status = list(statuses.items())[0]
+            path, status = next(iter(statuses.items()))
             msg = f"The resource {path} is {status.lower()}"
 
         self.msg = msg
@@ -209,11 +207,9 @@ class MultiStatusResponse:
              content: body received from PROPFIND call
         """
         self.content = content
-        self.tree = tree = str2xml(content)
+        self.tree = tree = str2xml(content)  # noqa: S314
 
-        self.response_description: Optional[str] = prop(
-            tree, "responsedescription"
-        )
+        self.response_description: Optional[str] = prop(tree, "responsedescription")
 
         self.responses: Dict[str, Response] = {}
         for resp in tree.findall(".//{DAV:}response"):
@@ -259,9 +255,7 @@ def prepare_propfind_request_data(
         return None
     name = MAPPING_PROPS.get(name) or name
     root = Element("propfind", xmlns="DAV:")
-    SubElement(
-        SubElement(root, "prop"), "{DAV:}" + name, xmlns=namespace or ""
-    )
+    SubElement(SubElement(root, "prop"), "{DAV:}" + name, xmlns=namespace or "")
     return xml2string(root, encoding="unicode")
 
 

@@ -32,9 +32,7 @@ class Method:
 def request(method: str):  # type: ignore[no-untyped-def]
     """Extending with new verb `method`."""
 
-    def func(
-        client: "Client", url: "URLTypes", **kwargs: Any
-    ) -> "HTTPResponse":
+    def func(client: "Client", url: "URLTypes", **kwargs: Any) -> "HTTPResponse":
         return client.request(method, url, **kwargs)
 
     return func

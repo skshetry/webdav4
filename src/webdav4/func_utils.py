@@ -22,9 +22,7 @@ if TYPE_CHECKING:
 _T = TypeVar("_T")
 
 
-def repeat_func(
-    func: Callable[[], _T], times: Optional[int] = None
-) -> Iterator[_T]:
+def repeat_func(func: Callable[[], _T], times: Optional[int] = None) -> Iterator[_T]:
     """Repeatedly calls a function multiple times.
 
     It will call infinite times if not specified, otherwise as many times as
@@ -34,7 +32,7 @@ def repeat_func(
     return (func() for i in repeat(*args))
 
 
-def retry(  # noqa: C901
+def retry(
     retries: int,
     errors: Iterable[Type[Exception]],
     timeout: Union[float, Callable[[int], float]] = 0,
@@ -47,7 +45,7 @@ def retry(  # noqa: C901
         for attempt in range(retries):
             try:
                 return func()
-            except _errors as exc:  # pylint: disable=catching-non-exception
+            except _errors as exc:
                 if not (filter_errors is None or filter_errors(exc)):
                     raise
                 if attempt + 1 == retries:  # reraise on the last attempt
