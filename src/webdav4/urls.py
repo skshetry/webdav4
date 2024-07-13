@@ -1,4 +1,5 @@
 """URLs parsing logics here."""
+
 from re import sub
 
 from httpx import URL

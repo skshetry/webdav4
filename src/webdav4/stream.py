@@ -1,4 +1,5 @@
 """Handle streaming response for file."""
+
 from contextlib import contextmanager
 from functools import partial
 from http import HTTPStatus

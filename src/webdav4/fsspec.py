@@ -1,4 +1,5 @@
 """fsspec compliant webdav file system."""
+
 import errno
 import io
 import os
