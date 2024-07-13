@@ -29,6 +29,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dynamic = [
   "version",
@@ -177,6 +178,9 @@ disable = [ "cyclic-import", "design", "fixme", "missing-module-docstring", "inv
 
 [tool.codespell]
 ignore-words-list = "cachable"
+
+[tool.pyproject-fmt]
+max_supported_python = "3.13"
 
 [tool.pytest.ini_options]
 addopts = "-ra -nauto -cov=src,tests"
