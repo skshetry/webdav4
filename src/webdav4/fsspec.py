@@ -68,13 +68,9 @@ def translate_exceptions() -> Iterator[None]:
             errno.ENOENT, "No such file or directory", exc.path
         ) from exc
     except IsACollectionError as exc:
-        raise IsADirectoryError(
-            errno.EISDIR, "Is a directory", exc.path
-        ) from exc
+        raise IsADirectoryError(errno.EISDIR, "Is a directory", exc.path) from exc
     except IsAResourceError as exc:
-        raise NotADirectoryError(
-            errno.ENOTDIR, "Not a directory", exc.path
-        ) from exc
+        raise NotADirectoryError(errno.ENOTDIR, "Not a directory", exc.path) from exc
 
 
 class WebdavFileSystem(AbstractFileSystem):
@@ -116,9 +112,7 @@ class WebdavFileSystem(AbstractFileSystem):
     ) -> List[Union[str, Dict[str, Any]]]:
         """`ls` implementation for fsspec, see fsspec for more information."""
         path = self._strip_protocol(path).strip()
-        data = self.client.ls(
-            path, detail=detail, allow_listing_resource=False
-        )
+        data = self.client.ls(path, detail=detail, allow_listing_resource=False)
         if not detail:
             return data
         return [translate_info(item) for item in data]
@@ -166,7 +160,7 @@ class WebdavFileSystem(AbstractFileSystem):
         super().rm(path, recursive=recursive, maxdepth=maxdepth)
         return None
 
-    def copy(
+    def copy(  # noqa: PLR0913
         self,
         path1: str,
         path2: str,
@@ -213,9 +207,7 @@ class WebdavFileSystem(AbstractFileSystem):
         if not recursive and self.isdir(path1):
             return self.makedirs(path2)
 
-        super().mv(
-            path1, path2, recursive=recursive, maxdepth=maxdepth, **kwargs
-        )
+        super().mv(path1, path2, recursive=recursive, maxdepth=maxdepth, **kwargs)
         return None
 
     def _mkdir(self, path: str, exist_ok: bool = False) -> None:
@@ -245,13 +237,9 @@ class WebdavFileSystem(AbstractFileSystem):
             details = self.info(parent)
             if details["type"] == "directory":
                 raise  # pragma: no cover
-            raise NotADirectoryError(
-                errno.ENOTDIR, "Not a directory", parent
-            ) from exc
+            raise NotADirectoryError(errno.ENOTDIR, "Not a directory", parent) from exc
 
-    def mkdir(
-        self, path: str, create_parents: bool = True, **kwargs: Any
-    ) -> None:
+    def mkdir(self, path: str, create_parents: bool = True, **kwargs: Any) -> None:
         """Create directory."""
         path = self._strip_protocol(path)
         if create_parents:
@@ -262,9 +250,7 @@ class WebdavFileSystem(AbstractFileSystem):
         """Creates directory to the given path."""
         path = self._strip_protocol(path)
         parent = self._parent(path)
-        if not ({"", self.root_marker} & {path, parent}) and not self.exists(
-            parent
-        ):
+        if not ({"", self.root_marker} & {path, parent}) and not self.exists(parent):
             self.makedirs(parent, exist_ok=exist_ok)
 
         return self._mkdir(path, exist_ok=exist_ok)
@@ -282,7 +268,7 @@ class WebdavFileSystem(AbstractFileSystem):
         return self.client.modified(path)
 
     @translate_exceptions()
-    def _open(
+    def _open(  # noqa: PLR0913
         self,
         path: str,
         mode: str = "rb",
@@ -298,9 +284,7 @@ class WebdavFileSystem(AbstractFileSystem):
         if "x" in mode and self.exists(path):
             raise FileExistsError(errno.EEXIST, "File exists", path)
         if set(mode) & {"w", "x"}:
-            return UploadFile(
-                self, path=path, mode=mode, block_size=block_size
-            )
+            return UploadFile(self, path=path, mode=mode, block_size=block_size)
 
         return WebdavFile(
             self,
@@ -335,7 +319,7 @@ class WebdavFileSystem(AbstractFileSystem):
         kwargs.setdefault("overwrite", True)
         return self.upload_fileobj(buff, path, **kwargs)
 
-    def upload_fileobj(
+    def upload_fileobj(  # noqa: PLR0913
         self,
         fobj: BinaryIO,
         rpath: str,
@@ -395,7 +379,7 @@ class WebdavFile(AbstractBufferedFile):
 
     size: int
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         fs: "WebdavFileSystem",
         path: str,
@@ -452,10 +436,6 @@ class WebdavFile(AbstractBufferedFile):
         """Start streaming."""
         return self
 
-    def _fetch_range(self, start: int, end: int) -> None:
-        """Not essential. Creating stub to make pylint happy."""
-        raise NotImplementedError
-
     def seek(self, loc: int, whence: int = 0) -> int:
         """Set current file location."""
         super().seek(loc, whence=whence)
@@ -488,7 +468,7 @@ class WebdavFile(AbstractBufferedFile):
         )
 
 
-class ReopenArgs(NamedTuple):  # pylint: disable=inherit-non-class
+class ReopenArgs(NamedTuple):
     """Args to reopen the file."""
 
     file: Type[WebdavFile]
@@ -531,7 +511,7 @@ class UploadFile(tempfile.SpooledTemporaryFile):
     if you don't need to upload content dynamically.
     """
 
-    def __init__(  # pylint: disable=invalid-name
+    def __init__(
         self,
         fs: "WebdavFileSystem",
         path: str,
@@ -546,7 +526,7 @@ class UploadFile(tempfile.SpooledTemporaryFile):
             if block_size in ["default", None]
             else block_size
         )
-        self.fs: WebdavFileSystem = fs  # pylint: disable=invalid-name
+        self.fs: WebdavFileSystem = fs
         assert mode
         self.path: str = path
 
@@ -554,7 +534,7 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         # in both rw mode.
         super().__init__(max_size=self.blocksize, mode="wb+")
 
-    def __exit__(self, *exc: Any) -> None:
+    def __exit__(self, *exc: object) -> None:
         """Upload file by seeking to first byte on exit."""
         self.close()
 
@@ -602,9 +582,7 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         """Read bytes into the given buffer."""
         return read_into(self, b)
 
-    def readuntil(
-        self, char: bytes = b"\n", blocks: Optional[int] = None
-    ) -> bytes:
+    def readuntil(self, char: bytes = b"\n", blocks: Optional[int] = None) -> bytes:
         """Read until the given character is found."""
         ret = AbstractBufferedFile.readuntil(self, char=char, blocks=blocks)
         return cast(bytes, ret)

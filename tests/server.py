@@ -47,7 +47,7 @@ def run_server(
     """Runs a webdav server."""
     dirmap = {"/": directory}
 
-    user, pwd = authentication  # pylint: disable=redefined-outer-name
+    user, pwd = authentication
     app = WsgiDAVApp(
         {
             "host": host,
@@ -56,9 +56,7 @@ def run_server(
             "simple_dc": {"user_mapping": {"*": {user: {"password": pwd}}}},
         }
     )
-    return run_server_on_thread(
-        wsgi.Server(bind_addr=(host, port), wsgi_app=app)
-    )
+    return run_server_on_thread(wsgi.Server(bind_addr=(host, port), wsgi_app=app))
 
 
 if __name__ == "__main__":
@@ -98,8 +96,7 @@ if __name__ == "__main__":
         try:
             if args.interactive:
                 print(
-                    "fs, client, server_address, storage_dir fixtures "
-                    "are available"
+                    "fs, client, server_address, storage_dir fixtures " "are available"
                 )
                 try:
                     from IPython import embed
@@ -107,7 +104,6 @@ if __name__ == "__main__":
                     embed(colors="neutral")  # type: ignore[no-untyped-call]
                 except ImportError:
                     with suppress(ImportError):
-                        # pylint: disable=unused-import
                         import readline  # noqa: F401
 
                     shell = code.InteractiveConsole({**globals(), **locals()})

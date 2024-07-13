@@ -1,7 +1,5 @@
 """Test fixtures."""
 
-# pylint: disable=redefined-outer-name
-
 from typing import Iterator, Tuple
 
 import pytest

@@ -13,7 +13,6 @@ BACKOFF: float = 1
 
 def filter_errors(exc: Exception) -> bool:
     """Filter these errors and retry if they fall in these categories."""
-    # pylint: disable=import-outside-toplevel
     from .client import HTTPError
 
     if isinstance(exc, HTTPError):
@@ -42,7 +41,6 @@ class RetryFunc(Protocol):
 
 def retry(arg: bool = False, tries: int = 3) -> RetryFunc:
     """Retry if arg up to `tries` times."""
-    # pylint: disable=import-outside-toplevel
     from .client import BadGatewayError, HTTPError, ResourceLocked
 
     return retry_func(

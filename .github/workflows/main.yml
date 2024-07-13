@@ -55,8 +55,6 @@ jobs:
       - if: ${{ github.event_name == 'lower-bound' }}
         run: uv pip install "fsspec==2021.7.0" --system
       - uses: pre-commit/action@v3.0.1
-      - run: pylint src tests
-        continue-on-error: ${{ matrix.pyv == '3.13' }}
       - run: mypy
       - run: pip show fsspec
       - run: pytest --cov-report=xml

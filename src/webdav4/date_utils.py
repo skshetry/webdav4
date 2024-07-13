@@ -18,6 +18,6 @@ def from_rfc1123(datetime_string: str) -> "datetime":
     """Convert rfc1123 datetime string to datetime object."""
     try:
         return parsedate_to_datetime(datetime_string)
-    except Exception:  # noqa:E722, pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         # fallback in case ^ is unable to parse the datetime string
         return parse(datetime_string)

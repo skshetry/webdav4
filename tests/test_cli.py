@@ -40,7 +40,7 @@ from webdav4.cli import (
 from .utils import TmpDir
 
 
-class MemoryFileSystem(_MemoryFS):  # pylint: disable=abstract-method
+class MemoryFileSystem(_MemoryFS):
     """Overriding to make memory per instance and extend protocol support."""
 
     cachable = False
@@ -127,7 +127,6 @@ def test_ls_colors(m):
 
 def test_lstheme_should_color(monkeypatch: MonkeyPatch):
     """Test LSTheme color deciding factors."""
-    # pylint: disable=protected-access
     theme = LSTheme()
     with mock.patch.object(sys.stdout, "isatty", return_value=False):
         assert not theme._should_color()
@@ -195,9 +194,7 @@ def test_style_path():
 
     theme = LSTheme(dir_trailing_slash=True)
     theme.colored = True
-    assert (
-        theme.style_path("path", isdir=True) == "\x1b[1m\x1b[34mpath/\x1b[0m"
-    )
+    assert theme.style_path("path", isdir=True) == "\x1b[1m\x1b[34mpath/\x1b[0m"
     theme.colored = False
     assert theme.style_path("path", isdir=True) == "path/"
 
@@ -208,20 +205,17 @@ def test_style_size_datetime():
     theme.colored = False
 
     dt = datetime.today()
-    assert theme.style_datetime(format_datetime(dt)) == dt.strftime(
-        "%b %d %H:%M"
-    )
+    assert theme.style_datetime(format_datetime(dt)) == dt.strftime("%b %d %H:%M")
     assert theme.style_size(*human_size(2027)) == "2.0k"
 
     theme.colored = True
 
-    # pylint: disable=consider-using-f-string
-    assert theme.style_datetime(
-        format_datetime(dt)
-    ) == "\x1b[34m{0}\x1b[0m".format(dt.strftime("%b %d %H:%M"))
+    assert theme.style_datetime(format_datetime(dt)) == "\x1b[34m{}\x1b[0m".format(
+        dt.strftime("%b %d %H:%M")
+    )
     assert theme.style_size(
         *human_size(2027)
-    ) == "\x1b[1m\x1b[32m{0}\x1b[0m\x1b[32m{1}\x1b[0m".format("2.0", "k")
+    ) == "\x1b[1m\x1b[32m{}\x1b[0m\x1b[32m{}\x1b[0m".format("2.0", "k")
 
     assert theme.style_size(*human_size(None)) == "\x1b[2m-\x1b[0m"
 
@@ -295,17 +289,11 @@ def test_cp_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     memfs.mkdir("data1")
     memfs.pipe({"data1/foo": b"foo", "data1/bar": b"bar"})
 
-    ns = Namespace(
-        path1="memory://data1", path2="memory://data2", recursive=False
-    )
-    with pytest.raises(
-        RuntimeError, match="cannot copy directory without -R flag"
-    ):
+    ns = Namespace(path1="memory://data1", path2="memory://data2", recursive=False)
+    with pytest.raises(RuntimeError, match="cannot copy directory without -R flag"):
         CommandCopy(ns, memfs).run()
 
-    ns = Namespace(
-        path1="memory://data1", path2="memory://data2", recursive=True
-    )
+    ns = Namespace(path1="memory://data1", path2="memory://data2", recursive=True)
     CommandCopy(ns, memfs).run()
     assert memfs.cat("data1", recursive=True, on_error="ignore") == {
         "/data1/bar": b"bar",
@@ -389,9 +377,7 @@ def test_mv_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     memfs.mkdir("data1")
     memfs.pipe({"data1/foo": b"foo", "data1/bar": b"bar"})
 
-    ns = Namespace(
-        path1="memory://data1", path2="memory://data2", recursive=True
-    )
+    ns = Namespace(path1="memory://data1", path2="memory://data2", recursive=True)
     CommandMove(ns, memfs).run()
     assert not memfs.isdir("data1")
     assert memfs.cat("data2", recursive=True, on_error="ignore") == {
@@ -445,14 +431,10 @@ def test_ls_cli(capsys: CaptureFixture):
         Row("-", Size("3"), "bar"),
     }
 
-    ns = Namespace(
-        path="data/foo", recursive=False, level=None, full_path=False
-    )
+    ns = Namespace(path="data/foo", recursive=False, level=None, full_path=False)
     assert set(CommandLS(ns, mfs).ls()) == {Row("-", Size("3"), "foo")}
 
-    ns = Namespace(
-        path="data/bar", recursive=False, level=None, full_path=False
-    )
+    ns = Namespace(path="data/bar", recursive=False, level=None, full_path=False)
     assert set(CommandLS(ns, mfs).ls()) == {Row("-", Size("3"), "bar")}
 
     with pytest.raises(FileNotFoundError):
@@ -482,7 +464,7 @@ def test_ls_cli(capsys: CaptureFixture):
     }
 
     CommandLS.render([])
-    assert ("", "") == capsys.readouterr()
+    assert capsys.readouterr() == ("", "")
 
     CommandLS.render(
         [
@@ -492,33 +474,24 @@ def test_ls_cli(capsys: CaptureFixture):
     )
 
     out, _ = capsys.readouterr()
-    assert (
-        textwrap.dedent(
-            """\
+    assert textwrap.dedent(
+        """\
         Apr 05 09:40 148.0k README.md
         Jun 03 03:33   6.2M my-docs.docx"""
-        )
-        in escape_ansi(out)
-    )
+    ) in escape_ansi(out)
 
-    ns = Namespace(
-        path="data/foo", recursive=True, level=None, full_path=False
-    )
+    ns = Namespace(path="data/foo", recursive=True, level=None, full_path=False)
     CommandLS(ns, mfs).run()
     out, err = capsys.readouterr()
     assert not err
     assert escape_ansi(out) == "-  3 foo\n"
 
     with pytest.raises(FileNotFoundError):
-        ns = Namespace(
-            path="not-existing", recursive=True, level=None, full_path=False
-        )
+        ns = Namespace(path="not-existing", recursive=True, level=None, full_path=False)
         CommandLS(ns, mfs).run()
 
 
-def test_sync_cli_local_to_remote(
-    storage_dir: TmpDir, monkeypatch: MonkeyPatch
-):
+def test_sync_cli_local_to_remote(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     """Test syncing between local to remote filesystem."""
     storage_dir.gen({"data": {"foo": "foo"}})
     memfs = MemoryFileSystem()
@@ -605,15 +578,11 @@ def test_sync_remote_to_local(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     memfs.mkdir("data/dir")
     memfs.pipe({"data/dir/lorem": b"lorem"})
     cmd.run()
-    assert storage_dir.cat() == {
-        "data": {"foo": "foo", "dir": {"lorem": "lorem"}}
-    }
+    assert storage_dir.cat() == {"data": {"foo": "foo", "dir": {"lorem": "lorem"}}}
 
     # nothing should change
     cmd.run()
-    assert storage_dir.cat() == {
-        "data": {"foo": "foo", "dir": {"lorem": "lorem"}}
-    }
+    assert storage_dir.cat() == {"data": {"foo": "foo", "dir": {"lorem": "lorem"}}}
 
 
 def test_sync_remote_to_remote():
@@ -719,9 +688,7 @@ def test_shorthand_url():
 
 def test_auth(monkeypatch: MonkeyPatch):
     """Test auth from args and url."""
-    ns = Namespace(
-        endpoint_url="http://server.com", user="user", password="pwd"
-    )
+    ns = Namespace(endpoint_url="http://server.com", user="user", password="pwd")
     assert Command(ns).auth == ("user", "pwd")
 
     ns.endpoint_url = "http://user:pwd@server.com"

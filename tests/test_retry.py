@@ -16,9 +16,7 @@ request = Request("get", "example.com")
     "exc",
     [
         BadGatewayError(),
-        HTTPError(
-            Response(HTTPStatus.TOO_MANY_REQUESTS.value, request=request)
-        ),
+        HTTPError(Response(HTTPStatus.TOO_MANY_REQUESTS.value, request=request)),
         ResourceLocked("beep boop bop"),
     ],
 )

@@ -8,7 +8,6 @@ from itertools import takewhile
 from typing import (
     IO,
     TYPE_CHECKING,
-    Any,
     AnyStr,
     Generator,
     Iterator,
@@ -30,21 +29,18 @@ if TYPE_CHECKING:
     from .types import HTTPResponse, URLTypes
 
 
-def request(
-    client: "HTTPClient", url: "URLTypes", pos: int = 0
-) -> "HTTPResponse":
+def request(client: "HTTPClient", url: "URLTypes", pos: int = 0) -> "HTTPResponse":
     """Streams a file from url from given position."""
     headers = {}
     if pos:
         headers.update({"Range": f"bytes={pos}-"})
 
     req = client.build_request(HTTPMethod.GET, url, headers=headers)
-    response = client.send(req, stream=True, follow_redirects=True)
-    return response
+    return client.send(req, stream=True, follow_redirects=True)
 
 
-@contextmanager  # noqa: C901
-def iter_url(  # noqa: C901
+@contextmanager
+def iter_url(
     client: "Client",
     url: "URLTypes",
     chunk_size: Optional[int] = None,
@@ -61,10 +57,7 @@ def iter_url(  # noqa: C901
         nonlocal pos
         try:
             while True:
-                if (
-                    response.status_code
-                    == HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE
-                ):
+                if response.status_code == HTTPStatus.REQUESTED_RANGE_NOT_SATISFIABLE:
                     return  # range request outside file
                 response.raise_for_status()
 
@@ -115,7 +108,7 @@ class IterStream(RawIOBase):
         self._loc: int = 0
         self._cm = iter_url(client, self.url, chunk_size=chunk_size)
         self._iterator: Optional[Iterator[bytes]] = None
-        self._initial_response: Optional["HTTPResponse"] = None
+        self._initial_response: Optional[HTTPResponse] = None
 
     @property
     def supports_ranges(self) -> bool:
@@ -136,9 +129,7 @@ class IterStream(RawIOBase):
     def size(self) -> Optional[int]:
         """Size of the file object."""
         assert self._initial_response
-        content_length: str = self._initial_response.headers.get(
-            "Content-Length", ""
-        )
+        content_length: str = self._initial_response.headers.get("Content-Length", "")
         return int(content_length) if content_length.isdigit() else None
 
     @property
@@ -153,11 +144,10 @@ class IterStream(RawIOBase):
 
     def __enter__(self) -> "IterStream":
         """Send a streaming response."""
-        #  pylint: disable=no-member,unpacking-non-sequence
         self._initial_response, self._iterator = self._cm.__enter__()
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         """Close the response."""
         self.close()
 
@@ -170,12 +160,12 @@ class IterStream(RawIOBase):
     def close(self) -> None:
         """Close response if not already."""
         if self._iterator:
-            self._cm.__exit__(None, None, None)  # pylint: disable=no-member
+            self._cm.__exit__(None, None, None)
 
         self._iterator = None
         self.buffer = b""
 
-    def seek(self, offset: int, whence: int = 0) -> int:  # noqa: C901
+    def seek(self, offset: int, whence: int = 0) -> int:
         """Seek the file object."""
         if whence == 0:
             loc = offset
@@ -196,10 +186,7 @@ class IterStream(RawIOBase):
             raise ValueError("server does not support ranges")
 
         self.close()
-        self._cm = iter_url(
-            self.client, self.url, pos=loc, chunk_size=self.chunk_size
-        )
-        #  pylint: disable=no-member,unpacking-non-sequence
+        self._cm = iter_url(self.client, self.url, pos=loc, chunk_size=self.chunk_size)
         _, self._iterator = self._cm.__enter__()
         self.loc = loc
         return loc
@@ -209,7 +196,7 @@ class IterStream(RawIOBase):
         return self.loc
 
     @property
-    def closed(self) -> bool:  # pylint: disable=invalid-overridden-method
+    def closed(self) -> bool:
         """Check whether the stream was closed or not."""
         return self._iterator is None
 
@@ -267,9 +254,7 @@ class IterStream(RawIOBase):
         return read_into(self, sequence, read_once=True)  # type: ignore
 
 
-def read_chunks(
-    obj: IO[AnyStr], chunk_size: Optional[int] = None
-) -> Iterator[AnyStr]:
+def read_chunks(obj: IO[AnyStr], chunk_size: Optional[int] = None) -> Iterator[AnyStr]:
     """Read file object in chunks."""
     func = partial(obj.read, chunk_size or DEFAULT_BUFFER_SIZE)
     return takewhile(bool, repeat_func(func))
@@ -289,7 +274,7 @@ def split_chunk(part: AnyStr, char: AnyStr) -> Tuple[AnyStr, Optional[AnyStr]]:
     return part, None
 
 
-def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:  # noqa: C901
+def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:
     """Read chunks until the char is reached."""
     is_bytes = isinstance(obj.read(0), bytes)
     # `c` and the `joiner` should be the same type as the file `obj` is of.
@@ -320,9 +305,7 @@ def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:  # noqa: C901
         yield joiner.join(out)
 
 
-def read_into(
-    obj: IO[AnyStr], sequence: "Buffer", read_once: bool = False
-) -> int:
+def read_into(obj: IO[AnyStr], sequence: "Buffer", read_once: bool = False) -> int:
     """Read into the buffer."""
     out = memoryview(sequence).cast("B")
     func = obj.read1 if read_once else obj.read  # type: ignore

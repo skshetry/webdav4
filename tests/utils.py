@@ -10,7 +10,7 @@ from _pytest.python_api import ApproxBase
 PathClass = PosixPath if os.name == "posix" else WindowsPath
 
 
-class TmpDir(PathClass):  # type: ignore # pylint: disable=abstract-method
+class TmpDir(PathClass):  # type: ignore
     """Extends Path with `cat` and `gen` methods."""
 
     def cat(self) -> Union[str, Dict[str, Any]]:
@@ -56,7 +56,7 @@ class TmpDir(PathClass):  # type: ignore # pylint: disable=abstract-method
         return list(struct.keys())
 
 
-class approx_datetime(ApproxBase):  # pylint: disable=abstract-method
+class approx_datetime(ApproxBase):  # noqa: N801
     """Perform approximate comparisons between datetime or timedelta.
 
     See https://github.com/pytest-dev/pytest/issues/8395#issuecomment-790549327
@@ -64,7 +64,6 @@ class approx_datetime(ApproxBase):  # pylint: disable=abstract-method
 
     default_tolerance = timedelta(seconds=1)
     expected: datetime
-    # pylint: disable=redefined-builtin
     abs: timedelta
 
     def __init__(
@@ -74,9 +73,7 @@ class approx_datetime(ApproxBase):  # pylint: disable=abstract-method
     ) -> None:
         """Initialize the approx_datetime with `abs` as tolerance."""
         assert isinstance(expected, datetime)
-        assert abs >= timedelta(
-            0
-        ), f"absolute tolerance can't be negative: {abs}"
+        assert abs >= timedelta(0), f"absolute tolerance can't be negative: {abs}"
         super().__init__(expected, abs=abs)
 
     def __repr__(self) -> str:  # pragma: no cover
