@@ -96,7 +96,7 @@ dependencies = [ "importlib_metadata" ]
 [tool.hatch.envs.default.scripts]
 tests = [
   "pip show fsspec",
-  "pytest",
+  "pytest --cov-report=xml",
 ]
 lint = [
   "pre-commit run --all-files --show-diff-on-failure",
