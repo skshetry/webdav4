@@ -87,33 +87,6 @@ version-file = "src/webdav4/_version.py"
 [tool.hatch.build.targets.wheel]
 packages = [ "src/webdav4" ]
 
-[tool.hatch.envs.default]
-features = [ "dev" ]
-type = "virtual"
-path = ".hatch"
-dependencies = [ "importlib_metadata" ]
-
-[tool.hatch.envs.default.scripts]
-tests = [
-  "pip show fsspec",
-  "pytest --cov-report=xml",
-]
-lint = [
-  "pre-commit run --all-files --show-diff-on-failure",
-  "pylint src tests",
-  "mypy",
-]
-cov-xml = [ "tests", "coverage xml" ]
-docs = "sphinx-build docs build/docs"
-
-[tool.hatch.envs.upstream]
-dependencies = [
-  "fsspec @ git+https://github.com/fsspec/filesystem_spec.git",
-]
-
-[tool.hatch.envs.lower-bound]
-dependencies = [ "fsspec==2021.7" ]
-
 [tool.black]
 line-length = 79
 
@@ -175,14 +148,6 @@ module = [ "tests.*" ]
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 warn_unused_ignores = false
-
-[tool.interrogate]
-ignore-init-method = true
-ignore-nested-functions = true
-verbose = 2
-fail-under = 100
-color = true
-exclude = [ "src/webdav4/_version.py" ]
 
 [tool.bandit]
 targets = [ "/src" ]

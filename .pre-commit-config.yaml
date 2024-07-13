@@ -38,11 +38,6 @@ repos:
           - flake8-docstrings
     repo: https://github.com/pycqa/flake8
     rev: 7.1.0
-  - repo: https://github.com/econchick/interrogate
-    rev: 1.7.0
-    hooks:
-      - id: interrogate
-        language_version: python3
   - repo: https://github.com/asottile/blacken-docs
     rev: 1.18.0
     hooks:
