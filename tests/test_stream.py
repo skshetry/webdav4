@@ -1,4 +1,5 @@
 """Testing stream utilities."""
+
 from io import DEFAULT_BUFFER_SIZE, BytesIO, StringIO
 from typing import Any, Iterator
 from unittest import mock

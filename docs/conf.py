@@ -9,15 +9,15 @@
 # -- Project information -----------------------------------------------------
 import sys
 
-from pkg_resources import get_distribution
+from webdav4 import __version__
 
 sys.path.insert(0, "..")
 
 project = "webdav4"
 copyright = "2022, Saugat Pachhai"  # pylint: disable=redefined-builtin
 author = "Saugat Pachhai"
+version = __version__
 
-version = get_distribution("webdav4").version
 # -- General configuration ---------------------------------------------------
 
 extensions = [

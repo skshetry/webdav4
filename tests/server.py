@@ -104,7 +104,7 @@ if __name__ == "__main__":
                 try:
                     from IPython import embed
 
-                    embed(colors="neutral")
+                    embed(colors="neutral")  # type: ignore[no-untyped-call]
                 except ImportError:
                     with suppress(ImportError):
                         # pylint: disable=unused-import

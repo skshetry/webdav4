@@ -1,4 +1,5 @@
 """Testing fsspec based WebdavFileSystem."""
+
 import errno
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Set, Tuple, Union

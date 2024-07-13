@@ -4,7 +4,7 @@ import time
 from functools import wraps
 from itertools import repeat
 from typing import (
-    Any,
+    TYPE_CHECKING,
     Callable,
     Iterable,
     Iterator,
@@ -12,12 +12,14 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    cast,
-    no_type_check,
 )
 
+if TYPE_CHECKING:
+    from typing_extensions import ParamSpec
+
+    P = ParamSpec("P")
+
 _T = TypeVar("_T")
-_F = TypeVar("_F", bound=Callable[..., Any])
 
 
 def repeat_func(
@@ -37,11 +39,11 @@ def retry(  # noqa: C901
     errors: Iterable[Type[Exception]],
     timeout: Union[float, Callable[[int], float]] = 0,
     filter_errors: Optional[Callable[[Exception], bool]] = None,
-) -> Callable[..., _T]:
+) -> Callable[[Callable[[], _T]], _T]:
     """Retry a given function."""
     _errors = tuple(errors)
 
-    def wrapped_function(func: Callable[..., _T]) -> _T:
+    def wrapped_function(func: Callable[[], _T]) -> _T:
         for attempt in range(retries):
             try:
                 return func()
@@ -61,13 +63,12 @@ def retry(  # noqa: C901
 
 
 def wrap_fn(
-    func: Callable[..., _T], *args: Any, **kwargs: Any
+    func: "Callable[P, _T]", *args: "P.args", **kwargs: "P.kwargs"
 ) -> Callable[[], _T]:
     """Wraps a function and turns into a 0-arity function."""
 
     @wraps(func)
-    @no_type_check
-    def wrapped():
+    def wrapped() -> _T:
         return func(*args, **kwargs)
 
-    return cast("Callable[[], _T]", wrapped)
+    return wrapped

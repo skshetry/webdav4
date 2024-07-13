@@ -569,9 +569,16 @@ class CommandLS(Command):
         # directory in L level.
         withdirs = not self.args.recursive or bool(self.args.level)
         depth = self.args.level if self.args.recursive else 1
+
+        # pylint: disable-next=protected-access
+        fs_path = self.fs._strip_protocol(self.args.path)
         details = self.fs.find(
-            self.args.path, maxdepth=depth, detail=True, withdirs=withdirs
+            fs_path, maxdepth=depth, detail=True, withdirs=withdirs
         )
+
+        # remove root path
+        if details.get(fs_path, {}).get("type") == "directory":
+            details.pop(fs_path, None)
 
         path = self.fs._strip_protocol(  # pylint: disable=protected-access
             self.args.path
@@ -653,8 +660,6 @@ class CommandTransfer(Command):
         if is_fqpath(self.fs, path1) and is_fqpath(self.fs, path2):
             self.transfer_remote()
         elif is_fqpath(self.fs, path1):
-            if self.fs.isdir(path1):
-                os.makedirs(path2, exist_ok=True)
             self.fs.download(path1, path2, recursive=recursive)
         else:
             self.fs.upload(path1, path2, recursive=recursive)
@@ -665,6 +670,8 @@ class CommandCopy(CommandTransfer):
 
     def transfer_remote(self) -> None:
         """Copy files/directories between remotes."""
+        if self.fs.isdir(self.args.path1) and not self.args.recursive:
+            raise RuntimeError("cannot copy directory without -R flag")
         self.fs.cp(
             self.args.path1, self.args.path2, recursive=self.args.recursive
         )
@@ -764,8 +771,6 @@ class CommandSync(Command):
         if isinstance(src_fs, LocalFileSystem):
             dest_fs.upload(src, dest, recursive=recursive)
         elif isinstance(dest_fs, LocalFileSystem):
-            if src_fs.isdir(src):
-                dest_fs.makedirs(dest, exist_ok=True)
             src_fs.download(src, dest, recursive=recursive)
         else:
             dest_fs.copy(src, dest, recursive=recursive)
@@ -783,9 +788,7 @@ class CommandSync(Command):
                 or info.get("created")
             )
             if isinstance(mtime, float):
-                return datetime.utcfromtimestamp(mtime).replace(
-                    tzinfo=timezone.utc
-                )
+                return datetime.fromtimestamp(mtime, timezone.utc)
             if isinstance(mtime, datetime):
                 return mtime.astimezone(timezone.utc)
             return mtime
@@ -833,9 +836,11 @@ class CommandSync(Command):
         return changed, only_in_dest
 
     @staticmethod
-    def _transform_info(info: Dict[str, Any], rel: str) -> Dict[str, Any]:
+    def _transform_info(
+        infos: List[Dict[str, Any]], rel: str
+    ) -> Dict[str, Any]:
         """Convert to relative paths for easier diff comparison."""
-        return {os.path.relpath(k, rel): v for k, v in info.items()}
+        return {os.path.relpath(info["name"], rel): info for info in infos}
 
     def sync(
         self,
@@ -866,8 +871,8 @@ class CommandSync(Command):
             self.copy_fs(src, dest, src_fs, dest_fs, recursive=False)
             return None
 
-        src_info = src_fs.find(src, withdirs=True, detail=True, maxdepth=1)
-        dest_info = dest_fs.find(dest, withdirs=True, detail=True, maxdepth=1)
+        src_info = src_fs.ls(src, detail=True)
+        dest_info = dest_fs.ls(dest, detail=True)
 
         src_d = self._transform_info(src_info, src)
         dest_d = self._transform_info(dest_info, dest)

@@ -1,4 +1,5 @@
 """Test retrying in the client."""
+
 from http import HTTPStatus
 from unittest import mock
 

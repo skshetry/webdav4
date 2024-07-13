@@ -53,7 +53,7 @@ class DAVProperties:
         def extract_text(prop_name: str) -> Optional[str]:
             text = (
                 prop(response_xml, MAPPING_PROPS[prop_name], relative=True)
-                if response_xml
+                if response_xml is not None
                 else None
             )
             self.raw[prop_name] = text

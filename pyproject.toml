@@ -16,72 +16,67 @@ keywords = [
   "webdav-client",
 ]
 license = "MIT"
-license-files = { paths = ["LICENSE"] }
+license-files = { paths = [ "LICENSE" ] }
 authors = [
-    { name = "Saugat Pachhai", email = "suagatchhetri@outlook.com" },
+  { name = "Saugat Pachhai", email = "suagatchhetri@outlook.com" },
 ]
 requires-python = ">=3.8"
-dependencies = [
-  "httpx<1.0.0,>=0.20",
-  "python-dateutil>=2.8.1",
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
 ]
 dynamic = [
   "version",
 ]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+dependencies = [
+  "httpx<1,>=0.20",
+  "python-dateutil>=2.8.1",
 ]
-[project.optional-dependencies]
-all = [
+optional-dependencies.all = [
   "webdav4[fsspec,http2]",
 ]
-dev = [
+optional-dependencies.dev = [
   "webdav4[docs,fsspec,http2,qa,tests]",
 ]
-docs = [
+optional-dependencies.docs = [
   "furo==2022.12.7",
   "myst-parser==0.18.1",
-  "Sphinx==5.3",
+  "sphinx==5.3",
   "sphinx-copybutton==0.5.1",
 ]
-fsspec = [
+optional-dependencies.fsspec = [
   # when changing lower-bound, keep `lower-bound` env dependencies up-to-date.
   "fsspec>=2021.7",
 ]
-http2 = [
-  "httpx[http2]<1.0.0,>=0.20",
+optional-dependencies.http2 = [
+  "httpx[http2]<1,>=0.20",
 ]
-qa = [
-  "mypy==1.0.1",
+optional-dependencies.qa = [
+  "mypy==1.10.1",
   "pre-commit",
-  "pylint==2.16.2",
+  "pylint==3.2.5",
   "types-colorama",
-  "types-pkg_resources",
+  "types-pkg-resources",
   "types-python-dateutil",
 ]
-tests = [
+optional-dependencies.tests = [
   "cheroot",
   "colorama",
   "pytest",
   "pytest-cov",
   "pytest-xdist",
-  "typing_extensions",
-  "WsgiDAV",
+  "typing-extensions",
+  "wsgidav",
 ]
-
-[project.urls]
-"Bug Tracker" = "https://github.com/skshetry/webdav4/issues"
-Documentation = "https://skshetry.github.io/webdav4"
-"Source Code" = "https://github.com/skshetry/webdav4"
-
-[project.scripts]
-dav = "webdav4.cli:main"
-
+urls."Bug Tracker" = "https://github.com/skshetry/webdav4/issues"
+urls.Documentation = "https://skshetry.github.io/webdav4"
+urls."Source Code" = "https://github.com/skshetry/webdav4"
+scripts.dav = "webdav4.cli:main"
 
 [tool.hatch.version]
 source = "vcs"
@@ -90,72 +85,44 @@ source = "vcs"
 version-file = "src/webdav4/_version.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/webdav4"]
-
-[tool.hatch.envs.default]
-features = ["dev"]
-type = "virtual"
-path = ".hatch"
-dependencies = ["importlib_metadata"]
-
-[tool.hatch.envs.default.scripts]
-tests = [
-  "pip show fsspec",
-  "pytest"
-]
-lint = [
-    "pre-commit run --all-files --show-diff-on-failure",
-    "pylint src tests",
-    "mypy",
-]
-cov-xml = ["tests", "coverage xml"]
-docs = "sphinx-build docs build/docs"
-
-[tool.hatch.envs.upstream]
-dependencies = [
-    "fsspec @ git+https://github.com/fsspec/filesystem_spec.git",
-]
-
-[tool.hatch.envs.lower-bound]
-dependencies = ["fsspec==2021.7"]
-
-[tool.coverage.run]
-parallel = true
-branch = true
-concurrency = ["multiprocessing"]
-source = ["webdav4", "tests"]
-
-[tool.coverage.report]
-show_missing = true
-exclude_lines = [
-    "if __name__ == .__main__.:",
-    "if typing.TYPE_CHECKING:",
-    "if TYPE_CHECKING:",
-    "pass",
-    "raise NotImplementedError",
-    "pragma: no cover",
-]
-
-[tool.coverage.paths]
-source = ["src", "*/site-packages"]
-
-[tool.pytest.ini_options]
-addopts = "-ra --cov -nauto"
+packages = [ "src/webdav4" ]
 
 [tool.black]
 line-length = 79
 
-[tool.interrogate]
-ignore-init-method = true
-ignore-nested-functions = true
-verbose = 2
-fail-under = 100
-color = true
-exclude = ["src/webdav4/_version.py"]
-
 [tool.isort]
 profile = "black"
-line_length=79
+line_length = 79
+
+[tool.pylint.message_control]
+enable = [ "c-extension-no-member", "no-else-return" ]
+disable = [ "cyclic-import", "design", "fixme", "missing-module-docstring", "invalid-name", "duplicate-code" ]
+
+[tool.codespell]
+ignore-words-list = "cachable"
+
+[tool.pytest.ini_options]
+addopts = "-ra -nauto -cov=src,tests"
+
+[tool.coverage.run]
+parallel = true
+branch = true
+concurrency = [ "multiprocessing" ]
+source = [ "webdav4", "tests" ]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+  "if __name__ == .__main__.:",
+  "if typing.TYPE_CHECKING:",
+  "if TYPE_CHECKING:",
+  "pass",
+  "raise NotImplementedError",
+  "pragma: no cover",
+]
+
+[tool.coverage.paths]
+source = [ "src", "*/site-packages" ]
 
 [tool.mypy]
 python_version = "3.8"
@@ -168,28 +135,21 @@ warn_no_return = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 check_untyped_defs = true
-files = ["src/webdav4", "tests", "docs"]
+files = [ "src/webdav4", "tests", "docs" ]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
 [[tool.mypy.overrides]]
-module = ["_version", "fsspec.*", "wsgidav.*", "IPython"]
+module = [ "_version", "fsspec.*", "wsgidav.*", "IPython" ]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["tests.*"]
+module = [ "tests.*" ]
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 warn_unused_ignores = false
 
-[tool.pylint.message_control]
-enable = ["c-extension-no-member", "no-else-return"]
-disable = ["cyclic-import", "design", "fixme", "missing-module-docstring", "invalid-name", "duplicate-code"]
-
 [tool.bandit]
-targets = ["/src"]
-exclude = ["/tests"]
-skips = ["B101", "B314", "B405"]
-
-[tool.codespell]
-ignore-words-list = "cachable"
+targets = [ "/src" ]
+exclude = [ "/tests" ]
+skips = [ "B101", "B314", "B405" ]

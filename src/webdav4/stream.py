@@ -1,4 +1,5 @@
 """Handle streaming response for file."""
+
 from contextlib import contextmanager
 from functools import partial
 from http import HTTPStatus
@@ -14,7 +15,6 @@ from typing import (
     List,
     Optional,
     Tuple,
-    Union,
     cast,
 )
 
@@ -23,19 +23,11 @@ from .http import HTTPNetworkError, HTTPTimeoutException
 from .http import Method as HTTPMethod
 
 if TYPE_CHECKING:
-    from array import ArrayType
-    from ctypes import _CData
-    from mmap import mmap
-    from pickle import PickleBuffer  # nosec B403
+    from typing_extensions import Buffer
 
     from .client import Client
     from .http import Client as HTTPClient
     from .types import HTTPResponse, URLTypes
-
-
-Buffer = Union[
-    bytearray, memoryview, "ArrayType[Any]", "mmap", "_CData", "PickleBuffer"
-]
 
 
 def request(
@@ -266,11 +258,11 @@ class IterStream(RawIOBase):
         self.loc += len(output)
         return output
 
-    def readinto(self, sequence: Buffer) -> int:
+    def readinto(self, sequence: "Buffer") -> int:
         """Read into the buffer."""
         return read_into(self, sequence)  # type: ignore
 
-    def readinto1(self, sequence: Buffer) -> int:
+    def readinto1(self, sequence: "Buffer") -> int:
         """Read into the buffer with 1 read at max."""
         return read_into(self, sequence, read_once=True)  # type: ignore
 
@@ -329,7 +321,7 @@ def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:  # noqa: C901
 
 
 def read_into(
-    obj: IO[AnyStr], sequence: Buffer, read_once: bool = False
+    obj: IO[AnyStr], sequence: "Buffer", read_once: bool = False
 ) -> int:
     """Read into the buffer."""
     out = memoryview(sequence).cast("B")

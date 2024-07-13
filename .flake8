@@ -5,5 +5,7 @@ max-complexity = 7
 show_source=true
 count=true
 ignore=
-    E203, # Whitespace before ':'
-    W503, # Line break occurred before a binary operator
+    ; Whitespace before ':'
+    E203,
+    W503
+    ; Line break occurred before a binary operator

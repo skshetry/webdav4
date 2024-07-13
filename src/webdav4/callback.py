@@ -1,4 +1,5 @@
 """Utilities to wrap file objects for callback purposes."""
+
 from collections.abc import Iterable
 from functools import wraps
 from typing import (

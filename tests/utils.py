@@ -1,4 +1,5 @@
 """Test utilities here."""
+
 import os
 from datetime import datetime, timedelta
 from pathlib import PosixPath, WindowsPath
@@ -9,7 +10,7 @@ from _pytest.python_api import ApproxBase
 PathClass = PosixPath if os.name == "posix" else WindowsPath
 
 
-class TmpDir(PathClass):  # type: ignore
+class TmpDir(PathClass):  # type: ignore # pylint: disable=abstract-method
     """Extends Path with `cat` and `gen` methods."""
 
     def cat(self) -> Union[str, Dict[str, Any]]:

@@ -1,4 +1,5 @@
 """Test fs utils."""
+
 from io import BytesIO
 
 from webdav4.fs_utils import peek_filelike_length

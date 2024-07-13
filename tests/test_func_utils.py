@@ -26,7 +26,7 @@ def test_wrap_fn():
     func = wrap_fn(sum, [1, 2, 3])
 
     params = inspect.getfullargspec(func)
-    assert not any(params)
+    assert not any(params[:-1])
     assert func() == 6
 
 

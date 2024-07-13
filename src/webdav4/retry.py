@@ -1,6 +1,7 @@
 """Retry mechanism for the webdav Client."""
+
 from http import HTTPStatus
-from typing import Callable, TypeVar, cast
+from typing import Callable, Protocol, TypeVar, cast
 
 from .func_utils import retry as retry_func
 from .http import BANDWIDTH_LIMIT_EXCEEDED
@@ -32,9 +33,14 @@ def _exp_backoff(attempt: int) -> float:
     return cast(float, BACKOFF * 2**attempt)
 
 
-def retry(
-    arg: bool = False, tries: int = 3
-) -> Callable[[Callable[[], _T]], _T]:
+class RetryFunc(Protocol):
+    """Retry function protocol."""
+
+    def __call__(self, __f: Callable[[], _T]) -> _T:
+        """Callable wrapper."""
+
+
+def retry(arg: bool = False, tries: int = 3) -> RetryFunc:
     """Retry if arg up to `tries` times."""
     # pylint: disable=import-outside-toplevel
     from .client import BadGatewayError, HTTPError, ResourceLocked

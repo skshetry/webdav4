@@ -1,4 +1,5 @@
 """Testing dav cli."""
+
 import os
 import re
 import sys
@@ -297,13 +298,10 @@ def test_cp_cli(storage_dir: TmpDir, monkeypatch: MonkeyPatch):
     ns = Namespace(
         path1="memory://data1", path2="memory://data2", recursive=False
     )
-    CommandCopy(ns, memfs).run()
-
-    assert memfs.cat("data1", recursive=True, on_error="ignore") == {
-        "/data1/bar": b"bar",
-        "/data1/foo": b"foo",
-    }
-    assert memfs.isdir("data2")
+    with pytest.raises(
+        RuntimeError, match="cannot copy directory without -R flag"
+    ):
+        CommandCopy(ns, memfs).run()
 
     ns = Namespace(
         path1="memory://data1", path2="memory://data2", recursive=True

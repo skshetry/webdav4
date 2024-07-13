@@ -1,4 +1,5 @@
 """Testing multistatus responses."""
+
 from datetime import datetime
 from typing import Optional, Tuple
 from xml.etree.ElementTree import Element, fromstring

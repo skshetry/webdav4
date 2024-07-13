@@ -1,4 +1,5 @@
 """Test IO callback wrapper."""
+
 from collections.abc import Iterable
 from io import StringIO
 from pathlib import Path
