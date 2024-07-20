@@ -48,14 +48,12 @@ def run_server(
     dirmap = {"/": directory}
 
     user, pwd = authentication
-    app = WsgiDAVApp(
-        {
-            "host": host,
-            "port": port,
-            "provider_mapping": dirmap,
-            "simple_dc": {"user_mapping": {"*": {user: {"password": pwd}}}},
-        }
-    )
+    app = WsgiDAVApp({
+        "host": host,
+        "port": port,
+        "provider_mapping": dirmap,
+        "simple_dc": {"user_mapping": {"*": {user: {"password": pwd}}}},
+    })
     return run_server_on_thread(wsgi.Server(bind_addr=(host, port), wsgi_app=app))
 
 

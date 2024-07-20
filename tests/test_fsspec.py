@@ -407,9 +407,9 @@ def test_ls(storage_dir: TmpDir, fs: WebdavFileSystem, detail: bool):
     assert get_files(fs.ls("data", detail=detail)) == {"data/foo", "data/bar"}
 
     # try ls with files and subdirs
-    storage_dir.gen(
-        {"data2": {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}}
-    )
+    storage_dir.gen({
+        "data2": {"foo": "foo", "bar": "bar", "baz": {"foobaz": "foobaz"}}
+    })
     assert get_files(fs.ls("data2", detail=detail)) == {
         "data2/foo",
         "data2/bar",
@@ -427,16 +427,14 @@ def test_ls(storage_dir: TmpDir, fs: WebdavFileSystem, detail: bool):
 
 def test_find(storage_dir: TmpDir, fs: WebdavFileSystem):
     """Test that find is compliance with fsspec."""
-    storage_dir.gen(
-        {
-            "data": {
-                "foo": "foo",
-                "bar": "bar",
-                "empty": {},
-                "baz": {"foobaz": "foobaz"},
-            }
+    storage_dir.gen({
+        "data": {
+            "foo": "foo",
+            "bar": "bar",
+            "empty": {},
+            "baz": {"foobaz": "foobaz"},
         }
-    )
+    })
     assert set(fs.find("")) == {"data/foo", "data/bar", "data/baz/foobaz"}
     assert set(fs.find("", withdirs=True)) == {
         "data",

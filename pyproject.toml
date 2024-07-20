@@ -51,7 +51,6 @@ optional-dependencies.docs = [
   "sphinx-copybutton==0.5.2",
 ]
 optional-dependencies.fsspec = [
-  # when changing lower-bound, keep `lower-bound` env dependencies up-to-date.
   "fsspec>=2021.7",
 ]
 optional-dependencies.http2 = [
@@ -87,12 +86,11 @@ version-file = "src/webdav4/_version.py"
 [tool.hatch.build.targets.wheel]
 packages = [ "src/webdav4" ]
 
-[tool.black]
-line-length = 79
-
 [tool.ruff]
 show-fixes = true
+format.preview = true
 
+format.docstring-code-format = true
 lint.select = [
   "ASYNC",  # flake8-async
   "B",      # flake8-bugbear
@@ -168,14 +166,6 @@ lint.flake8-type-checking.strict = true
 lint.isort.known-first-party = [ "webdav4" ]
 lint.preview = true
 
-[tool.isort]
-profile = "black"
-line_length = 79
-
-[tool.pylint.message_control]
-enable = [ "c-extension-no-member", "no-else-return" ]
-disable = [ "cyclic-import", "design", "fixme", "missing-module-docstring", "invalid-name", "duplicate-code" ]
-
 [tool.codespell]
 ignore-words-list = "cachable"
 
@@ -229,8 +219,3 @@ module = [ "tests.*" ]
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 warn_unused_ignores = false
-
-[tool.bandit]
-targets = [ "/src" ]
-exclude = [ "/tests" ]
-skips = [ "B101", "B314", "B405" ]

@@ -417,13 +417,11 @@ def test_ls_cli(capsys: CaptureFixture):
 
     mfs.mkdir("data")
     mfs.mkdir("dir")
-    mfs.pipe(
-        {
-            "data/foo": b"foo",
-            "data/bar": b"bar",
-            "dir/nested/foo": b"dirfoo" * 1000,
-        }
-    )
+    mfs.pipe({
+        "data/foo": b"foo",
+        "data/bar": b"bar",
+        "dir/nested/foo": b"dirfoo" * 1000,
+    })
 
     ns = Namespace(path="data", recursive=False, level=None, full_path=False)
     assert set(CommandLS(ns, mfs).ls()) == {
@@ -466,12 +464,10 @@ def test_ls_cli(capsys: CaptureFixture):
     CommandLS.render([])
     assert capsys.readouterr() == ("", "")
 
-    CommandLS.render(
-        [
-            Row("Apr 05 09:40", Size("148.0", "k"), "README.md"),
-            Row("Jun 03 03:33", Size("6.2", "M"), "my-docs.docx"),
-        ]
-    )
+    CommandLS.render([
+        Row("Apr 05 09:40", Size("148.0", "k"), "README.md"),
+        Row("Jun 03 03:33", Size("6.2", "M"), "my-docs.docx"),
+    ])
 
     out, _ = capsys.readouterr()
     assert textwrap.dedent(

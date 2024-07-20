@@ -62,13 +62,11 @@ class CallbackIOWrapper(Iterable):
 
             self.__dict__[method] = fwrite
 
-        self.__dict__.update(
-            {
-                "__wrapped_stream__": stream,
-                "__wrapped_method__": method,
-                "__call_back__": cb_func,
-            }
-        )
+        self.__dict__.update({
+            "__wrapped_stream__": stream,
+            "__wrapped_method__": method,
+            "__call_back__": cb_func,
+        })
 
     def __iter__(self) -> Iterator[AnyStr]:
         """Iterate through the stream and call callback method with size.
