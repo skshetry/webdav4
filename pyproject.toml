@@ -60,7 +60,6 @@ optional-dependencies.qa = [
   "mypy==1.10.1",
   "pre-commit",
   "types-colorama",
-  "types-pkg-resources",
   "types-python-dateutil",
 ]
 optional-dependencies.tests = [
