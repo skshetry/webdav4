@@ -57,7 +57,7 @@ optional-dependencies.http2 = [
   "httpx[http2]<1,>=0.20",
 ]
 optional-dependencies.qa = [
-  "mypy==1.11.2",
+  "mypy==1.14.1",
   "pre-commit",
   "types-colorama",
   "types-python-dateutil",
