@@ -578,11 +578,13 @@ class Client:
             raise IsACollectionError(path, "Cannot open a collection")
         assert mode in {"r", "rt", "rb"}
 
-        with IterStream(
+        call = wrap_fn(IterStream,
             self,
             self.join_url(path),
             chunk_size=chunk_size or self.chunk_size,
-        ) as buffer:
+        )
+
+        with self.with_retry(call) as buffer:
             buff = cast(BinaryIO, buffer)
 
             if mode == "rb":
