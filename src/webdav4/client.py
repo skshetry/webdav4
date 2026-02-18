@@ -456,7 +456,7 @@ class Client:
                 raise ResourceAlreadyExists(path) from exc
             if exc.status_code == HTTPStatus.FORBIDDEN:
                 msg = (
-                    "the server does not allow creation in the namespace"
+                    "the server does not allow creation in the namespace "
                     "or cannot accept members"
                 )
                 raise ForbiddenOperation(msg) from exc
