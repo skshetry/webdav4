@@ -195,7 +195,6 @@ exclude_lines = [
 source = [ "src", "*/site-packages" ]
 
 [tool.mypy]
-python_version = "3.8"
 show_column_numbers = true
 # be strict
 disallow_untyped_calls = true
