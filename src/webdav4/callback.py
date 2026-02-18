@@ -81,7 +81,7 @@ class CallbackIOWrapper(Iterable):
             if method != "read":
                 raise
 
-            from .stream import read_until
+            from .stream import read_until  # noqa: PLC0415
 
             chunks = read_until(stream, "\n")
 
@@ -108,4 +108,4 @@ def wrap_file_like(
     This method exists to cast the type to the file-like on return.
     """
     wrapper = CallbackIOWrapper(file_obj, callback, method=method)
-    return cast(IO[AnyStr], wrapper)
+    return cast("IO[AnyStr]", wrapper)

@@ -22,7 +22,7 @@ class TmpDir(PathClass):  # type: ignore
         """
         if self.is_dir():
             return {path.name: path.cat() for path in self.iterdir()}
-        return cast(str, self.read_text(encoding="utf8"))
+        return cast("str", self.read_text(encoding="utf8"))
 
     def gen(
         self, struct: Union[str, Dict[str, Any]], text: Union[str, bytes] = ""
@@ -56,7 +56,7 @@ class TmpDir(PathClass):  # type: ignore
         return list(struct.keys())
 
 
-class approx_datetime(ApproxBase):  # noqa: N801
+class approx_datetime(ApproxBase):  # noqa: N801, PLW1641
     """Perform approximate comparisons between datetime or timedelta.
 
     See https://github.com/pytest-dev/pytest/issues/8395#issuecomment-790549327

@@ -191,7 +191,7 @@ class FeatureDetection:
 class Client:
     """Provides higher level APIs for interacting with Webdav server."""
 
-    def __init__(  # noqa: PLR0913
+    def __init__(
         self,
         base_url: "URLTypes",
         auth: Optional["AuthTypes"] = None,
@@ -391,7 +391,7 @@ class Client:
         """Move resource to a new destination (with or without overwriting)."""
         return self._transfer(HTTPMethod.MOVE, from_path, to_path, overwrite=overwrite)
 
-    def _transfer(  # noqa: PLR0913
+    def _transfer(
         self,
         operation: str,
         from_path: str,
@@ -583,7 +583,7 @@ class Client:
             self.join_url(path),
             chunk_size=chunk_size or self.chunk_size,
         ) as buffer:
-            buff = cast(BinaryIO, buffer)
+            buff = cast("BinaryIO", buffer)
 
             if mode == "rb":
                 yield buff
