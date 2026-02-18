@@ -49,7 +49,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
       - run: uv pip install ".[dev]" "${{ matrix.fsspec }}" --system
       - run: uv pip show fsspec
-      - uses: pre-commit/action@v3.0.1
+      - uses: j178/prek-action@v1
       - run: mypy
       - run: pytest --cov-report=term
       - run: uv build
