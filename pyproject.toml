@@ -16,7 +16,7 @@ keywords = [
   "webdav-client",
 ]
 license = "MIT"
-license-files = { paths = [ "LICENSE" ] }
+license-files = [ "LICENSE" ]
 authors = [
   { name = "Saugat Pachhai", email = "suagatchhetri@outlook.com" },
 ]
