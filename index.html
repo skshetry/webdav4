@@ -5,9 +5,9 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Client" href="reference/client.html" />
 
-    <!-- Generated with Sphinx 8.0.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
         <title>webdav4</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
@@ -270,7 +270,7 @@
 <h3>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h3>
 <section id="webdav4-client">
 <h4>webdav4 Client<a class="headerlink" href="#webdav4-client" title="Link to this heading">¶</a></h4>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">webdav4.client</span> <span class="kn">import</span> <span class="n">Client</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">webdav4.client</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
 
 <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s2">&quot;https://webdav.com&quot;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">))</span>
 <span class="n">client</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;Documents/Readme.md&quot;</span><span class="p">)</span>
@@ -293,7 +293,7 @@ follows:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>webdav4<span class="o">[</span>fsspec<span class="o">]</span>
 </pre></div>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">webdav4.fsspec</span> <span class="kn">import</span> <span class="n">WebdavFileSystem</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">webdav4.fsspec</span><span class="w"> </span><span class="kn">import</span> <span class="n">WebdavFileSystem</span>
 
 <span class="n">fs</span> <span class="o">=</span> <span class="n">WebdavFileSystem</span><span class="p">(</span><span class="s2">&quot;https://webdav.com&quot;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;username&quot;</span><span class="p">,</span> <span class="s2">&quot;password&quot;</span><span class="p">))</span>
 <span class="n">fs</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s2">&quot;Documents/Readme.md&quot;</span><span class="p">)</span>
@@ -364,7 +364,7 @@ follows:</p>
     </aside>
   </div>
 </div><script src="_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
