@@ -93,9 +93,7 @@ if __name__ == "__main__":
 
         try:
             if args.interactive:
-                print(
-                    "fs, client, server_address, storage_dir fixtures " "are available"
-                )
+                print("fs, client, server_address, storage_dir fixtures are available")
                 try:
                     from IPython import embed
 

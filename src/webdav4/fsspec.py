@@ -39,11 +39,11 @@ from .fs_utils import peek_filelike_length
 from .stream import read_into
 
 if TYPE_CHECKING:
-    from array import ArrayType
     from datetime import datetime
-    from mmap import mmap
     from os import PathLike
     from typing import AnyStr
+
+    from typing_extensions import Buffer, Self
 
     from .callback import CallbackFn
     from .types import AuthTypes, URLTypes
@@ -104,7 +104,7 @@ class WebdavFileSystem(AbstractFileSystem):
     def _strip_protocol(cls, path: str) -> str:
         """Strips protocol from the given path, overriding for type-casting."""
         stripped = super()._strip_protocol(path)
-        return cast(str, stripped)
+        return cast("str", stripped)
 
     @translate_exceptions()
     def ls(
@@ -160,7 +160,7 @@ class WebdavFileSystem(AbstractFileSystem):
         super().rm(path, recursive=recursive, maxdepth=maxdepth)
         return None
 
-    def copy(  # noqa: PLR0913
+    def copy(
         self,
         path1: str,
         path2: str,
@@ -268,7 +268,7 @@ class WebdavFileSystem(AbstractFileSystem):
         return self.client.modified(path)
 
     @translate_exceptions()
-    def _open(  # noqa: PLR0913
+    def _open(
         self,
         path: str,
         mode: str = "rb",
@@ -319,7 +319,7 @@ class WebdavFileSystem(AbstractFileSystem):
         kwargs.setdefault("overwrite", True)
         return self.upload_fileobj(buff, path, **kwargs)
 
-    def upload_fileobj(  # noqa: PLR0913
+    def upload_fileobj(
         self,
         fobj: BinaryIO,
         rpath: str,
@@ -384,7 +384,7 @@ class WebdavFile(AbstractBufferedFile):
         fs: "WebdavFileSystem",
         path: str,
         mode: str = "rb",
-        block_size: Optional[int] = None,
+        block_size: Union[int, str, None] = None,
         autocommit: bool = True,
         cache_type: str = "readahead",
         cache_options: Optional[Dict[str, str]] = None,
@@ -432,7 +432,7 @@ class WebdavFile(AbstractBufferedFile):
             self.loc += len(chunk)
         return chunk
 
-    def __enter__(self) -> "WebdavFile":
+    def __enter__(self) -> "Self":
         """Start streaming."""
         return self
 
@@ -516,15 +516,15 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         fs: "WebdavFileSystem",
         path: str,
         mode: str = "wb",
-        block_size: Optional[int] = None,
+        block_size: Union[int, str, None] = None,
     ):
         """Extended interface with path and fs."""
         assert fs
         assert path
-        self.blocksize = (
-            AbstractBufferedFile.DEFAULT_BLOCK_SIZE
-            if block_size in ["default", None]
-            else block_size
+        self.blocksize: int = (
+            block_size
+            if isinstance(block_size, int)
+            else AbstractBufferedFile.DEFAULT_BLOCK_SIZE
         )
         self.fs: WebdavFileSystem = fs
         assert mode
@@ -556,7 +556,7 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         As we cannot upload in chunk, this is where we really upload file.
         """
         self.seek(0)
-        fileobj = cast(BinaryIO, self)
+        fileobj = cast("BinaryIO", self)
         self.fs.client.upload_fileobj(
             fileobj, self.path, chunk_size=self.blocksize, overwrite=True
         )
@@ -576,13 +576,11 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         """Info about the file upload that is in progress."""
         raise ValueError("cannot provide info in write-mode")
 
-    def readinto(
-        self, b: Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
-    ) -> int:
+    def readinto(self, b: "Buffer") -> int:
         """Read bytes into the given buffer."""
         return read_into(self, b)
 
     def readuntil(self, char: bytes = b"\n", blocks: Optional[int] = None) -> bytes:
         """Read until the given character is found."""
         ret = AbstractBufferedFile.readuntil(self, char=char, blocks=blocks)
-        return cast(bytes, ret)
+        return cast("bytes", ret)

@@ -378,7 +378,7 @@ def test_mkdir_forbidden_operations(client: Client, server_address: URL):
         client.mkdir("container")
 
     assert str(exc_info.value) == (
-        "the server does not allow creation in the namespace" "or cannot accept members"
+        "the server does not allow creation in the namespace or cannot accept members"
     )
 
 

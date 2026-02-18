@@ -361,7 +361,7 @@ def _color_file(  # noqa: C901
 ) -> Optional[str]:
     """Returns a color appropriate for file/dir based on ext/path etc."""
     try:
-        import colorama
+        import colorama  # noqa: PLC0415
     except ModuleNotFoundError:  # pragma: no cover
         return None
 
@@ -387,7 +387,7 @@ def _color_file(  # noqa: C901
     elif is_compiled(file):
         color = colorama.Fore.GREEN
 
-    return color if color else None
+    return color or None
 
 
 def color_file(file: File, isdir: bool = False) -> str:
@@ -395,7 +395,7 @@ def color_file(file: File, isdir: bool = False) -> str:
     color = _color_file(file, isdir=isdir)
     if color:
         try:
-            import colorama
+            import colorama  # noqa: PLC0415
         except ModuleNotFoundError:  # pragma: no cover
             pass
         else:
@@ -408,7 +408,7 @@ def color_file(file: File, isdir: bool = False) -> str:
 def colored(name: str, color: str = "", style: str = "") -> str:
     """Colors a string with given color name."""
     try:
-        import colorama
+        import colorama  # noqa: PLC0415
 
         colors = {
             "green": colorama.Fore.GREEN,
@@ -701,9 +701,10 @@ class CommandRun(Command):
             raise ValueError("no path specified or contents piped")
 
         count = 0
-        for line in fileinput.input(files=(self.args.path or "-",)):
-            if line.startswith("#"):
-                continue
+        with fileinput.input(files=(self.args.path or "-",)) as f:
+            for line in f:
+                if line.startswith("#"):
+                    continue
 
             cmd, *args = line.strip().split()
             subparsers = self.args.subparsers
@@ -1051,7 +1052,7 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
         "-p",
         default=False,
         action="store_true",
-        help="no error if existing, " "make parent directories as needed",
+        help="no error if existing, make parent directories as needed",
     )
     mkdir_parser.add_argument("path", help="Path to create")
     mkdir_parser.set_defaults(func=CommandMkdir)
@@ -1110,7 +1111,7 @@ def get_parser() -> Tuple["ArgumentParser", Dict[str, "ArgumentParser"]]:
 
 def run_cmd(args: Namespace, fs: Optional[AbstractFileSystem] = None) -> Optional[int]:
     """Run cmd from given args."""
-    cmd = cast(Command, args.func(args, fs=fs))
+    cmd = cast("Command", args.func(args, fs=fs))
     cmd.run()
     return 0
 
@@ -1126,6 +1127,6 @@ def main(argv: Optional[List[str]] = None) -> Optional[int]:
 
     try:
         return run_cmd(args)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error("%s: %s", type(exc).__name__, exc, exc_info=args.verbose)
         return 1

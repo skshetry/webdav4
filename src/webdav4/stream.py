@@ -22,7 +22,7 @@ from .http import HTTPNetworkError, HTTPTimeoutException
 from .http import Method as HTTPMethod
 
 if TYPE_CHECKING:
-    from typing_extensions import Buffer
+    from typing_extensions import Buffer, Self
 
     from .client import Client
     from .http import Client as HTTPClient
@@ -142,7 +142,7 @@ class IterStream(RawIOBase):
         """Update location, and run callbacks."""
         self._loc = value
 
-    def __enter__(self) -> "IterStream":
+    def __enter__(self) -> "Self":
         """Send a streaming response."""
         self._initial_response, self._iterator = self._cm.__enter__()
         return self
@@ -279,8 +279,8 @@ def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:
     is_bytes = isinstance(obj.read(0), bytes)
     # `c` and the `joiner` should be the same type as the file `obj` is of.
     assert char
-    _char: AnyStr = cast(AnyStr, char.encode() if is_bytes else char)
-    joiner: AnyStr = cast(AnyStr, b"" if is_bytes else "")
+    _char: AnyStr = cast("AnyStr", char.encode() if is_bytes else char)
+    joiner: AnyStr = cast("AnyStr", b"" if is_bytes else "")
 
     reader = read_chunks(obj)
     leftover = None
@@ -311,5 +311,5 @@ def read_into(obj: IO[AnyStr], sequence: "Buffer", read_once: bool = False) -> i
     func = obj.read1 if read_once else obj.read  # type: ignore
     data = func(out.nbytes)
 
-    out[: len(data)] = data
+    out[: len(data)] = data  # type: ignore[assignment]
     return len(data)

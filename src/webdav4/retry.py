@@ -13,7 +13,7 @@ BACKOFF: float = 1
 
 def filter_errors(exc: Exception) -> bool:
     """Filter these errors and retry if they fall in these categories."""
-    from .client import HTTPError
+    from .client import HTTPError  # noqa: PLC0415
 
     if isinstance(exc, HTTPError):
         return exc.status_code in (
@@ -29,19 +29,19 @@ def filter_errors(exc: Exception) -> bool:
 def _exp_backoff(attempt: int) -> float:
     """Backoff exponentially."""
     # for some reason, mypy is unable to figure out types
-    return cast(float, BACKOFF * 2**attempt)
+    return cast("float", BACKOFF * 2**attempt)
 
 
 class RetryFunc(Protocol):
     """Retry function protocol."""
 
-    def __call__(self, __f: Callable[[], _T]) -> _T:
+    def __call__(self, f: Callable[[], _T], /) -> _T:
         """Callable wrapper."""
 
 
 def retry(arg: bool = False, tries: int = 3) -> RetryFunc:
     """Retry if arg up to `tries` times."""
-    from .client import BadGatewayError, HTTPError, ResourceLocked
+    from .client import BadGatewayError, HTTPError, ResourceLocked  # noqa: PLC0415
 
     return retry_func(
         tries if arg is True else 1,
