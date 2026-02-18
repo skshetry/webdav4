@@ -39,11 +39,11 @@ from .fs_utils import peek_filelike_length
 from .stream import read_into
 
 if TYPE_CHECKING:
-    from array import ArrayType
     from datetime import datetime
-    from mmap import mmap
     from os import PathLike
     from typing import AnyStr
+
+    from typing_extensions import Buffer
 
     from .callback import CallbackFn
     from .types import AuthTypes, URLTypes
@@ -576,9 +576,7 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         """Info about the file upload that is in progress."""
         raise ValueError("cannot provide info in write-mode")
 
-    def readinto(
-        self, b: Union[bytearray, memoryview, "ArrayType[Any]", "mmap"]
-    ) -> int:
+    def readinto(self, b: "Buffer") -> int:
         """Read bytes into the given buffer."""
         return read_into(self, b)
 
