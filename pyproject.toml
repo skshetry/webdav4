@@ -27,9 +27,10 @@ dependencies = [ "httpx<1,>=0.20", "python-dateutil>=2.8.1" ]
 optional-dependencies.all = [ "webdav4[fsspec,http2]" ]
 optional-dependencies.dev = [ "webdav4[docs,fsspec,http2,qa,tests]" ]
 optional-dependencies.docs = [
-  "furo==2024.8.6",
-  "myst-parser>=3,<5",
-  "sphinx>=7,<9",
+  "furo==2024.8.6; python_version=='3.8'",
+  "furo==2025.12.19; python_version>='3.9'",
+  "myst-parser>=3,<6",
+  "sphinx>=7,<10",
   "sphinx-copybutton==0.5.2",
 ]
 optional-dependencies.fsspec = [ "fsspec>=2021.7" ]
