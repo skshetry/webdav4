@@ -311,5 +311,5 @@ def read_into(obj: IO[AnyStr], sequence: "Buffer", read_once: bool = False) -> i
     func = obj.read1 if read_once else obj.read  # type: ignore
     data = func(out.nbytes)
 
-    out[: len(data)] = data
+    out[: len(data)] = data  # type: ignore[assignment]
     return len(data)

@@ -1,16 +1,13 @@
 """Test utilities here."""
 
-import os
 from datetime import datetime, timedelta
-from pathlib import PosixPath, WindowsPath
-from typing import Any, Dict, Iterable, Union, cast
+from pathlib import Path
+from typing import Any, Dict, List, Union
 
 from _pytest.python_api import ApproxBase
 
-PathClass = PosixPath if os.name == "posix" else WindowsPath
 
-
-class TmpDir(PathClass):  # type: ignore
+class TmpDir(type(Path())):  # type: ignore
     """Extends Path with `cat` and `gen` methods."""
 
     def cat(self) -> Union[str, Dict[str, Any]]:
@@ -22,11 +19,11 @@ class TmpDir(PathClass):  # type: ignore
         """
         if self.is_dir():
             return {path.name: path.cat() for path in self.iterdir()}
-        return cast("str", self.read_text(encoding="utf8"))
+        return self.read_text(encoding="utf8")  # type: ignore[no-any-return]
 
     def gen(
         self, struct: Union[str, Dict[str, Any]], text: Union[str, bytes] = ""
-    ) -> Iterable[str]:
+    ) -> List[str]:
         """Creates folder structure locally from the provided structure.
 
         Args:
@@ -36,7 +33,7 @@ class TmpDir(PathClass):  # type: ignore
                 If it's a string, a file with `text` is created.
             text: optional, only necessary if struct is passed a string.
         """
-        if isinstance(struct, (str, bytes, PathClass)):
+        if not isinstance(struct, dict):
             struct = {struct: text}
         for name, contents in struct.items():
             path = self / name

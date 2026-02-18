@@ -384,7 +384,7 @@ class WebdavFile(AbstractBufferedFile):
         fs: "WebdavFileSystem",
         path: str,
         mode: str = "rb",
-        block_size: Optional[int] = None,
+        block_size: Union[int, str, None] = None,
         autocommit: bool = True,
         cache_type: str = "readahead",
         cache_options: Optional[Dict[str, str]] = None,
@@ -516,15 +516,15 @@ class UploadFile(tempfile.SpooledTemporaryFile):
         fs: "WebdavFileSystem",
         path: str,
         mode: str = "wb",
-        block_size: Optional[int] = None,
+        block_size: Union[int, str, None] = None,
     ):
         """Extended interface with path and fs."""
         assert fs
         assert path
-        self.blocksize = (
-            AbstractBufferedFile.DEFAULT_BLOCK_SIZE
-            if block_size in ["default", None]
-            else block_size
+        self.blocksize: int = (
+            block_size
+            if isinstance(block_size, int)
+            else AbstractBufferedFile.DEFAULT_BLOCK_SIZE
         )
         self.fs: WebdavFileSystem = fs
         assert mode

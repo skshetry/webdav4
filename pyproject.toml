@@ -35,7 +35,8 @@ optional-dependencies.docs = [
 optional-dependencies.fsspec = [ "fsspec>=2021.7" ]
 optional-dependencies.http2 = [ "httpx[http2]<1,>=0.20" ]
 optional-dependencies.qa = [
-  "mypy==1.11.2",
+  "mypy==1.14; python_version=='3.8'",
+  "mypy==1.19.1; python_version>='3.9'",
   "pre-commit",
   "types-colorama",
   "types-python-dateutil",
