@@ -51,8 +51,8 @@ optional-dependencies.tests = [
   "wsgidav",
 ]
 urls."Bug Tracker" = "https://github.com/skshetry/webdav4/issues"
-urls."Source Code" = "https://github.com/skshetry/webdav4"
 urls.Documentation = "https://skshetry.github.io/webdav4"
+urls."Source Code" = "https://github.com/skshetry/webdav4"
 scripts.dav = "webdav4.cli:main"
 
 [tool.hatch]
@@ -134,6 +134,9 @@ lint.preview = true
 
 [tool.codespell]
 ignore-words-list = "cachable"
+
+[tool.pyproject-fmt]
+max_supported_python = "3.14"
 
 [tool.pytest]
 ini_options.addopts = "-ra -nauto -cov=src,tests"
