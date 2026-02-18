@@ -647,10 +647,13 @@ class Client:
         chunk_size: Optional[int] = None,
         size: Optional[int] = None,
         headers: Optional[Dict[str, str]] = None,
+        request_kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Upload file from file object to given path."""
         if headers is None:
             headers = {}
+        if request_kwargs is None:
+            request_kwargs = {}
 
         # we try to avoid chunked transfer as much as possible
         # so we try to use size as a hint if provided.
@@ -670,6 +673,6 @@ class Client:
         content = read_chunks(wrapped, chunk_size=chunk_size or self.chunk_size)
 
         http_resp = self.request(
-            HTTPMethod.PUT, to_path, content=content, headers=headers
+            HTTPMethod.PUT, to_path, content=content, headers=headers, **request_kwargs
         )
         http_resp.raise_for_status()

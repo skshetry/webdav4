@@ -9,7 +9,7 @@ from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
-from httpx import Request, Response
+from httpx import Request, Response, Timeout
 
 from webdav4.client import (
     BadGatewayError,
@@ -690,6 +690,13 @@ def test_upload_fobj_size_hints(client: Client):
         wrapped = ReadWrapper(BytesIO(b"foobar"))  # type: ignore
         client.upload_fileobj(wrapped, "foobar", size=6)  # type: ignore
         assert m.call_args[1]["headers"] == {"Content-Length": "6"}
+
+        client.upload_fileobj(
+            BytesIO(b"foobar"),
+            "foobar",
+            request_kwargs={"timeout": Timeout(3, connect=10)},
+        )
+        assert m.call_args[1]["timeout"] == Timeout(connect=10, read=3, write=3, pool=3)
 
 
 def test_upload_file(tmp_path: Path, storage_dir: TmpDir, client: Client):
