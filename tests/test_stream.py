@@ -1,6 +1,6 @@
 """Testing stream utilities."""
 
-from io import DEFAULT_BUFFER_SIZE, BytesIO, StringIO
+from io import DEFAULT_BUFFER_SIZE
 from typing import Any, Iterator
 from unittest import mock
 from unittest.mock import MagicMock, patch
@@ -12,39 +12,6 @@ from tests.utils import TmpDir
 from webdav4.client import Client
 from webdav4.fsspec import WebdavFileSystem
 from webdav4.http import HTTPNetworkError, HTTPResponse
-from webdav4.stream import read_until
-
-
-def test_read_until_non_binary():
-    """Test read_until with non-binary obj."""
-    buff = StringIO()
-    buff.write("hello world\n" * 100)
-    buff.seek(0)
-
-    assert list(read_until(buff, "\n")) == ["hello world\n"] * 100
-
-
-def test_read_until_binary():
-    """Test read_until with binary obj."""
-    buff = BytesIO()
-    buff.write(b"hello world\n" * 100)
-    buff.seek(0)
-
-    assert list(read_until(buff, "\n")) == [b"hello world\n"] * 100
-
-
-@pytest.mark.parametrize("buff", [StringIO(), BytesIO()])
-def test_read_until_empty(buff):
-    """Test read_until with empty data."""
-    assert not list(read_until(buff, "\n"))
-
-
-def test_read_until_not_found_any_match():
-    """Test read_until, with no matching character."""
-    d = "hello world" * 100
-    buff = StringIO(d)
-
-    assert list(read_until(buff, "\n")) == [d]
 
 
 def test_retry_reconnect_on_failure(
@@ -85,11 +52,11 @@ def test_retry_reconnect_on_failure(
             assert fd.read() == text1
             assert fd.read() == ""
 
-        with client.open("sample.txt", mode="rb") as fd:
+        with client.open("sample.txt", mode="rb") as binary_fd:
             # Test various .read() variants
-            assert fd.read(len(text1)) == text1.encode()
-            assert fd.read() == text1.encode()
-            assert fd.read() == b""
+            assert binary_fd.read(len(text1)) == text1.encode()
+            assert binary_fd.read() == text1.encode()
+            assert binary_fd.read() == b""
 
         with fs.open("sample.txt", mode="r") as fd:
             # Test various .read() variants
@@ -105,14 +72,14 @@ def test_retry_reconnect_on_failure(
 
         # when we cannot detect support for ranges, we should just raise error
         client.detected_features.supports_ranges = False
-        with client.open("sample.txt", mode="rb") as fd:
-            fd._initial_response.headers.clear()  # type: ignore
+        with client.open("sample.txt", mode="rb") as binary_fd:
+            binary_fd._initial_response.headers.clear()  # type: ignore
             with pytest.raises(HTTPNetworkError):
-                fd.read()
+                binary_fd.read()
 
-            assert fd.supports_ranges is False  # type: ignore
+            assert binary_fd.supports_ranges is False  # type: ignore
             with pytest.raises(ValueError) as exc_info:
-                fd.seek(10)
+                binary_fd.seek(10)
             assert str(exc_info.value) == "server does not support ranges"
 
         with fs.open("sample.txt", mode="rb") as fd:

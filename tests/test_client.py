@@ -29,7 +29,6 @@ from webdav4.http import Client as HTTPClient
 from webdav4.http import Method as HTTPMethod
 from webdav4.urls import URL
 
-from .test_callback import ReadWrapper
 from .utils import TmpDir, approx_datetime
 
 
@@ -676,6 +675,18 @@ def test_upload_fobj_size_hints(client: Client):
 
     This is used to choose between chunked and non-chunked transfers.
     """
+
+    class ReadWrapper:
+        """Wraps any given buffer."""
+
+        def __init__(self, buff):
+            """Wrap buff."""
+            self.buff = buff
+
+        def read(self, *args):
+            """Wrap read method of the buff."""
+            return self.buff.read(*args)
+
     with patch.object(client, "request") as m:
         client.upload_fileobj(BytesIO(b"foobar"), "foobar", size=3)
         assert m.call_args[1]["headers"] == {"Content-Length": "3"}

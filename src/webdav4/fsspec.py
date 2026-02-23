@@ -36,7 +36,6 @@ from .client import (
     ResourceNotFound,
 )
 from .fs_utils import peek_filelike_length
-from .stream import read_into
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -45,7 +44,6 @@ if TYPE_CHECKING:
 
     from typing_extensions import Buffer, Self
 
-    from .callback import CallbackFn
     from .types import AuthTypes, URLTypes
 
 
@@ -338,13 +336,12 @@ class WebdavFileSystem(AbstractFileSystem):
         callback = cast("Callback", Callback.as_callback(callback))
         if size is not None:  # pragma: no cover
             callback.set_size(size)
-        progress_callback = cast("CallbackFn", callback.relative_update)
 
         return self.client.upload_fileobj(
             fobj,
             rpath,
             overwrite=overwrite,
-            callback=progress_callback,
+            callback=callback.relative_update,
             size=size,
             **kwargs,
         )
@@ -578,7 +575,10 @@ class UploadFile(tempfile.SpooledTemporaryFile):
 
     def readinto(self, b: "Buffer") -> int:
         """Read bytes into the given buffer."""
-        return read_into(self, b)
+        out = memoryview(b).cast("B")
+        data = self.read(out.nbytes)
+        out[: len(data)] = data
+        return len(data)
 
     def readuntil(self, char: bytes = b"\n", blocks: Optional[int] = None) -> bytes:
         """Read until the given character is found."""

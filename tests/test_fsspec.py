@@ -10,7 +10,6 @@ import pytest
 from webdav4.fsspec import WebdavFileSystem
 from webdav4.urls import URL, join_url
 
-from .test_callback import ReadWrapper
 from .utils import TmpDir, approx_datetime
 
 
@@ -828,6 +827,17 @@ def test_upload_fileobj(
     file = storage_dir / "foo"
     length = file.write_bytes(b"foo")
 
+    class ReadWrapper:
+        """Wraps any given buffer."""
+
+        def __init__(self, buff):
+            """Wrap buff."""
+            self.buff = buff
+
+        def read(self, *args, **kwargs):
+            """Read from the buffer."""
+            return self.buff.read(*args, **kwargs)
+
     with file.open(mode="rb") as fobj:
         if wrap_fobj:
             fobj = ReadWrapper(fobj)  # type: ignore
@@ -869,6 +879,25 @@ def test_callbacks(storage_dir: TmpDir, fs: WebdavFileSystem):
         ("relative_update", 4),
         ("relative_update", 4),
         ("relative_update", 4),
+        ("relative_update", 4),
+    ]
+
+    event_logger = EventLogger()
+    with src_file.open("rb") as fobj:
+        fs.upload_fileobj(fobj, dest_file + "-2", chunk_size=10, callback=event_logger)
+    assert event_logger.events[0] == ("set_size", size)
+    assert event_logger.events[1:] == [
+        ("relative_update", 10),
+        ("relative_update", 6),
+    ]
+
+    event_logger = EventLogger()
+    fs.blocksize = 6
+    fs.get_file(dest_file, src_file.with_name("source_copy"), callback=event_logger)
+    assert event_logger.events[0] == ("set_size", size)
+    assert event_logger.events[1:] == [
+        ("relative_update", 6),
+        ("relative_update", 6),
         ("relative_update", 4),
         ("relative_update", 0),
     ]

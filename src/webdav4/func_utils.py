@@ -2,12 +2,10 @@
 
 import time
 from functools import wraps
-from itertools import repeat
 from typing import (
     TYPE_CHECKING,
     Callable,
     Iterable,
-    Iterator,
     Optional,
     Type,
     TypeVar,
@@ -20,16 +18,6 @@ if TYPE_CHECKING:
     P = ParamSpec("P")
 
 _T = TypeVar("_T")
-
-
-def repeat_func(func: Callable[[], _T], times: Optional[int] = None) -> Iterator[_T]:
-    """Repeatedly calls a function multiple times.
-
-    It will call infinite times if not specified, otherwise as many times as
-    specified in `times` arg.
-    """
-    args = (None, times) if times else (None,)
-    return (func() for i in repeat(*args))
 
 
 def retry(
