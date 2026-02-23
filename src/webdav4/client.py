@@ -1,7 +1,6 @@
 """Client for the webdav."""
 
 import locale
-import shutil
 import threading
 from contextlib import contextmanager, suppress
 from http import HTTPStatus
@@ -14,14 +13,15 @@ from typing import (
     Dict,
     Iterator,
     List,
+    Literal,
     Optional,
     Set,
     TextIO,
     Union,
     cast,
+    overload,
 )
 
-from .callback import wrap_file_like
 from .fs_utils import peek_filelike_length
 from .func_utils import wrap_fn
 from .http import Client as HTTPClient
@@ -34,7 +34,7 @@ from .multistatus import (
     prepare_propfind_request_data,
 )
 from .retry import retry as _retry
-from .stream import IterStream, read_chunks
+from .stream import IterStream
 from .urls import URL, join_url
 
 if TYPE_CHECKING:
@@ -565,6 +565,36 @@ class Client:
         """Returns content language of the resource with the given path."""
         return self.get_props(path, "content_language").content_language
 
+    @overload
+    @contextmanager
+    def open(
+        self,
+        path: str,
+        mode: Literal["rb"],
+        encoding: Optional[str] = ...,
+        chunk_size: Optional[int] = ...,
+    ) -> Iterator[BinaryIO]: ...
+
+    @overload
+    @contextmanager
+    def open(
+        self,
+        path: str,
+        mode: Literal["r", "rt"] = ...,
+        encoding: Optional[str] = ...,
+        chunk_size: Optional[int] = ...,
+    ) -> Iterator[TextIO]: ...
+
+    @overload
+    @contextmanager
+    def open(
+        self,
+        path: str,
+        mode: str,
+        encoding: Optional[str] = ...,
+        chunk_size: Optional[int] = ...,
+    ) -> Iterator[Union[TextIO, BinaryIO]]: ...
+
     @contextmanager
     def open(
         self,
@@ -602,8 +632,10 @@ class Client:
     ) -> None:
         """Write stream from path to given file object."""
         with self.open(from_path, mode="rb", chunk_size=chunk_size) as remote_obj:
-            wrapped = wrap_file_like(file_obj, callback, method="write")
-            shutil.copyfileobj(remote_obj, wrapped)  # type: ignore[misc]
+            while data := remote_obj.read(chunk_size or self.chunk_size):
+                file_obj.write(data)
+                if callback:
+                    callback(len(data))
 
     def download_file(
         self,
@@ -666,10 +698,17 @@ class Client:
         if not overwrite and self.exists(to_path):
             raise ResourceAlreadyExists(to_path)
 
-        wrapped = wrap_file_like(file_obj, callback)
-        content = read_chunks(wrapped, chunk_size=chunk_size or self.chunk_size)
+        def chunks() -> Iterator[bytes]:
+            """Read file object in chunks."""
+            while data := file_obj.read(chunk_size or self.chunk_size):
+                yield data
+                if callback is not None:
+                    callback(len(data))
 
         http_resp = self.request(
-            HTTPMethod.PUT, to_path, content=content, headers=headers
+            HTTPMethod.PUT,
+            to_path,
+            content=chunks(),
+            headers=headers,
         )
         http_resp.raise_for_status()

@@ -3,21 +3,15 @@
 from contextlib import contextmanager
 from functools import partial
 from http import HTTPStatus
-from io import DEFAULT_BUFFER_SIZE, RawIOBase
-from itertools import takewhile
+from io import RawIOBase
 from typing import (
-    IO,
     TYPE_CHECKING,
-    AnyStr,
     Generator,
     Iterator,
-    List,
     Optional,
     Tuple,
-    cast,
 )
 
-from .func_utils import repeat_func
 from .http import HTTPNetworkError, HTTPTimeoutException
 from .http import Method as HTTPMethod
 
@@ -247,69 +241,14 @@ class IterStream(RawIOBase):
 
     def readinto(self, sequence: "Buffer") -> int:
         """Read into the buffer."""
-        return read_into(self, sequence)  # type: ignore
+        out = memoryview(sequence).cast("B")
+        data = self.read(out.nbytes)
+        out[: len(data)] = data
+        return len(data)
 
     def readinto1(self, sequence: "Buffer") -> int:
         """Read into the buffer with 1 read at max."""
-        return read_into(self, sequence, read_once=True)  # type: ignore
-
-
-def read_chunks(obj: IO[AnyStr], chunk_size: Optional[int] = None) -> Iterator[AnyStr]:
-    """Read file object in chunks."""
-    func = partial(obj.read, chunk_size or DEFAULT_BUFFER_SIZE)
-    return takewhile(bool, repeat_func(func))
-
-
-def split_chunk(part: AnyStr, char: AnyStr) -> Tuple[AnyStr, Optional[AnyStr]]:
-    """Split chunk into two parts, based on given delimiter character.
-
-    It will return tuple of those two chunks. If no such delim exists,
-    the first element of tuple will have the complete chunk whereas the other
-    will be None.
-    """
-    found = part.find(char)
-    if found > -1:
-        return part[: found + len(char)], part[found + len(char) :]
-
-    return part, None
-
-
-def read_until(obj: IO[AnyStr], char: str) -> Iterator[AnyStr]:
-    """Read chunks until the char is reached."""
-    is_bytes = isinstance(obj.read(0), bytes)
-    # `c` and the `joiner` should be the same type as the file `obj` is of.
-    assert char
-    _char: AnyStr = cast("AnyStr", char.encode() if is_bytes else char)
-    joiner: AnyStr = cast("AnyStr", b"" if is_bytes else "")
-
-    reader = read_chunks(obj)
-    leftover = None
-    while True:
-        out: List[AnyStr] = []
-        while True:
-            try:
-                part = leftover or next(reader)
-            except StopIteration:
-                part = joiner
-
-            if not part:
-                if out:
-                    yield joiner.join(out)
-                return
-
-            output, leftover = split_chunk(part, _char)
-            out.append(output)
-            if leftover is not None:
-                break
-
-        yield joiner.join(out)
-
-
-def read_into(obj: IO[AnyStr], sequence: "Buffer", read_once: bool = False) -> int:
-    """Read into the buffer."""
-    out = memoryview(sequence).cast("B")
-    func = obj.read1 if read_once else obj.read  # type: ignore
-    data = func(out.nbytes)
-
-    out[: len(data)] = data  # type: ignore[assignment]
-    return len(data)
+        out = memoryview(sequence).cast("B")
+        data = self.read1(out.nbytes)
+        out[: len(data)] = data
+        return len(data)
