@@ -242,6 +242,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">locale</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">contextmanager</span><span class="p">,</span> <span class="n">suppress</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">http</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStatus</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">TextIOWrapper</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -262,7 +263,6 @@
 <span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.fs_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">peek_filelike_length</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">.func_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">wrap_fn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span> <span class="k">as</span> <span class="n">HTTPClient</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStatusError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">Method</span> <span class="k">as</span> <span class="n">HTTPMethod</span>
@@ -586,7 +586,7 @@
         <span class="n">follow_redirects</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;MultiStatusResponse&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns properties of the specific resource by propfind request.&quot;&quot;&quot;</span>
-        <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">,</span>
             <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">PROPFIND</span><span class="p">,</span>
             <span class="n">path</span><span class="p">,</span>
@@ -713,7 +713,7 @@
             <span class="s2">&quot;Depth&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">depth</span><span class="p">),</span>
         <span class="p">}</span>
 
-        <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">from_path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">operation</span><span class="p">,</span> <span class="n">from_path</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
@@ -757,7 +757,7 @@
 <a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.mkdir">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a collection.&quot;&quot;&quot;</span>
-        <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MKCOL</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">MKCOL</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">add_trailing_slash</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">http_resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
@@ -782,7 +782,7 @@
 <a class="viewcode-back" href="../../reference/client.html#webdav4.client.Client.remove">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove a resource.&quot;&quot;&quot;</span>
-        <span class="n">call</span> <span class="o">=</span> <span class="n">wrap_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">DELETE</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">,</span> <span class="n">HTTPMethod</span><span class="o">.</span><span class="n">DELETE</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">with_retry</span><span class="p">(</span><span class="n">call</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
