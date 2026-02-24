@@ -3,6 +3,7 @@
 import locale
 import threading
 from contextlib import contextmanager, suppress
+from functools import partial
 from http import HTTPStatus
 from io import TextIOWrapper
 from typing import (
@@ -23,7 +24,6 @@ from typing import (
 )
 
 from .fs_utils import peek_filelike_length
-from .func_utils import wrap_fn
 from .http import Client as HTTPClient
 from .http import HTTPStatusError
 from .http import Method as HTTPMethod
@@ -298,7 +298,7 @@ class Client:
         follow_redirects: bool = False,
     ) -> "MultiStatusResponse":
         """Returns properties of the specific resource by propfind request."""
-        call = wrap_fn(
+        call = partial(
             self._request,
             HTTPMethod.PROPFIND,
             path,
@@ -409,7 +409,7 @@ class Client:
             "Depth": str(depth),
         }
 
-        call = wrap_fn(self.request, operation, from_path, headers=headers)
+        call = partial(self.request, operation, from_path, headers=headers)
         try:
             self.with_retry(call)
         except HTTPError as exc:
@@ -448,7 +448,7 @@ class Client:
 
     def mkdir(self, path: str) -> None:
         """Create a collection."""
-        call = wrap_fn(self.request, HTTPMethod.MKCOL, path, add_trailing_slash=True)
+        call = partial(self.request, HTTPMethod.MKCOL, path, add_trailing_slash=True)
         try:
             http_resp = self.with_retry(call)
         except HTTPError as exc:
@@ -470,7 +470,7 @@ class Client:
 
     def remove(self, path: str) -> None:
         """Remove a resource."""
-        call = wrap_fn(self.request, HTTPMethod.DELETE, path)
+        call = partial(self.request, HTTPMethod.DELETE, path)
         try:
             self.with_retry(call)
         except HTTPError as exc:

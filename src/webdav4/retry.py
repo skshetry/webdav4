@@ -1,35 +1,14 @@
 """Retry mechanism for the webdav Client."""
 
+import time
 from http import HTTPStatus
-from typing import Callable, Protocol, TypeVar, cast
+from typing import Callable, Protocol, TypeVar
 
-from .func_utils import retry as retry_func
 from .http import BANDWIDTH_LIMIT_EXCEEDED
 
 _T = TypeVar("_T")
 
 BACKOFF: float = 1
-
-
-def filter_errors(exc: Exception) -> bool:
-    """Filter these errors and retry if they fall in these categories."""
-    from .client import HTTPError  # noqa: PLC0415
-
-    if isinstance(exc, HTTPError):
-        return exc.status_code in (
-            HTTPStatus.TOO_MANY_REQUESTS,
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-            HTTPStatus.SERVICE_UNAVAILABLE,
-            HTTPStatus.GATEWAY_TIMEOUT,
-            BANDWIDTH_LIMIT_EXCEEDED,
-        )
-    return True
-
-
-def _exp_backoff(attempt: int) -> float:
-    """Backoff exponentially."""
-    # for some reason, mypy is unable to figure out types
-    return cast("float", BACKOFF * 2**attempt)
 
 
 class RetryFunc(Protocol):
@@ -43,9 +22,24 @@ def retry(arg: bool = False, tries: int = 3) -> RetryFunc:
     """Retry if arg up to `tries` times."""
     from .client import BadGatewayError, HTTPError, ResourceLocked  # noqa: PLC0415
 
-    return retry_func(
-        tries if arg is True else 1,
-        (ResourceLocked, BadGatewayError, HTTPError),
-        timeout=_exp_backoff,
-        filter_errors=filter_errors,
-    )
+    retries = tries if arg is True else 1
+
+    def wrapper(func: Callable[[], _T]) -> _T:
+        for attempt in range(retries):
+            try:
+                return func()
+            except (ResourceLocked, BadGatewayError, HTTPError) as exc:
+                if isinstance(exc, HTTPError) and exc.status_code not in (
+                    HTTPStatus.TOO_MANY_REQUESTS,
+                    HTTPStatus.INTERNAL_SERVER_ERROR,
+                    HTTPStatus.SERVICE_UNAVAILABLE,
+                    HTTPStatus.GATEWAY_TIMEOUT,
+                    BANDWIDTH_LIMIT_EXCEEDED,
+                ):
+                    raise
+                if attempt + 1 == retries:
+                    raise
+            time.sleep(BACKOFF * 2**attempt)
+        raise AssertionError("unreachable")  # pragma: no cover
+
+    return wrapper
