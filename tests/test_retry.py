@@ -28,6 +28,18 @@ def test_retry(exc):
     assert func.call_count == 2
 
 
+def test_retry_disabled():
+    """Test that retry(False) does not retry."""
+    func = mock.MagicMock(
+        side_effect=HTTPError(
+            Response(HTTPStatus.SERVICE_UNAVAILABLE.value, request=request)
+        )
+    )
+    with pytest.raises(HTTPError):
+        retry(False)(func)
+    assert func.call_count == 1
+
+
 @pytest.mark.parametrize(
     "status_code, retries ",
     [
