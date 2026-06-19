@@ -179,6 +179,13 @@ class IterStream(RawIOBase):
         if loc and not self.supports_ranges:
             raise ValueError("server does not support ranges")
 
+        # If the target position is within the current buffer,
+        # just adjust the buffer and loc without closing the connection.
+        if self._loc <= loc < self._loc + len(self.buffer):
+            self.buffer = self.buffer[loc - self._loc:]
+            self.loc = loc
+            return loc
+
         self.close()
         self._cm = iter_url(self.client, self.url, pos=loc, chunk_size=self.chunk_size)
         _, self._iterator = self._cm.__enter__()
