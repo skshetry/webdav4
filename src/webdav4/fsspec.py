@@ -81,6 +81,7 @@ class WebdavFileSystem(AbstractFileSystem):
         base_url: "URLTypes",
         auth: Optional["AuthTypes"] = None,
         client: Optional["Client"] = None,
+        blocksize: int | None = None,
         **client_opts: Any,
     ) -> None:
         """Instantiate WebdavFileSystem with base_url and auth.
@@ -94,6 +95,10 @@ class WebdavFileSystem(AbstractFileSystem):
             client_opts: Extra args that are passed to Webdav Client.
                 (refer to it's documenting for more information).
         """
+        if blocksize is None and client is not None:
+            blocksize = client.chunk_size
+        if blocksize is not None:
+            self.blocksize = blocksize
         super().__init__()
         client_opts.setdefault("chunk_size", self.blocksize)
         self.client = client or Client(base_url, auth=auth, **client_opts)
@@ -276,6 +281,9 @@ class WebdavFileSystem(AbstractFileSystem):
         **kwargs: Any,
     ) -> Union["WebdavFile", "UploadFile"]:
         """Return a file-like object from the filesystem."""
+        if block_size is None:
+            block_size = self.blocksize
+
         size = kwargs.pop("size", None)
         assert "a" not in mode
 
