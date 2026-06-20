@@ -37,7 +37,7 @@ jobs:
           fsspec: "fsspec==2021.7.0"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 0
           persist-credentials: false
