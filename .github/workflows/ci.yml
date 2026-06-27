@@ -37,11 +37,11 @@ jobs:
           fsspec: "fsspec==2021.7.0"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6.2.0
         with:
           python-version: ${{ matrix.pyv }}
           allow-prereleases: true
