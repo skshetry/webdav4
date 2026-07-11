@@ -37,7 +37,7 @@ jobs:
           fsspec: "fsspec==2021.7.0"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -46,7 +46,7 @@ jobs:
           python-version: ${{ matrix.pyv }}
           allow-prereleases: true
 
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@v8.2.0
       - run: uv pip install ".[dev]" "${{ matrix.fsspec }}" --system
       - run: uv pip show fsspec
       - uses: j178/prek-action@v2
